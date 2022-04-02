@@ -11,12 +11,16 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.pos.PaymentTab.PaymentMethodPagerAdapter;
 import com.example.pos.databinding.PaymentPageBinding;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.tabs.TabLayoutMediator;
 
 public class PaymentPage extends AppCompatActivity {
 
     PaymentPageBinding binding;
+    PaymentMethodPagerAdapter paymentMethodPagerAdapter;
+    private String[] titles = new String[]{"Cash", "Other Modes"};
 
     String statuslogin;
     Context contextpage;
@@ -27,9 +31,22 @@ public class PaymentPage extends AppCompatActivity {
         contextpage = PaymentPage.this;
         binding = DataBindingUtil.setContentView(this, R.layout.payment_page);
 
+        //Body Setting
+        paymentMethodPagerAdapter = new PaymentMethodPagerAdapter(this);
+
+        binding.paymentMethodViewPager.setAdapter(paymentMethodPagerAdapter);
+        new TabLayoutMediator(binding.paymentMethodTl, binding.paymentMethodViewPager,
+            (
+                (
+                    (tab, position) -> tab.setText(titles[position])
+                )
+            )
+        ).attach();
+
 
         //OnClickListener
         //Body
+        {
         binding.paymentBackBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -69,5 +86,6 @@ public class PaymentPage extends AppCompatActivity {
                }
            }
         );
+        }
     }
 }
