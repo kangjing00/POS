@@ -85,8 +85,8 @@
             android:padding="15dp"
             android:hint="1"
             android:inputType="numberDecimal"
-            android:textDirection="rtl"
             android:textSize="12dp"
+            android:gravity="end"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/add_discount_popup_rg"
             app:layout_constraintTop_toBottomOf="@+id/add_discount_popup_title" />
