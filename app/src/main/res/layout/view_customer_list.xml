@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:paddingRight="15dp"
+        android:paddingLeft="15dp"
+        android:background="@drawable/box_coner_nopadding_white"
+        android:clickable="true">
+
+        <ImageView
+            android:id="@+id/customer_list_customer_image"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:src="@drawable/face1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <TextView
+            android:id="@+id/customer_list_customer_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Benjamin Cole"
+            android:layout_marginLeft="15dp"
+            android:textSize="15dp"
+            android:fontFamily="@font/roboto_regular"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/customer_list_customer_image" />
+
+        <TextView
+            android:id="@+id/customer_list_customer_email"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="benjaminCole123@gmail.com"
+            android:layout_marginLeft="15dp"
+            android:textColor="@color/darkGrey"
+            android:layout_marginTop="2dp"
+            android:textSize="15dp"
+            android:fontFamily="@font/roboto_regular"
+            app:layout_constraintStart_toEndOf="@+id/customer_list_customer_image"
+            app:layout_constraintTop_toBottomOf="@+id/customer_list_customer_name" />
+
+        <TextView
+            android:id="@+id/customer_list_customer_join_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="31/3/2022"
+            android:textSize="15dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/lightGrey"
+        tools:context=".HomePage">
+
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/appBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <include android:id="@+id/toolbar_layout_incl" layout="@layout/toolbar_layout" />
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <ScrollView
+            android:id="@+id/navbar_layout_include_sv"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:background="@color/white"
+            android:fillViewport="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/appBar">
+
+            <include android:id="@+id/navbar_layout_include" layout="@layout/navbar_layout" />
+        </ScrollView>
+        <!--    Body   -->
+        <HorizontalScrollView
+            android:id="@+id/horizontalScrollView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="20dp"
+            android:background="@drawable/box_coner_nopadding_white"
+            android:scrollbars="none"
+            app:layout_constraintEnd_toStartOf="@+id/cart_relativeLayout"
+            app:layout_constraintStart_toEndOf="@+id/navbar_layout_include_sv"
+            app:layout_constraintTop_toBottomOf="@+id/appBar">
+
+            <RadioGroup
+                android:id="@+id/product_category_radioGroup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingStart="10dp"
+                android:paddingTop="5dp"
+                android:paddingEnd="10dp"
+                android:paddingBottom="5dp">
+
+                <RadioButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/navbtn_selector"
+                    android:button="@android:color/transparent"
+                    android:padding="8dp"
+                    android:text="Starters"
+                    android:textColor="@drawable/categorybtn_text_color" />
+
+                <RadioButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/navbtn_selector"
+                    android:button="@android:color/transparent"
+                    android:padding="8dp"
+                    android:text="Breakfast"
+                    android:textColor="@drawable/categorybtn_text_color" />
+
+                <RadioButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/navbtn_selector"
+                    android:button="@android:color/transparent"
+                    android:fontFamily="@font/roboto_medium"
+                    android:padding="8dp"
+                    android:text="Lunch"
+                    android:textColor="@drawable/categorybtn_text_color" />
+
+                <RadioButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/navbtn_selector"
+                    android:button="@android:color/transparent"
+                    android:padding="8dp"
+                    android:text="Supper"
+                    android:textColor="@drawable/categorybtn_text_color" />
+
+                <RadioButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/navbtn_selector"
+                    android:button="@android:color/transparent"
+                    android:padding="8dp"
+                    android:text="Desserts"
+                    android:textColor="@drawable/categorybtn_text_color" />
+
+                <RadioButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/navbtn_selector"
+                    android:button="@android:color/transparent"
+                    android:padding="8dp"
+                    android:text="Beverages"
+                    android:textColor="@drawable/categorybtn_text_color" />
+
+                <RadioButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/navbtn_selector"
+                    android:button="@android:color/transparent"
+                    android:padding="8dp"
+                    android:text="Category 3"
+                    android:textColor="@drawable/categorybtn_text_color" />
+
+                <RadioButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/navbtn_selector"
+                    android:button="@android:color/transparent"
+                    android:padding="8dp"
+                    android:text="Category 3"
+                    android:textColor="@drawable/categorybtn_text_color" />
+
+                <RadioButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/navbtn_selector"
+                    android:button="@android:color/transparent"
+                    android:padding="8dp"
+                    android:text="Category 3"
+                    android:textColor="@drawable/categorybtn_text_color" />
+
+            </RadioGroup>
+        </HorizontalScrollView>
+        <!--    </LinearLayout>-->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/product_list_rv"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_margin="10dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/cart_relativeLayout"
+            app:layout_constraintStart_toEndOf="@+id/navbar_layout_include_sv"
+            app:layout_constraintTop_toBottomOf="@+id/horizontalScrollView"
+            tools:listitem="@layout/view_product_menu" />
+
+        <RelativeLayout
+            android:id="@+id/cart_relativeLayout"
+            android:layout_width="450dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/appBar">
+
+            <include android:id="@+id/cart_include" layout="@layout/cart_layout" />
+        </RelativeLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

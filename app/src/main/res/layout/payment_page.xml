@@ -1,0 +1,425 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/lightGrey"
+        tools:context=".PaymentPage">
+
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/appBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <include android:id="@+id/toolbar_layout_incl" layout="@layout/toolbar_layout" />
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <TextView
+            android:id="@+id/payment_back_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="20dp"
+            android:clickable="true"
+            android:drawableStart="@drawable/ic_left"
+            android:drawablePadding="10dp"
+            android:drawableTint="@color/darkOrange"
+            android:gravity="center"
+            android:text="Back"
+            android:textColor="@color/darkOrange"
+            android:textSize="18dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/appBar" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/payment_split_bill_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:layout_marginRight="25dp"
+            android:backgroundTint="@color/darkOrange"
+            android:paddingLeft="30dp"
+            android:paddingTop="10dp"
+            android:paddingRight="30dp"
+            android:paddingBottom="10dp"
+            android:text="Split Bill"
+            android:textAllCaps="false"
+            app:icon="@drawable/ic_split"
+            app:iconGravity="textStart"
+            app:iconPadding="10dp"
+            app:layout_constraintEnd_toStartOf="@+id/payment_bar_rl"
+            app:layout_constraintTop_toBottomOf="@id/appBar" />
+
+        <RelativeLayout
+            android:id="@+id/payment_order_detail_rl"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_margin="20dp"
+            android:background="@color/white"
+            android:elevation="2dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/payment_bar_rl"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/payment_back_btn">
+
+            <TextView
+                android:id="@+id/textView1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentTop="true"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="15dp"
+                android:layout_marginRight="10dp"
+                android:text="Order ID"
+                android:textSize="25dp" />
+
+            <TextView
+                android:id="@+id/payment_order_detail_order_id"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:layout_toRightOf="@+id/textView1"
+                android:text="#999999"
+                android:textSize="25dp" />
+
+            <TextView
+                android:id="@+id/payment_order_detail_customer_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/textView1"
+                android:layout_alignParentStart="true"
+                android:layout_marginLeft="15dp"
+                android:fontFamily="@font/roboto_regular"
+                android:text="Vincent Lobo"
+                android:textColor="@color/raisinBlack" />
+
+            <TextView
+                android:id="@+id/payment_order_detail_type"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/textView1"
+                android:layout_alignParentEnd="true"
+                android:layout_marginRight="15dp"
+                android:fontFamily="@font/roboto_regular"
+                android:text="Dine-in - T-34"
+                android:textColor="@color/raisinBlack" />
+
+            <View
+                android:id="@+id/line1"
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:layout_below="@+id/payment_order_detail_type"
+                android:layout_marginTop="10dp"
+                android:background="@color/lightGrey" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/payment_order_detail_product_rv"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_above="@+id/textView8"
+                android:layout_below="@+id/line1"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginRight="15dp"
+                android:layout_marginBottom="10dp"
+                tools:listitem="@layout/view_payment_product" />
+
+
+            <TextView
+                android:id="@+id/textView8"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@id/textView7"
+                android:layout_marginLeft="30dp"
+                android:fontFamily="@font/roboto_regular"
+                android:text="Subtotal" />
+
+            <TextView
+                android:id="@+id/payment_subtotal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/payment_tax"
+                android:layout_alignParentEnd="true"
+                android:layout_marginRight="30dp"
+                android:text="RM 200.00" />
+
+            <TextView
+                android:id="@+id/textView7"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@id/textView6"
+                android:layout_marginLeft="30dp"
+                android:layout_marginTop="5dp"
+                android:fontFamily="@font/roboto_regular"
+                android:text="Tax" />
+
+            <TextView
+                android:id="@+id/payment_tax"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/payment_discount"
+                android:layout_alignParentEnd="true"
+                android:layout_marginTop="5dp"
+                android:layout_marginRight="30dp"
+                android:text="RM 45.00" />
+
+            <TextView
+                android:id="@+id/textView6"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@id/textView5"
+                android:layout_marginLeft="30dp"
+                android:layout_marginTop="5dp"
+                android:fontFamily="@font/roboto_regular"
+                android:text="Discount" />
+
+            <TextView
+                android:id="@+id/payment_discount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/payment_grand_total"
+                android:layout_alignParentEnd="true"
+                android:layout_marginTop="5dp"
+                android:layout_marginRight="30dp"
+                android:text="- RM 50.00" />
+
+            <TextView
+                android:id="@+id/textView5"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/payment_order_detail_creditBalance_rl"
+                android:layout_marginLeft="30dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:text="Grand Total"
+                android:textSize="18dp" />
+
+            <TextView
+                android:id="@+id/payment_grand_total"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/payment_order_detail_creditBalance_rl"
+                android:layout_alignParentEnd="true"
+                android:layout_marginTop="10dp"
+                android:layout_marginRight="30dp"
+                android:layout_marginBottom="10dp"
+                android:text="RM 195.00"
+                android:textSize="18dp" />
+
+            <RelativeLayout
+                android:id="@+id/payment_order_detail_creditBalance_rl"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/payment_order_detail_confirm_btn"
+                android:layout_marginLeft="15dp"
+                android:layout_marginRight="15dp"
+                android:background="@drawable/box_coner_nopadding_white"
+                android:backgroundTint="@color/lightGrey"
+                android:padding="15dp">
+
+                <TextView
+                    android:id="@+id/textView3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Credit"
+                    android:textSize="18dp" />
+
+                <TextView
+                    android:id="@+id/payment_order_detail_credit"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:text="RM 200.00"
+                    android:textSize="18dp" />
+
+                <TextView
+                    android:id="@+id/textView4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/textView3"
+                    android:layout_marginTop="5dp"
+                    android:text="Balance"
+                    android:textSize="18dp" />
+
+                <TextView
+                    android:id="@+id/payment_order_detail_balance"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/payment_order_detail_credit"
+                    android:layout_alignParentEnd="true"
+                    android:layout_marginTop="5dp"
+                    android:text="- RM 5.00"
+                    android:textSize="18dp" />
+            </RelativeLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/payment_order_detail_confirm_btn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginRight="15dp"
+                android:layout_marginBottom="15dp"
+                android:backgroundTint="@color/green"
+                android:padding="15dp"
+                android:text="Confirm Payment"
+                android:textAllCaps="false"
+                app:icon="@drawable/ic_payment"
+                app:iconGravity="textStart" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/payment_bar_rl"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginRight="15dp"
+            android:background="@drawable/box_coner_nopadding_white"
+            android:elevation="2dp"
+            android:padding="20dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/payment_order_detail_rl"
+            app:layout_constraintTop_toBottomOf="@+id/appBar">
+
+            <ImageButton
+                android:id="@+id/payment_bar_add_tip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:background="@drawable/box_corner_icon_btn"
+                android:padding="12dp"
+                android:src="@drawable/ic_tip"
+                android:tint="@color/raisinBlack" />
+
+            <TextView
+                android:id="@+id/textView2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:layout_toRightOf="@+id/payment_bar_add_tip"
+                android:text="Payable Amount"
+                android:textSize="20dp" />
+
+            <TextView
+                android:id="@+id/payment_bar_payable_amount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/textView2"
+                android:layout_marginLeft="15dp"
+                android:layout_toRightOf="@+id/payment_bar_add_tip"
+                android:text="RM 195.00"
+                android:textColor="@color/green"
+                android:textSize="25dp" />
+
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/payment_bar_add_customer_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_marginTop="10dp"
+                android:layout_marginRight="20dp"
+                android:backgroundTint="@color/darkOrange"
+                android:padding="10dp"
+                android:text="Add New Customer"
+                android:textAllCaps="false"
+                android:visibility="gone"
+                app:icon="@drawable/ic_add"
+                app:iconGravity="textStart" />
+
+            <RelativeLayout
+                android:id="@+id/payment_bar_customer_rl"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:layout_toRightOf="@+id/textView2">
+
+                <ImageView
+                    android:id="@+id/payment_bar_customer_image"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:layout_centerVertical="true"
+                    android:layout_toLeftOf="@+id/payment_bar_customer_name"
+                    android:src="@drawable/face2" />
+
+                <TextView
+                    android:id="@+id/payment_bar_customer_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginRight="20dp"
+                    android:layout_toLeftOf="@+id/payment_bar_remove_customer_btn"
+                    android:text="Vincent Lobo"
+                    android:textSize="15dp" />
+
+                <TextView
+                    android:id="@+id/payment_bar_customer_id"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/payment_bar_customer_name"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_toRightOf="@+id/payment_bar_customer_image"
+                    android:text="#999999"
+                    android:textColor="@color/darkGrey"
+                    android:textSize="15dp" />
+
+                <ImageButton
+                    android:id="@+id/payment_bar_remove_customer_btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/box_corner_icon_btn"
+                    android:padding="12dp"
+                    android:src="@drawable/ic_delete"
+                    android:tint="@color/raisinBlack" />
+            </RelativeLayout>
+        </RelativeLayout>
+
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/payment_tabs"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="25dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginRight="15dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/payment_order_detail_rl"
+            app:layout_constraintTop_toBottomOf="@+id/payment_bar_rl"
+            app:tabIndicatorColor="@color/darkOrange"
+            app:tabSelectedTextColor="@color/darkOrange"
+            app:tabRippleColor="@color/lightOrange"
+            app:tabUnboundedRipple="true"
+            app:tabTextColor="@color/raisinBlack" />
+
+        <androidx.viewpager.widget.ViewPager
+            android:id="@+id/view_pager"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginLeft="25dp"
+            android:layout_marginRight="15dp"
+            android:layout_marginBottom="20dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/payment_order_detail_rl"
+            app:layout_constraintTop_toBottomOf="@+id/payment_tabs" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

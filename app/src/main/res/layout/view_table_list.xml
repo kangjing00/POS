@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/item_card"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:background="@drawable/box_coner_nopadding_white"
+        android:elevation="2dp">
+
+        <View
+            android:id="@+id/table_list_line"
+            android:layout_width="0dp"
+            android:layout_height="10dp"
+            android:background="@drawable/box_btm_corner"
+            android:backgroundTint="@color/green"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintCircleRadius="5dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <ImageView
+            android:id="@+id/table_list_table_image"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_margin="20dp"
+            android:scaleType="centerCrop"
+            android:scaleX="2"
+            android:scaleY="2"
+            android:src="@drawable/ic_square_table_4"
+            android:tint="@color/darkGrey"
+            app:layout_constraintBottom_toTopOf="@+id/table_list_line"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/table_list_table_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="T42"
+            app:layout_constraintBottom_toTopOf="@+id/table_list_order_id"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed" />
+
+        <TextView
+            android:id="@+id/table_list_order_id"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="#999999"
+            app:layout_constraintBottom_toTopOf="@+id/table_list_line"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/table_list_table_name" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

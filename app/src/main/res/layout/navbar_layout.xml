@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent">
+
+        <RadioGroup
+            android:id="@+id/navBar_navBtn_group"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <RadioButton
+                android:id="@+id/navBar_home"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginRight="5dp"
+                android:background="@drawable/navbtn_selector"
+                android:button="@android:color/transparent"
+                android:drawableTop="@drawable/ic_home"
+                android:drawableTint="@drawable/navbtn_icon_color"
+                android:paddingTop="18dp"
+                android:paddingBottom="18dp"
+                android:text="Home"
+                android:textAlignment="center"
+                android:textColor="@drawable/navbtn_text_color"
+                android:textSize="10dp" />
+
+            <RadioButton
+                android:id="@+id/navBar_customers"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:background="@drawable/navbtn_selector"
+                android:button="@android:color/transparent"
+                android:drawableTop="@drawable/ic_customer"
+                android:drawableTint="@drawable/navbtn_icon_color"
+                android:paddingTop="18dp"
+                android:paddingBottom="18dp"
+                android:text="Customers"
+                android:textAlignment="center"
+                android:textColor="@drawable/navbtn_text_color"
+                android:textSize="10dp" />
+
+            <RadioButton
+                android:id="@+id/navBar_tables"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:background="@drawable/navbtn_selector"
+                android:button="@android:color/transparent"
+                android:drawableTop="@drawable/ic_select_table"
+                android:drawableTint="@drawable/navbtn_icon_color"
+                android:paddingTop="18dp"
+                android:paddingBottom="18dp"
+                android:text="Tables"
+                android:textAlignment="center"
+                android:textColor="@drawable/navbtn_text_color"
+                android:textSize="10dp" />
+
+            <RadioButton
+                android:id="@+id/navBar_cashier"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:background="@drawable/navbtn_selector"
+                android:button="@android:color/transparent"
+                android:drawableTop="@drawable/ic_cashier"
+                android:drawableTint="@drawable/navbtn_icon_color"
+                android:paddingTop="18dp"
+                android:paddingBottom="18dp"
+                android:text="Cashier"
+                android:textAlignment="center"
+                android:textColor="@drawable/navbtn_text_color"
+                android:textSize="10dp" />
+
+            <RadioButton
+                android:id="@+id/navBar_orders"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:background="@drawable/navbtn_selector"
+                android:button="@android:color/transparent"
+                android:drawableTop="@drawable/ic_order"
+                android:drawableTint="@drawable/navbtn_icon_color"
+                android:paddingTop="18dp"
+                android:paddingBottom="18dp"
+                android:text="Orders"
+                android:textAlignment="center"
+                android:textColor="@drawable/navbtn_text_color"
+                android:textSize="10dp" />
+
+            <RadioButton
+                android:id="@+id/navBar_reports"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:background="@drawable/navbtn_selector"
+                android:button="@android:color/transparent"
+                android:drawableTop="@drawable/ic_report"
+                android:drawableTint="@drawable/navbtn_icon_color"
+                android:paddingTop="18dp"
+                android:paddingBottom="18dp"
+                android:text="Reports"
+                android:textAlignment="center"
+                android:textColor="@drawable/navbtn_text_color"
+                android:textSize="10dp" />
+
+            <RadioButton
+                android:id="@+id/navBar_settings"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:background="@drawable/navbtn_selector"
+                android:button="@android:color/transparent"
+                android:drawableTop="@drawable/ic_setting"
+                android:drawableTint="@drawable/navbtn_icon_color"
+                android:paddingTop="18dp"
+                android:paddingBottom="18dp"
+                android:text="Settings"
+                android:textAlignment="center"
+                android:textColor="@drawable/navbtn_text_color"
+                android:textSize="10dp" />
+        </RadioGroup>
+
+        <ImageButton
+            android:id="@+id/navBar_profile"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:background="@drawable/sphere_btn"
+            android:scaleType="fitCenter"
+            app:layout_constraintBottom_toTopOf="@id/navbar_logout"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/navbar_logout"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:drawableTop="@drawable/ic_logout"
+            android:text="Logout"
+            android:gravity="center"
+            android:textSize="10dp"
+            android:layout_margin="5dp"
+            android:backgroundTint="@color/white"
+            android:textColor="@color/darkGrey"
+            android:paddingTop="15dp"
+            android:paddingBottom="18dp"
+            android:drawableTint="@color/darkGrey" />
+        <!--<LinearLayout-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:orientation="vertical">-->
+
+        <!--    <TextView-->
+        <!--        android:id="@+id/navBar_home"-->
+        <!--        android:layout_width="75dp"-->
+        <!--        android:layout_height="wrap_content"-->
+        <!--        android:text="Home"-->
+        <!--        android:gravity="center"-->
+        <!--        android:drawableTop="@drawable/ic_home"-->
+        <!--        android:textColor="@drawable/navbtn_text_color"-->
+
+        <!--        android:background="@drawable/navbtn_normal"-->
+        <!--        android:layout_margin="5dp"-->
+        <!--        android:padding="10dp"-->
+        <!--        android:textSize="12dp"-->
+        <!--        android:layout_centerHorizontal="true"/>-->
+
+        <!--    <TextView-->
+        <!--        android:id="@+id/navBar_customer"-->
+        <!--        android:layout_width="75dp"-->
+        <!--        android:layout_height="wrap_content"-->
+        <!--        android:text="Customer"-->
+        <!--        android:gravity="center"-->
+        <!--        android:drawableTop="@drawable/ic_customer"-->
+        <!--        android:background="@color/white"-->
+        <!--        android:layout_margin="5dp"-->
+        <!--        android:padding="10dp"-->
+        <!--        android:layout_below="@+id/navBar_home"-->
+        <!--        android:textSize="12dp"-->
+        <!--        android:layout_centerHorizontal="true"/>-->
+
+        <!--    <TextView-->
+        <!--        android:id="@+id/navBar_table"-->
+        <!--        android:layout_width="75dp"-->
+        <!--        android:layout_height="wrap_content"-->
+        <!--        android:text="Tables"-->
+        <!--        android:drawableTop="@drawable/ic_select_table"-->
+        <!--        android:background="@color/white"-->
+        <!--        android:layout_margin="5dp"-->
+        <!--        android:padding="10dp"-->
+        <!--        android:layout_below="@+id/navBar_customer"-->
+        <!--        android:textSize="12dp"-->
+        <!--        android:gravity="center"-->
+        <!--        android:layout_centerHorizontal="true"/>-->
+
+        <!--    <TextView-->
+        <!--        android:id="@+id/navBar_cashier"-->
+        <!--        android:layout_width="75dp"-->
+        <!--        android:layout_height="wrap_content"-->
+        <!--        android:text="Cashier"-->
+        <!--        android:drawableTop="@drawable/ic_cashier"-->
+        <!--        android:background="@color/white"-->
+        <!--        android:layout_margin="5dp"-->
+        <!--        android:padding="10dp"-->
+        <!--        android:layout_below="@+id/navBar_table"-->
+        <!--        android:textSize="12dp"-->
+        <!--        android:gravity="center"-->
+        <!--        android:layout_centerHorizontal="true"/>-->
+
+        <!--    <TextView-->
+        <!--        android:id="@+id/navBar_order"-->
+        <!--        android:layout_width="75dp"-->
+        <!--        android:layout_height="wrap_content"-->
+        <!--        android:text="Order"-->
+        <!--        android:drawableTop="@drawable/ic_order"-->
+        <!--        android:background="@color/white"-->
+        <!--        android:layout_margin="5dp"-->
+        <!--        android:padding="10dp"-->
+        <!--        android:layout_below="@+id/navBar_cashier"-->
+        <!--        android:textSize="12dp"-->
+        <!--        android:gravity="center"-->
+        <!--        android:layout_centerHorizontal="true"/>-->
+
+        <!--    <TextView-->
+        <!--        android:id="@+id/navBar_report"-->
+        <!--        android:layout_width="75dp"-->
+        <!--        android:layout_height="wrap_content"-->
+        <!--        android:text="Reports"-->
+        <!--        android:drawableTop="@drawable/ic_report"-->
+        <!--        android:background="@color/white"-->
+        <!--        android:layout_margin="5dp"-->
+        <!--        android:padding="10dp"-->
+        <!--        android:layout_below="@+id/navBar_order"-->
+        <!--        android:textSize="12dp"-->
+        <!--        android:gravity="center"-->
+        <!--        android:layout_centerHorizontal="true"/>-->
+
+        <!--    <TextView-->
+        <!--        android:id="@+id/navBar_setting"-->
+        <!--        android:layout_width="75dp"-->
+        <!--        android:layout_height="wrap_content"-->
+        <!--        android:text="Settings"-->
+        <!--        android:drawableTop="@drawable/ic_setting"-->
+        <!--        android:background="@color/white"-->
+        <!--        android:layout_margin="5dp"-->
+        <!--        android:padding="10dp"-->
+        <!--        android:layout_below="@+id/navBar_report"-->
+        <!--        android:textSize="12dp"-->
+        <!--        android:gravity="center"-->
+        <!--        android:layout_centerHorizontal="true"/>-->
+        <!--</LinearLayout>-->
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

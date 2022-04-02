@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+    </data>
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="10dp"
+        app:cardPreventCornerOverlap="true"
+        android:id="@+id/item_card">
+
+        <View
+            android:id="@+id/product_order_green_line"
+            android:layout_width="5dp"
+            android:layout_height="match_parent"
+            android:background="@color/green" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="10dp">
+
+
+            <!--    Clicked src = ic_down / ic_right -->
+            <ImageButton
+                android:id="@+id/product_order_setting_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@android:color/transparent"
+                android:src="@drawable/ic_down"
+                android:tint="@color/darkGrey"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/product_order_quantity"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_margin="10dp"
+                android:text="1"
+                app:layout_constraintStart_toEndOf="@+id/product_order_setting_btn"
+                app:layout_constraintTop_toTopOf="parent" />
+
+
+            <TextView
+                android:id="@+id/product_order_product_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Spicy Shrimp Soup"
+                android:layout_margin="10dp"
+                app:layout_constraintBottom_toTopOf="@+id/product_order_product_option"
+                app:layout_constraintStart_toEndOf="@id/product_order_quantity"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/product_order_product_option"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Medium - Half Grilled"
+                android:textSize="8dp"
+                android:layout_marginLeft="10dp"
+                android:textColor="@color/darkGrey"
+                app:layout_constraintTop_toBottomOf="@+id/product_order_product_name"
+                app:layout_constraintStart_toEndOf="@+id/product_order_quantity" />
+
+
+            <TextView
+                android:id="@+id/product_order_product_subtotal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="RM 100"
+                android:layout_marginTop="10dp"
+                android:layout_marginRight="20dp"
+                app:layout_constraintEnd_toStartOf="@+id/product_order_cancel_product"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/product_order_product_price"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="20dp"
+                android:text="RM 150"
+                android:textSize="8dp"
+                android:background="@drawable/strike_through"
+                android:textColor="@color/darkGrey"
+                app:layout_constraintTop_toBottomOf="@+id/product_order_product_subtotal"
+                app:layout_constraintEnd_toStartOf="@+id/product_order_cancel_product" />
+
+
+            <ImageButton
+                android:id="@+id/product_order_cancel_product"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@color/white"
+                android:tint="@color/darkGrey"
+                android:src="@drawable/ic_cancel"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                android:layout_margin="10dp" />
+
+            <RelativeLayout
+                android:id="@+id/product_order_quantity_discount_rl"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_margin="10dp"
+                android:orientation="vertical"
+                app:layout_constraintStart_toEndOf="@+id/product_order_quantity"
+                app:layout_constraintTop_toBottomOf="@+id/product_order_product_option">
+
+                <TextView
+                    android:id="@+id/textView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/roboto_regular"
+                    android:text="Quantity" />
+
+                <EditText
+                    android:id="@+id/product_order_quantity_et"
+                    android:layout_width="150dp"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/custom_input"
+                    android:maxLines="1"
+                    android:padding="15dp"
+                    android:hint="1"
+                    android:textDirection="rtl"
+                    android:textSize="12dp"
+                    android:layout_below="@+id/textView" />
+
+                <TextView
+                    android:id="@+id/textView1"
+                    android:layout_width="150dp"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/roboto_regular"
+                    android:text="Discount(%)"
+                    android:layout_marginLeft="20dp"
+                    android:layout_toRightOf="@+id/product_order_quantity_et" />
+
+                <EditText
+                    android:id="@+id/product_order_discount_et"
+                    android:layout_width="150dp"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/custom_input"
+                    android:maxLines="1"
+                    android:padding="15dp"
+                    android:hint="20"
+                    android:layout_marginLeft="20dp"
+                    android:textDirection="rtl"
+                    android:textSize="12dp"
+                    android:layout_below="@+id/textView1"
+                    android:layout_toRightOf="@+id/product_order_quantity_et" />
+            </RelativeLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.cardview.widget.CardView>
+</layout>
