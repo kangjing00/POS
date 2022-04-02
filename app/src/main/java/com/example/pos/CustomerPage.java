@@ -49,14 +49,17 @@ public class CustomerPage extends AppCompatActivity {
 
         //OnClickListener
         //body
+        {
         binding.customerCurrentRemoveBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Toast.makeText(contextpage, "Button Clicked", Toast.LENGTH_SHORT).show();
             }
         });
+        }
 
         //Toolbar buttons
+        {
         binding.toolbarLayoutIncl.toolbarSearchIcon.setOnClickListener(new View.OnClickListener(){
                @Override
                public void onClick(View view) {
@@ -88,7 +91,9 @@ public class CustomerPage extends AppCompatActivity {
                 }
             }
         );
+        }
         //Navigation bar buttons
+        {
         binding.navbarLayoutInclude.navBarHome.setOnClickListener(new View.OnClickListener(){
                @Override
                public void onClick(View view) {
@@ -156,7 +161,9 @@ public class CustomerPage extends AppCompatActivity {
                }
            }
         );
+        }
         //Cart buttons
+        {
         binding.cartInclude.cartOrderDiscountBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
@@ -219,6 +226,7 @@ public class CustomerPage extends AppCompatActivity {
                 binding.cartInclude.cartOrderSummaryDiscountRl.setVisibility(View.GONE);
             }
         });
+        }
     }
 
     private void showCartOrderAddDiscountPopup(View view) {
@@ -242,6 +250,7 @@ public class CustomerPage extends AppCompatActivity {
         add_popup_negative_btn = (Button)layout.findViewById(R.id.add_discount_popup_negative_btn);
         add_popup_positive_btn = (Button)layout.findViewById(R.id.add_discount_popup_positive_btn);
         add_popup_et = (EditText)layout.findViewById(R.id.add_discount_popup_et);
+
 
         add_popup_negative_btn.setOnClickListener(new View.OnClickListener(){
             @Override

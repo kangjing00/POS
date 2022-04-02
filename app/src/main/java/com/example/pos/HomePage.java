@@ -69,6 +69,7 @@ public class HomePage extends AppCompatActivity {
 
         //OnClickListener
         //Toolbar buttons
+        {
         binding.toolbarLayoutIncl.toolbarSearchIcon.setOnClickListener(new View.OnClickListener(){
                @Override
                public void onClick(View view) {
@@ -100,7 +101,9 @@ public class HomePage extends AppCompatActivity {
                 }
             }
         );
+        }
         //Navigation bar buttons
+        {
         binding.navbarLayoutInclude.navBarHome.setOnClickListener(new View.OnClickListener(){
                @Override
                public void onClick(View view) {
@@ -169,7 +172,9 @@ public class HomePage extends AppCompatActivity {
                }
            }
         );
+        }
         //Cart buttons
+        {
         binding.cartInclude.cartOrderDiscountBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
@@ -232,6 +237,7 @@ public class HomePage extends AppCompatActivity {
                 binding.cartInclude.cartOrderSummaryDiscountRl.setVisibility(View.GONE);
             }
         });
+        }
     }
 
     private void showCartOrderAddDiscountPopup(View view) {
