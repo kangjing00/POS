@@ -48,6 +48,7 @@ public class TablePage extends AppCompatActivity {
 
         //OnClickListener
         //body
+        {
         binding.tableNoticeBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -88,7 +89,9 @@ public class TablePage extends AppCompatActivity {
                 }
             }
         );
+        }
         //Navigation bar buttons
+        {
         binding.navbarLayoutInclude.navBarHome.setOnClickListener(new View.OnClickListener(){
                   @Override
                   public void onClick(View view) {
@@ -157,6 +160,7 @@ public class TablePage extends AppCompatActivity {
                 }
             }
         );
+        }
     }
 
     private void showAddonAndProceed(View view) {

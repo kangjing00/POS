@@ -302,7 +302,7 @@
                 android:background="@drawable/box_corner_icon_btn"
                 android:padding="12dp"
                 android:src="@drawable/ic_tip"
-                android:tint="@color/raisinBlack" />
+                app:tint="@color/raisinBlack" />
 
             <TextView
                 android:id="@+id/textView2"
@@ -390,36 +390,46 @@
                     android:background="@drawable/box_corner_icon_btn"
                     android:padding="12dp"
                     android:src="@drawable/ic_delete"
-                    android:tint="@color/raisinBlack" />
+                    app:tint="@color/raisinBlack" />
             </RelativeLayout>
         </RelativeLayout>
 
         <com.google.android.material.tabs.TabLayout
-            android:id="@+id/payment_tabs"
+            android:id="@+id/payment_method_tl"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginLeft="25dp"
             android:layout_marginTop="20dp"
             android:layout_marginRight="15dp"
+            android:elevation="2dp"
+            android:background="@drawable/box_top_corner"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/payment_order_detail_rl"
             app:layout_constraintTop_toBottomOf="@+id/payment_bar_rl"
             app:tabIndicatorColor="@color/darkOrange"
             app:tabSelectedTextColor="@color/darkOrange"
             app:tabRippleColor="@color/lightOrange"
+            app:tabGravity="fill"
+            app:tabMaxWidth="0dp"
+            app:tabMode="fixed"
+            app:tabPadding="15dp"
             app:tabUnboundedRipple="true"
-            app:tabTextColor="@color/raisinBlack" />
+            app:tabIndicatorHeight="4dp"
+            app:tabTextColor="@color/raisinBlack"
+            app:tabTextAppearance="@style/CustomTabAllCapsFalse"/>
 
-        <androidx.viewpager.widget.ViewPager
-            android:id="@+id/view_pager"
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/payment_method_view_pager"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_marginLeft="25dp"
             android:layout_marginRight="15dp"
             android:layout_marginBottom="20dp"
+            android:elevation="2dp"
+            android:background="@drawable/box_btm_corner"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/payment_order_detail_rl"
-            app:layout_constraintTop_toBottomOf="@+id/payment_tabs" />
+            app:layout_constraintTop_toBottomOf="@+id/payment_method_tl" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
