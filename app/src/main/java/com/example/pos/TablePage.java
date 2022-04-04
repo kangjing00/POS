@@ -21,10 +21,10 @@ import com.google.android.material.button.MaterialButton;
 
 public class TablePage extends AppCompatActivity {
 
-    TablePageBinding binding;
+    private TablePageBinding binding;
 
-    String statuslogin;
-    Context contextpage;
+    private String statuslogin;
+    private Context contextpage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,6 +97,7 @@ public class TablePage extends AppCompatActivity {
                   public void onClick(View view) {
                       Intent intent = new Intent(contextpage, HomePage.class);
                       startActivity(intent);
+                      finish();
                       Toast.makeText(contextpage, "Home Button Clicked", Toast.LENGTH_SHORT).show();
                   }
               }
@@ -106,7 +107,7 @@ public class TablePage extends AppCompatActivity {
                    public void onClick(View view) {
                        Intent intent = new Intent(contextpage, CustomerPage.class);
                        startActivity(intent);
-
+                       finish();
                        Toast.makeText(contextpage, "Customers Button Clicked", Toast.LENGTH_SHORT).show();
                    }
                }

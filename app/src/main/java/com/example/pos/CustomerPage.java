@@ -99,6 +99,7 @@ public class CustomerPage extends AppCompatActivity {
                public void onClick(View view) {
                    Intent intent = new Intent(contextpage, HomePage.class);
                    startActivity(intent);
+                   finish();
                    Toast.makeText(contextpage, "Home Button Clicked", Toast.LENGTH_SHORT).show();
                }
            }
@@ -115,6 +116,7 @@ public class CustomerPage extends AppCompatActivity {
                public void onClick(View view) {
                    Intent intent = new Intent(contextpage, TablePage.class);
                    startActivity(intent);
+                   finish();
                    Toast.makeText(contextpage, "Tables Button Clicked", Toast.LENGTH_SHORT).show();
                }
            }

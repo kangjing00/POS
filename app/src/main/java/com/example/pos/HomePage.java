@@ -32,15 +32,14 @@ import java.util.ArrayList;
 
 public class HomePage extends AppCompatActivity {
 
-    HomePageBinding binding;
+    private HomePageBinding binding;
 
     //Cart //Popup
-    Button add_popup_negative_btn, add_popup_positive_btn;
-    EditText add_popup_et;
+    private Button add_popup_negative_btn, add_popup_positive_btn;
+    private EditText add_popup_et;
 
-
-    String statuslogin;
-    Context contextpage;
+    private String statuslogin;
+    private Context contextpage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,7 +115,7 @@ public class HomePage extends AppCompatActivity {
                public void onClick(View view) {
                    Intent intent = new Intent(contextpage, CustomerPage.class);
                    startActivity(intent);
-
+                   finish();
                    Toast.makeText(contextpage, "Customers Button Clicked", Toast.LENGTH_SHORT).show();
                }
            }
@@ -126,6 +125,7 @@ public class HomePage extends AppCompatActivity {
                public void onClick(View view) {
                    Intent intent = new Intent(contextpage, TablePage.class);
                    startActivity(intent);
+                   finish();
                    Toast.makeText(contextpage, "Tables Button Clicked", Toast.LENGTH_SHORT).show();
                }
            }

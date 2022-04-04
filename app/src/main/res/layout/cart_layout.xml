@@ -94,7 +94,7 @@
                 android:background="@drawable/box_corner_icon_btn"
                 android:padding="12dp"
                 android:src="@drawable/ic_add"
-                android:tint="@color/raisinBlack" />
+                app:tint="@color/raisinBlack" />
 
             <ImageButton
                 android:id="@+id/cart_btnScan"
@@ -106,7 +106,7 @@
                 android:background="@drawable/box_corner_icon_btn"
                 android:padding="12dp"
                 android:src="@drawable/ic_barcode"
-                android:tint="@color/raisinBlack" />
+                app:tint="@color/raisinBlack" />
 
             <ImageButton
                 android:id="@+id/cart_btnReload"
@@ -118,7 +118,7 @@
                 android:background="@drawable/box_corner_icon_btn"
                 android:padding="12dp"
                 android:src="@drawable/ic_reload"
-                android:tint="@color/raisinBlack" />
+                app:tint="@color/raisinBlack" />
         </RelativeLayout>
 
         <View
@@ -188,7 +188,6 @@
                 android:clickable="true"
                 android:text="Note"
                 android:textColor="@color/darkOrange" />
-
         </RelativeLayout>
 
         <RelativeLayout
@@ -249,7 +248,7 @@
                     android:layout_centerVertical="true"
                     android:background="@color/white"
                     android:src="@drawable/ic_cancel"
-                    android:tint="@color/darkGrey" />
+                    app:tint="@color/darkGrey" />
             </RelativeLayout>
 
             <TextView

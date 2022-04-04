@@ -4,7 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-
+        <variable
+            name="paymentPageViewModel"
+            type="com.example.pos.PaymentPageViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -93,6 +95,20 @@
                 android:textSize="25dp" />
 
             <TextView
+                android:id="@+id/payment_order_detail_view_all_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/payment_order_detail_type"
+                android:layout_alignParentEnd="true"
+                android:layout_marginRight="15dp"
+                android:drawableStart="@drawable/ic_eye"
+                android:drawablePadding="10dp"
+                android:gravity="center"
+                android:drawableTint="@color/darkOrange"
+                android:text="View all"
+                android:textColor="@color/darkOrange" />
+
+            <TextView
                 android:id="@+id/payment_order_detail_customer_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -151,7 +167,7 @@
                 android:layout_above="@+id/payment_tax"
                 android:layout_alignParentEnd="true"
                 android:layout_marginRight="30dp"
-                android:text="RM 200.00" />
+                android:text="200.00" />
 
             <TextView
                 android:id="@+id/textView7"
@@ -171,7 +187,7 @@
                 android:layout_alignParentEnd="true"
                 android:layout_marginTop="5dp"
                 android:layout_marginRight="30dp"
-                android:text="RM 45.00" />
+                android:text="45.00" />
 
             <TextView
                 android:id="@+id/textView6"
@@ -191,7 +207,7 @@
                 android:layout_alignParentEnd="true"
                 android:layout_marginTop="5dp"
                 android:layout_marginRight="30dp"
-                android:text="- RM 50.00" />
+                android:text="- 50.00" />
 
             <TextView
                 android:id="@+id/textView5"
@@ -201,7 +217,7 @@
                 android:layout_marginLeft="30dp"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
-                android:text="Grand Total"
+                android:text="Grand Total (RM)"
                 android:textSize="18dp" />
 
             <TextView
@@ -213,7 +229,7 @@
                 android:layout_marginTop="10dp"
                 android:layout_marginRight="30dp"
                 android:layout_marginBottom="10dp"
-                android:text="RM 195.00"
+                android:text="195.00"
                 android:textSize="18dp" />
 
             <RelativeLayout
@@ -231,7 +247,7 @@
                     android:id="@+id/textView3"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Credit"
+                    android:text="Credit (RM)"
                     android:textSize="18dp" />
 
                 <TextView
@@ -239,7 +255,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
-                    android:text="RM 200.00"
+                    android:text="@{paymentPageViewModel.payment_order_detail_credit}"
                     android:textSize="18dp" />
 
                 <TextView
@@ -248,7 +264,7 @@
                     android:layout_height="wrap_content"
                     android:layout_below="@+id/textView3"
                     android:layout_marginTop="5dp"
-                    android:text="Balance"
+                    android:text="Balance (RM)"
                     android:textSize="18dp" />
 
                 <TextView
@@ -258,7 +274,7 @@
                     android:layout_below="@+id/payment_order_detail_credit"
                     android:layout_alignParentEnd="true"
                     android:layout_marginTop="5dp"
-                    android:text="- RM 5.00"
+                    android:text="- 5.00"
                     android:textSize="18dp" />
             </RelativeLayout>
 

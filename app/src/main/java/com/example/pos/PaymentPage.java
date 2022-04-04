@@ -2,6 +2,7 @@ package com.example.pos;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -18,9 +19,10 @@ import com.google.android.material.tabs.TabLayoutMediator;
 
 public class PaymentPage extends AppCompatActivity {
 
-    PaymentPageBinding binding;
-    PaymentMethodPagerAdapter paymentMethodPagerAdapter;
+    private PaymentPageBinding binding;
+    private PaymentMethodPagerAdapter paymentMethodPagerAdapter;
     private String[] titles = new String[]{"Cash", "Other Modes"};
+    private PaymentPageViewModel viewModel;
 
     String statuslogin;
     Context contextpage;
@@ -30,7 +32,9 @@ public class PaymentPage extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         contextpage = PaymentPage.this;
         binding = DataBindingUtil.setContentView(this, R.layout.payment_page);
-
+        viewModel = new ViewModelProvider(this).get(PaymentPageViewModel.class);
+        binding.setPaymentPageViewModel(viewModel);
+        binding.setLifecycleOwner(this);
         //Body Setting
         paymentMethodPagerAdapter = new PaymentMethodPagerAdapter(this);
 
@@ -52,6 +56,18 @@ public class PaymentPage extends AppCompatActivity {
             public void onClick(View view) {
                 finish();
                 Toast.makeText(contextpage, "Back Button Clicked", Toast.LENGTH_SHORT).show();
+            }
+        });
+        binding.paymentBarAddTip.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(contextpage, "Add Tip Button Clicked", Toast.LENGTH_SHORT).show();
+            }
+        });
+        binding.paymentOrderDetailViewAllBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(contextpage, "View All Button Clicked", Toast.LENGTH_SHORT).show();
             }
         });
         //Toolbar buttons

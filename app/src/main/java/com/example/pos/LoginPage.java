@@ -8,8 +8,8 @@ import android.os.Bundle;
 
 public class LoginPage extends AppCompatActivity {
 
-    Context contextpage;
-    String statuslogin;
+    private Context contextpage;
+    private String statuslogin;
 
 
 

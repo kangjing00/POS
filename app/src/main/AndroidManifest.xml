@@ -15,7 +15,8 @@
         <activity android:name=".CustomerPage" />
         <activity android:name=".HomePage" />
         <activity android:name=".LoginPage" />
-        <activity android:name=".SplashScreen">
+        <activity android:name=".SplashScreen"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
