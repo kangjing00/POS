@@ -33,9 +33,9 @@
                 android:layout_height="wrap_content"
                 android:backgroundTint="@android:color/transparent"
                 android:src="@drawable/ic_down"
-                android:tint="@color/darkGrey"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="@color/darkGrey" />
 
             <TextView
                 android:id="@+id/product_order_quantity"
@@ -97,11 +97,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@color/white"
-                android:tint="@color/darkGrey"
                 android:src="@drawable/ic_cancel"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                android:layout_margin="10dp" />
+                android:layout_margin="10dp"
+                app:tint="@color/darkGrey" />
 
             <RelativeLayout
                 android:id="@+id/product_order_quantity_discount_rl"

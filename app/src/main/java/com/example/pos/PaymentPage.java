@@ -3,18 +3,16 @@ package com.example.pos;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
-
 import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.TextView;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.PopupWindow;
 import android.widget.Toast;
-
 import com.example.pos.PaymentTab.PaymentMethodPagerAdapter;
 import com.example.pos.databinding.PaymentPageBinding;
-import com.google.android.material.button.MaterialButton;
 import com.google.android.material.tabs.TabLayoutMediator;
 
 public class PaymentPage extends AppCompatActivity {
@@ -23,6 +21,8 @@ public class PaymentPage extends AppCompatActivity {
     private PaymentMethodPagerAdapter paymentMethodPagerAdapter;
     private String[] titles = new String[]{"Cash", "Other Modes"};
     private PaymentPageViewModel viewModel;
+    private Button add_popup_negative_btn, add_popup_positive_btn;
+    private EditText add_popup_et;
 
     String statuslogin;
     Context contextpage;
@@ -61,6 +61,7 @@ public class PaymentPage extends AppCompatActivity {
         binding.paymentBarAddTip.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                showCartOrderAddDiscountPopup(view);
                 Toast.makeText(contextpage, "Add Tip Button Clicked", Toast.LENGTH_SHORT).show();
             }
         });
@@ -68,6 +69,15 @@ public class PaymentPage extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Toast.makeText(contextpage, "View All Button Clicked", Toast.LENGTH_SHORT).show();
+            }
+        });
+        binding.paymentTipCancelBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                binding.textView9.setVisibility(View.GONE);
+                binding.paymentTip.setVisibility(View.GONE);
+                binding.getPaymentPageViewModel().setPayment_tip("0.00");
+                binding.paymentTipCancelBtn.setVisibility(View.GONE);
             }
         });
         //Toolbar buttons
@@ -103,5 +113,48 @@ public class PaymentPage extends AppCompatActivity {
            }
         );
         }
+    }
+
+    private void showCartOrderAddDiscountPopup(View view) {
+        PopupWindow popup = new PopupWindow(contextpage);
+        View layout = getLayoutInflater().inflate(R.layout.payment_add_tip_popup, null);
+        popup.setContentView(layout);
+        // Set content width and height
+        popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
+        popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
+        // Closes the popup window when touch outside of it - when looses focus
+        popup.setOutsideTouchable(true);
+        popup.setFocusable(true);
+        // Show anchored to button
+        popup.setElevation(8);
+        popup.setBackgroundDrawable(null);
+        binding.textView9.setVisibility(View.VISIBLE);
+        binding.paymentTip.setVisibility(View.VISIBLE);
+        binding.paymentTipCancelBtn.setVisibility(View.VISIBLE);
+        //binding.cartInclude.tvDiscount.setTextColor(contextpage.getResources().getColor(R.color.darkOrange));
+        popup.showAsDropDown(binding.paymentBarAddTip, -520, -180);
+
+        //Popup Buttons
+        add_popup_negative_btn = (Button)layout.findViewById(R.id.add_tip_popup_negative_btn);
+        add_popup_positive_btn = (Button)layout.findViewById(R.id.add_tip_popup_positive_btn);
+        add_popup_et = (EditText)layout.findViewById(R.id.add_tip_popup_et);
+        add_popup_et.setText(binding.getPaymentPageViewModel().getPayment_tip().getValue());
+
+        add_popup_negative_btn.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                popup.dismiss();
+                Toast.makeText(contextpage, "Cancel", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        add_popup_positive_btn.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                binding.getPaymentPageViewModel().setPayment_tip(add_popup_et.getText().toString());
+                popup.dismiss();
+                Toast.makeText(contextpage, "Positive button from popup", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

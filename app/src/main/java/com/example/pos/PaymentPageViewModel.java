@@ -5,11 +5,12 @@ import androidx.lifecycle.ViewModel;
 
 public class PaymentPageViewModel extends ViewModel {
 
-    private MutableLiveData<String> payment_order_detail_credit, cash_amount_et;
+    private MutableLiveData<String> payment_order_detail_credit, cash_amount_et, payment_tip;
 
     public PaymentPageViewModel() {
        payment_order_detail_credit = new MutableLiveData<String>("0.00");
        cash_amount_et = new MutableLiveData<String>("0.00");
+       payment_tip = new MutableLiveData<String>("0.00");
     }
 
 
@@ -54,27 +55,6 @@ public class PaymentPageViewModel extends ViewModel {
         cash_amount_et.setValue(displayCashAmountEt);
     }
 
-//    public String displayCashAmountEt(String cashAmountFromEt, char keyPadNo){
-//        char[] addedCashAmountEt;
-//        addedCashAmountEt = new char[cashAmountFromEt.length() + 1];
-//        addedCashAmountEt[addedCashAmountEt.length - 1] = keyPadNo;
-//        addedCashAmountEt[addedCashAmountEt.length - 3] = '.';
-//        for(int i = (addedCashAmountEt.length - 2), j = (cashAmountFromEt.length() - 1); i >= 0; i--, j--){
-//            if(i != addedCashAmountEt.length - 3) {
-//                if(cashAmountFromEt.charAt(j) == '.'){
-//                    j--;
-//                }
-//                addedCashAmountEt[i] = cashAmountFromEt.charAt(j);
-//            }else{
-//                j++;
-//            }
-//        }
-//
-//        String cashAmountEtBeforeProcess = String.valueOf(addedCashAmountEt);
-//
-//        return displayCashAmountEt;
-//    }
-
     private String swapChar(String string, int position1, int position2){
         char[] result = string.toCharArray();
         char temp = result[position1];
@@ -82,7 +62,6 @@ public class PaymentPageViewModel extends ViewModel {
         result[position2] = temp;
         return String.valueOf(result);
     }
-
 
 
     public MutableLiveData<String> getPayment_order_detail_credit() {
@@ -99,5 +78,13 @@ public class PaymentPageViewModel extends ViewModel {
 
     public void setCash_amount_et(String cash_amount_et) {
         this.cash_amount_et.setValue(cash_amount_et);
+    }
+
+    public MutableLiveData<String> getPayment_tip() {
+        return payment_tip;
+    }
+
+    public void setPayment_tip(String payment_tip) {
+        this.payment_tip.setValue(payment_tip);
     }
 }
