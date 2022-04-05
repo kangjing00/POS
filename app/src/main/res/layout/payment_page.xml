@@ -216,8 +216,9 @@
                 android:layout_marginLeft="30dp"
                 android:layout_marginTop="5dp"
                 android:fontFamily="@font/roboto_regular"
+                android:text="Tip"
                 android:visibility="gone"
-                android:text="Tip" />
+                android:textColor="@color/darkOrange"/>
 
             <TextView
                 android:id="@+id/payment_tip"
@@ -228,6 +229,7 @@
                 android:layout_marginTop="5dp"
                 android:layout_marginRight="6dp"
                 android:visibility="gone"
+                android:textColor="@color/darkOrange"
                 android:text="@{paymentPageViewModel.payment_tip}" />
 
             <ImageButton

@@ -101,7 +101,7 @@
                     android:paddingTop="8dp"
                     android:paddingBottom="8dp"
                     android:src="@drawable/ic_search"
-                    android:tint="@color/black" />
+                    app:tint="@color/black" />
 
                 <EditText
                     android:id="@+id/customer_etSearch"
@@ -270,7 +270,9 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/appBar">
 
-            <include android:id="@+id/cart_include" layout="@layout/cart_layout"/>
+            <include
+                android:id="@+id/cart_include"
+                layout="@layout/cart_layout" />
         </RelativeLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

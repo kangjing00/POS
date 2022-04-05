@@ -7,18 +7,20 @@ public class Customer extends RealmObject {
 
     @PrimaryKey
     private int customer_id;
-    private String customer_name, customer_email;
+    private String customer_name, customer_email, customer_phoneNo;
 
-    public Customer(int customer_id, String customer_name, String customer_email){
+    public Customer(int customer_id, String customer_name, String customer_email, String customer_phoneNo){
         this.customer_id = customer_id;
         this.customer_name = customer_name;
         this.customer_email = customer_email;
+        this.customer_phoneNo = customer_phoneNo;
     }
 
     public Customer(){
         customer_id = -1;
         customer_name = null;
         customer_email = null;
+        customer_phoneNo = null;
     }
 
     public int getCustomer_id() {
@@ -39,5 +41,13 @@ public class Customer extends RealmObject {
 
     public void setCustomer_email(String customer_email) {
         this.customer_email = customer_email;
+    }
+
+    public String getCustomer_phoneNo() {
+        return customer_phoneNo;
+    }
+
+    public void setCustomer_phoneNo(String customer_phoneNo) {
+        this.customer_phoneNo = customer_phoneNo;
     }
 }
