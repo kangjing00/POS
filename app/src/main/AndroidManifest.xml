@@ -9,13 +9,17 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".CashierPage"></activity>
+        <activity
+            android:name=".OrderPage"
+            android:exported="false" />
+        <activity android:name=".CashierPage" />
         <activity android:name=".PaymentPage" />
         <activity android:name=".TablePage" />
         <activity android:name=".CustomerPage" />
         <activity android:name=".HomePage" />
         <activity android:name=".LoginPage" />
-        <activity android:name=".SplashScreen"
+        <activity
+            android:name=".SplashScreen"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

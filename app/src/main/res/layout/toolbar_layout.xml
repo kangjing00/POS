@@ -23,13 +23,15 @@
 
         <TextView
             android:id="@+id/toolbar_title"
-            android:text="Restro POS"
             android:layout_width="wrap_content"
-            android:textSize="30dp"
-            android:fontFamily="@font/roboto_bold"
-            android:textColor="@color/raisinBlack"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp" />
+            android:layout_centerVertical="true"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:fontFamily="@font/roboto_bold"
+            android:text="Restro POS"
+            android:textColor="@color/raisinBlack"
+            android:textSize="28dp" />
 
         <LinearLayout
             android:id="@+id/toolbar_search_layout"
@@ -52,9 +54,8 @@
                 android:background="@color/lightGrey"
                 android:layout_marginLeft="15dp"
                 android:paddingRight="15dp"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp"
-                android:textSize="18dp"
+                android:layout_gravity="center_vertical"
+                android:textSize="15dp"
                 android:hint="Search Products..."
                 android:maxLines="1"
                 android:singleLine="true"
@@ -68,23 +69,23 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:src="@drawable/ic_search"
-                android:tint="@color/black"
                 android:layout_gravity="center_vertical"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp"
-                android:clickable="true" />
+                android:paddingTop="7dp"
+                android:paddingBottom="7dp"
+                android:clickable="true"
+                app:tint="@color/black" />
         </LinearLayout>
 
         <ImageButton
             android:id="@+id/toolbar_refresh"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_refresh"
-            android:padding="10dp"
-            android:background="@drawable/box_corner_icon_btn"
+            android:layout_centerVertical="true"
             android:layout_marginLeft="30dp"
             android:layout_toLeftOf="@+id/toolbar_wifi"
-            android:layout_centerVertical="true" />
+            android:background="@drawable/box_corner_icon_btn"
+            android:padding="8dp"
+            android:src="@drawable/ic_refresh" />
 
         <ImageButton
             android:id="@+id/toolbar_wifi"
@@ -92,45 +93,29 @@
             android:layout_height="wrap_content"
             android:background="@drawable/box_corner_icon_btn"
             android:src="@drawable/ic_wifi"
-            android:tint="@color/green"
-            android:padding="10dp"
+            android:padding="8dp"
             android:layout_marginLeft="15dp"
             android:layout_marginRight="15dp"
             android:layout_toLeftOf="@+id/toolbar_select_table"
-            android:layout_centerVertical="true" />
+            android:layout_centerVertical="true"
+            app:tint="@color/green" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/toolbar_select_table"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Select Table"
-            android:padding="11dp"
-            android:textColor="@color/white"
-            android:drawableLeft="@drawable/ic_select_table"
-            android:drawableTint="@color/white"
-            android:drawablePadding="10dp"
-            android:layout_marginRight="15dp"
-            android:textAllCaps="false"
-            android:backgroundTint="@color/darkOrange"
             android:layout_alignParentRight="true"
-            android:layout_centerVertical="true" />
-
-        <!--    <Button-->
-        <!--        android:id="@+id/toolbar_select_table"-->
-        <!--        android:layout_width="wrap_content"-->
-        <!--        android:layout_height="wrap_content"-->
-        <!--        android:text="Select Table"-->
-        <!--        android:layout_marginRight="15dp"-->
-        <!--        android:background="@drawable/box_corner_nopadding"-->
-        <!--        android:backgroundTint="@color/darkOrange"-->
-        <!--        android:layout_centerVertical="true"-->
-        <!--        android:drawablePadding="10dp"-->
-        <!--        android:textSize="18dp"-->
-        <!--        android:drawableTint="@color/white"-->
-        <!--        android:textColor="@color/white"-->
-        <!--        android:padding="10dp"-->
-        <!--        android:drawableLeft="@drawable/ic_select_table"-->
-        <!--        android:layout_alignParentRight="true"-->
-        <!--        android:textAllCaps="false"/>-->
+            android:layout_centerVertical="true"
+            android:layout_marginRight="15dp"
+            android:backgroundTint="@color/darkOrange"
+            android:drawableLeft="@drawable/ic_select_table"
+            android:drawablePadding="10dp"
+            android:drawableTint="@color/white"
+            android:padding="8dp"
+            android:text="Select Table"
+            android:layout_marginTop="-5dp"
+            android:layout_marginBottom="-5dp"
+            android:textAllCaps="false"
+            android:textColor="@color/white" />
     </RelativeLayout>
 </layout>

@@ -35,7 +35,6 @@ public class HomePage extends AppCompatActivity {
     private EditText add_discount_popup_et;
     private Button  add_note_popup_negative_btn, add_note_popup_positive_btn;
     private EditText add_note_popup_et;
-    private ImageButton add_note_popup_exit_btn;
     // Storing data into SharedPreferences
     private SharedPreferences cartSharedPreference;
     // Creating an Editor object to edit(write to the file)
@@ -148,6 +147,9 @@ public class HomePage extends AppCompatActivity {
         binding.navbarLayoutInclude.navBarCashier.setOnClickListener(new View.OnClickListener(){
                @Override
                public void onClick(View view) {
+                   Intent intent = new Intent(contextpage, CashierPage.class);
+                   startActivity(intent);
+                   finish();
                    Toast.makeText(contextpage, "Cashier Button Clicked", Toast.LENGTH_SHORT).show();
                }
            }
@@ -277,21 +279,14 @@ public class HomePage extends AppCompatActivity {
         add_note_popup_negative_btn = (Button)layout.findViewById(R.id.add_note_popup_negative_btn);
         add_note_popup_positive_btn = (Button)layout.findViewById(R.id.add_note_popup_positive_btn);
         add_note_popup_et = (EditText)layout.findViewById(R.id.add_note_popup_et);
-        add_note_popup_exit_btn = (ImageButton)layout.findViewById(R.id.add_note_popup_exit_btn);
 
         add_note_popup_et.setText(cartSharedPreference.getString("cartNote", ""));
 
-        add_note_popup_exit_btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                popup.dismiss();
-            }
-        });
         add_note_popup_negative_btn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                add_note_popup_et.getText().clear();
-                Toast.makeText(contextpage, "Clear", Toast.LENGTH_SHORT).show();
+                popup.dismiss();
+                Toast.makeText(contextpage, "Cancel", Toast.LENGTH_SHORT).show();
             }
         });
         add_note_popup_positive_btn.setOnClickListener(new View.OnClickListener() {

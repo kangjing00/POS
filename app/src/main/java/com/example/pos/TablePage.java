@@ -122,6 +122,9 @@ public class TablePage extends AppCompatActivity {
         binding.navbarLayoutInclude.navBarCashier.setOnClickListener(new View.OnClickListener(){
                  @Override
                  public void onClick(View view) {
+                     Intent intent = new Intent(contextpage, CashierPage.class);
+                     startActivity(intent);
+                     finish();
                      Toast.makeText(contextpage, "Cashier Button Clicked", Toast.LENGTH_SHORT).show();
                  }
              }

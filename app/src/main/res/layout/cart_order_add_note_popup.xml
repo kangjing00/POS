@@ -21,25 +21,14 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"/>
 
-        <ImageButton
-            android:id="@+id/add_note_popup_exit_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@color/white"
-            android:src="@drawable/ic_cancel"
-            android:layout_margin="10dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/darkGrey" />
-
         <EditText
             android:id="@+id/add_note_popup_et"
             android:layout_width="500dp"
-            android:layout_height="200dp"
+            android:layout_height="150dp"
             android:layout_marginLeft="20dp"
             android:layout_marginRight="20dp"
             android:layout_marginTop="10dp"
-            android:padding="10dp"
+            android:padding="15dp"
             android:background="@drawable/custom_input"
             android:hint="Note...(optional)"
             android:gravity="top"
@@ -53,7 +42,7 @@
             android:layout_height="wrap_content"
             android:layout_margin="20dp"
             android:backgroundTint="@color/darkOrange"
-            android:text="Clear"
+            android:text="Cancel"
             android:textAllCaps="false"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/add_note_popup_positive_btn"
