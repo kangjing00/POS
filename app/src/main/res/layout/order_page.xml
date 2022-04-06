@@ -39,7 +39,7 @@
 
         <RadioGroup
             android:id="@+id/order_radioGroup"
-            android:layout_width="700dp"
+            android:layout_width="650dp"
             android:layout_height="wrap_content"
             android:layout_margin="20dp"
             android:background="@drawable/box_coner_nopadding_white"
@@ -48,7 +48,6 @@
             android:paddingTop="5dp"
             android:paddingEnd="10dp"
             android:paddingBottom="5dp"
-            app:layout_constraintEnd_toStartOf="@+id/order_relativeLayout"
             app:layout_constraintStart_toEndOf="@+id/navbar_layout_include_sv"
             app:layout_constraintTop_toBottomOf="@+id/appBar">
 

@@ -39,7 +39,7 @@
 
         <RadioGroup
             android:id="@+id/cashier_radioGroup"
-            android:layout_width="700dp"
+            android:layout_width="650dp"
             android:layout_height="wrap_content"
             android:layout_margin="20dp"
             android:paddingStart="10dp"
