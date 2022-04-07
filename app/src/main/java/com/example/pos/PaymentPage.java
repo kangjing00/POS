@@ -5,14 +5,17 @@ import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import android.content.Context;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.PopupWindow;
+import android.widget.RadioButton;
 import android.widget.Toast;
 import com.example.pos.PaymentTab.PaymentMethodPagerAdapter;
 import com.example.pos.databinding.PaymentPageBinding;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.tabs.TabLayoutMediator;
 
 public class PaymentPage extends AppCompatActivity {
@@ -23,6 +26,10 @@ public class PaymentPage extends AppCompatActivity {
     private PaymentPageViewModel viewModel;
     private Button add_popup_negative_btn, add_popup_positive_btn;
     private EditText add_popup_et;
+    //Cash in out popup
+    private RadioButton cash_in_rb, cash_out_rb;
+    private EditText cash_in_out_amount, cash_in_out_reason;
+    private MaterialButton cash_in_out_cancel, cash_in_out_confirm;
 
     String statuslogin;
     Context contextpage;
@@ -61,7 +68,7 @@ public class PaymentPage extends AppCompatActivity {
         binding.paymentBarAddTip.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showCartOrderAddDiscountPopup(view);
+                showAddTipPopup(view);
                 Toast.makeText(contextpage, "Add Tip Button Clicked", Toast.LENGTH_SHORT).show();
             }
         });
@@ -105,17 +112,56 @@ public class PaymentPage extends AppCompatActivity {
             }
         );
 
-        binding.toolbarLayoutIncl.toolbarSelectTable.setOnClickListener(new View.OnClickListener(){
-               @Override
-               public void onClick(View view) {
-                   Toast.makeText(contextpage, "Select Table Button Clicked", Toast.LENGTH_SHORT).show();
-               }
-           }
+        binding.toolbarLayoutIncl.cashInOutBtn.setOnClickListener(new View.OnClickListener(){
+                @Override
+                public void onClick(View view) {
+                    showCashInOut();
+                    Toast.makeText(contextpage, "Cash in / out Button Clicked", Toast.LENGTH_SHORT).show();
+                }
+            }
         );
         }
     }
 
-    private void showCartOrderAddDiscountPopup(View view) {
+    private void showCashInOut() {
+        PopupWindow popup = new PopupWindow(contextpage);
+        View layout = getLayoutInflater().inflate(R.layout.cash_in_out_popup, null);
+        popup.setContentView(layout);
+        // Set content width and height
+        popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
+        popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
+        // Closes the popup window when touch outside of it - when looses focus
+        popup.setOutsideTouchable(true);
+        popup.setFocusable(true);
+        // Show anchored to button
+        popup.setElevation(8);
+        popup.setBackgroundDrawable(null);
+        popup.showAtLocation(binding.getRoot(), Gravity.CENTER, 0, 0);
+
+        cash_in_rb = (RadioButton)layout.findViewById(R.id.cash_in_rb);
+        cash_out_rb = (RadioButton)layout.findViewById(R.id.cash_out_rb);
+        cash_in_out_amount = (EditText)layout.findViewById(R.id.cash_in_out_amount_et);
+        cash_in_out_reason = (EditText)layout.findViewById(R.id.cash_in_out_reason_et);
+        cash_in_out_cancel = (MaterialButton)layout.findViewById(R.id.cash_in_out_cancel_btn);
+        cash_in_out_confirm = (MaterialButton)layout.findViewById(R.id.cash_in_out_confirm_btn);
+
+        cash_in_out_cancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                popup.dismiss();
+                Toast.makeText(contextpage, "Cancel", Toast.LENGTH_SHORT).show();
+            }
+        });
+        cash_in_out_confirm.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                popup.dismiss();
+                Toast.makeText(contextpage, "Confirm", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void showAddTipPopup(View view) {
         PopupWindow popup = new PopupWindow(contextpage);
         View layout = getLayoutInflater().inflate(R.layout.payment_add_tip_popup, null);
         popup.setContentView(layout);

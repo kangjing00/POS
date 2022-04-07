@@ -96,26 +96,26 @@
             android:padding="8dp"
             android:layout_marginLeft="15dp"
             android:layout_marginRight="15dp"
-            android:layout_toLeftOf="@+id/toolbar_select_table"
+            android:layout_toLeftOf="@+id/cash_in_out_btn"
             android:layout_centerVertical="true"
             app:tint="@color/green" />
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/toolbar_select_table"
+            android:id="@+id/cash_in_out_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="Cash In / Out"
+            android:textAllCaps="false"
+            app:icon="@drawable/ic_cash"
+            android:backgroundTint="@color/darkOrange"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
+            android:layout_marginTop="-5dp"
             android:layout_marginRight="15dp"
-            android:backgroundTint="@color/darkOrange"
+            android:layout_marginBottom="-5dp"
             android:drawableLeft="@drawable/ic_select_table"
             android:drawablePadding="10dp"
-            android:drawableTint="@color/white"
             android:padding="8dp"
-            android:text="Select Table"
-            android:layout_marginTop="-5dp"
-            android:layout_marginBottom="-5dp"
-            android:textAllCaps="false"
-            android:textColor="@color/white" />
+            />
     </RelativeLayout>
 </layout>

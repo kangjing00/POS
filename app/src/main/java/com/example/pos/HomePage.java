@@ -19,10 +19,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.PopupWindow;
+import android.widget.RadioButton;
 import android.widget.Toast;
 
 import com.example.pos.databinding.HomePageBinding;
 import com.example.pos.databinding.ViewProductMenuBinding;
+import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
 
@@ -33,8 +35,12 @@ public class HomePage extends AppCompatActivity {
     //Cart //Popup
     private Button add_discount_popup_negative_btn, add_discount_popup_positive_btn;
     private EditText add_discount_popup_et;
-    private Button  add_note_popup_negative_btn, add_note_popup_positive_btn;
+    private MaterialButton  add_note_popup_negative_btn, add_note_popup_positive_btn;
     private EditText add_note_popup_et;
+    //Cash in out popup
+    private RadioButton cash_in_rb, cash_out_rb;
+    private EditText cash_in_out_amount, cash_in_out_reason;
+    private MaterialButton cash_in_out_cancel, cash_in_out_confirm;
     // Storing data into SharedPreferences
     private SharedPreferences cartSharedPreference;
     // Creating an Editor object to edit(write to the file)
@@ -107,10 +113,11 @@ public class HomePage extends AppCompatActivity {
              }
         );
 
-        binding.toolbarLayoutIncl.toolbarSelectTable.setOnClickListener(new View.OnClickListener(){
+        binding.toolbarLayoutIncl.cashInOutBtn.setOnClickListener(new View.OnClickListener(){
                 @Override
                 public void onClick(View view) {
-                    Toast.makeText(contextpage, "Select Table Button Clicked", Toast.LENGTH_SHORT).show();
+                    showCashInOut();
+                    Toast.makeText(contextpage, "Cash in / out Button Clicked", Toast.LENGTH_SHORT).show();
                 }
             }
         );
@@ -210,7 +217,7 @@ public class HomePage extends AppCompatActivity {
         binding.cartInclude.cartOrderNoteBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                showCartOrderAddNotePopup(view);
+                showCartOrderAddNotePopup(binding.cartInclude.cartOrderNoteBtn.getId());
                 Toast.makeText(contextpage, "Order Note Clicked", Toast.LENGTH_SHORT).show();
             }
         });
@@ -223,6 +230,7 @@ public class HomePage extends AppCompatActivity {
         binding.cartInclude.cartOrderSummaryHoldBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
+                showCartOrderAddNotePopup(binding.cartInclude.cartOrderSummaryHoldBtn.getId());
                 Toast.makeText(contextpage, "Hold Button Clicked", Toast.LENGTH_SHORT).show();
             }
         });
@@ -265,7 +273,45 @@ public class HomePage extends AppCompatActivity {
         }
     }
 
-    private void showCartOrderAddNotePopup(View view) {
+    private void showCashInOut() {
+        PopupWindow popup = new PopupWindow(contextpage);
+        View layout = getLayoutInflater().inflate(R.layout.cash_in_out_popup, null);
+        popup.setContentView(layout);
+        // Set content width and height
+        popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
+        popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
+        // Closes the popup window when touch outside of it - when looses focus
+        popup.setOutsideTouchable(true);
+        popup.setFocusable(true);
+        // Show anchored to button
+        popup.setElevation(8);
+        popup.setBackgroundDrawable(null);
+        popup.showAtLocation(binding.getRoot(), Gravity.CENTER, 0, 0);
+
+        cash_in_rb = (RadioButton)layout.findViewById(R.id.cash_in_rb);
+        cash_out_rb = (RadioButton)layout.findViewById(R.id.cash_out_rb);
+        cash_in_out_amount = (EditText)layout.findViewById(R.id.cash_in_out_amount_et);
+        cash_in_out_reason = (EditText)layout.findViewById(R.id.cash_in_out_reason_et);
+        cash_in_out_cancel = (MaterialButton)layout.findViewById(R.id.cash_in_out_cancel_btn);
+        cash_in_out_confirm = (MaterialButton)layout.findViewById(R.id.cash_in_out_confirm_btn);
+
+        cash_in_out_cancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                popup.dismiss();
+                Toast.makeText(contextpage, "Cancel", Toast.LENGTH_SHORT).show();
+            }
+        });
+        cash_in_out_confirm.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                popup.dismiss();
+                Toast.makeText(contextpage, "Confirm", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void showCartOrderAddNotePopup(int btnID) {
         PopupWindow popup = new PopupWindow(contextpage);
         View layout = getLayoutInflater().inflate(R.layout.cart_order_add_note_popup, null);
         popup.setContentView(layout);
@@ -279,11 +325,16 @@ public class HomePage extends AppCompatActivity {
         popup.setElevation(8);
         popup.setBackgroundDrawable(null);
         popup.showAtLocation(binding.getRoot(), Gravity.CENTER, 0, 0);
-        add_note_popup_negative_btn = (Button)layout.findViewById(R.id.add_note_popup_negative_btn);
-        add_note_popup_positive_btn = (Button)layout.findViewById(R.id.add_note_popup_positive_btn);
+        add_note_popup_negative_btn = (MaterialButton)layout.findViewById(R.id.add_note_popup_negative_btn);
+        add_note_popup_positive_btn = (MaterialButton)layout.findViewById(R.id.add_note_popup_positive_btn);
         add_note_popup_et = (EditText)layout.findViewById(R.id.add_note_popup_et);
 
         add_note_popup_et.setText(cartSharedPreference.getString("cartNote", ""));
+        if(btnID == binding.cartInclude.cartOrderNoteBtn.getId()){
+            add_note_popup_positive_btn.setText("Add & Update");
+        }else if(btnID == binding.cartInclude.cartOrderSummaryHoldBtn.getId()){
+            add_note_popup_positive_btn.setText("Proceed");
+        }
 
         add_note_popup_negative_btn.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -297,13 +348,19 @@ public class HomePage extends AppCompatActivity {
             public void onClick(View view) {
                 cartSharedPreferenceEdit.putString("cartNote", add_note_popup_et.getText().toString());
                 cartSharedPreferenceEdit.commit();
-                popup.dismiss();
                 if(!cartSharedPreference.getString("cartNote", "").equalsIgnoreCase("")){
                     binding.cartInclude.cartOrderNoteBtn.setTextColor(contextpage.getResources().getColor(R.color.green));
                 }else{
                     binding.cartInclude.cartOrderNoteBtn.setTextColor(contextpage.getResources().getColor(R.color.darkOrange));
                 }
-                Toast.makeText(contextpage, "Added & Updated", Toast.LENGTH_SHORT).show();
+                //if it is proceed
+                if(btnID == binding.cartInclude.cartOrderSummaryHoldBtn.getId()){
+                    //do the proceed process
+                    Toast.makeText(contextpage, "Proceed", Toast.LENGTH_SHORT).show();
+                }else{
+                    Toast.makeText(contextpage, "Added & Updated", Toast.LENGTH_SHORT).show();
+                }
+                popup.dismiss();
             }
         });
     }
@@ -359,7 +416,6 @@ public class HomePage extends AppCompatActivity {
             }
         });
     }
-
 
 //    public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ProductsViewHolder>{
 //        Context c;

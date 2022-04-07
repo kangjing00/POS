@@ -1,4 +1,4 @@
-package com.example.pos.OrderFragments;
+package com.example.pos.CustomerFragments;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -7,16 +7,16 @@ import android.view.ViewGroup;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
 import com.example.pos.R;
-import com.example.pos.databinding.FragmentOfflineOrderBinding;
+import com.example.pos.databinding.FragmentCustomerBinding;
 
-public class FragmentOfflineOrder extends Fragment {
+public class FragmentCustomer extends Fragment {
 
-    FragmentOfflineOrderBinding binding;
+    FragmentCustomerBinding binding;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_offline_order, container, false);
+        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_customer, container, false);
         View view = binding.getRoot();
 
         return view;
