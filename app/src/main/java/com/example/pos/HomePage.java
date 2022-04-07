@@ -157,6 +157,9 @@ public class HomePage extends AppCompatActivity {
         binding.navbarLayoutInclude.navBarOrders.setOnClickListener(new View.OnClickListener(){
               @Override
               public void onClick(View view) {
+                  Intent intent = new Intent(contextpage, OrderPage.class);
+                  startActivity(intent);
+                  finish();
                   Toast.makeText(contextpage, "Orders Button Clicked", Toast.LENGTH_SHORT).show();
               }
           }

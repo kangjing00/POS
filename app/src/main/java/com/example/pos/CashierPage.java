@@ -17,9 +17,9 @@ import com.example.pos.databinding.CashierPageBinding;
 
 public class CashierPage extends AppCompatActivity {
 
-    CashierPageBinding binding;
-    FragmentManager fm;
-    FragmentTransaction ft;
+    private CashierPageBinding binding;
+    private FragmentManager fm;
+    private FragmentTransaction ft;
 
     private String statuslogin;
     private Context contextpage;
@@ -59,14 +59,14 @@ public class CashierPage extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 ft = fm.beginTransaction();
-                ft.replace(R.id.cashier_fragment_fl, new FragmentTodaySale()).commit();
+                ft.replace(binding.cashierFragmentFl.getId(), new FragmentTodaySale()).commit();
             }
         });
         binding.saleHistoryRb.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 ft = fm.beginTransaction();
-                ft.replace(R.id.cashier_fragment_fl, new FragmentSaleHistory()).commit();
+                ft.replace(binding.cashierFragmentFl.getId(), new FragmentSaleHistory()).commit();
             }
         });
         }
@@ -146,6 +146,9 @@ public class CashierPage extends AppCompatActivity {
         binding.navbarLayoutInclude.navBarOrders.setOnClickListener(new View.OnClickListener(){
               @Override
               public void onClick(View view) {
+                  Intent intent = new Intent(contextpage, OrderPage.class);
+                  startActivity(intent);
+                  finish();
                   Toast.makeText(contextpage, "Orders Button Clicked", Toast.LENGTH_SHORT).show();
               }
           }

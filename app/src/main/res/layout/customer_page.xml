@@ -74,6 +74,7 @@
             android:layout_marginLeft="20dp"
             android:layout_marginTop="10dp"
             android:layout_marginRight="20dp"
+            android:layout_marginBottom="10dp"
             android:background="@drawable/box_coner_nopadding_white"
             android:elevation="3dp"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -92,7 +93,7 @@
                 android:weightSum="10">
 
                 <ImageView
-                    android:id="@+id/customer_searchIcon"
+                    android:id="@+id/customer_search_btn"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_gravity="center_vertical"
@@ -109,7 +110,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="9"
                     android:background="@color/white"
-                    android:hint="Search Products..."
+                    android:hint="Search Customers..."
                     android:imeOptions="actionSearch"
                     android:maxLines="1"
                     android:paddingLeft="10dp"
