@@ -3,31 +3,28 @@ package com.example.pos;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.databinding.DataBindingUtil;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.PopupWindow;
 import android.widget.RadioButton;
 import android.widget.Toast;
-
+import com.example.pos.DataAdapters.ProductAdapter;
+import com.example.pos.PaymentTab.PaymentMethodPagerAdapter;
 import com.example.pos.databinding.HomePageBinding;
-import com.example.pos.databinding.ViewProductMenuBinding;
 import com.google.android.material.button.MaterialButton;
-
 import java.util.ArrayList;
+import io.realm.Realm;
+import io.realm.RealmResults;
 
 public class HomePage extends AppCompatActivity {
 
@@ -45,6 +42,9 @@ public class HomePage extends AppCompatActivity {
     private SharedPreferences cartSharedPreference;
     // Creating an Editor object to edit(write to the file)
     private SharedPreferences.Editor cartSharedPreferenceEdit;
+    private ProductAdapter productAdapter;
+    private  ArrayList<Product> list;
+    private Realm realm;
 
     private String statuslogin;
     private Context contextpage;
@@ -56,6 +56,8 @@ public class HomePage extends AppCompatActivity {
         contextpage = HomePage.this;
 
         binding = DataBindingUtil.setContentView(this, R.layout.home_page);
+
+        realm = Realm.getDefaultInstance();
 
         //Appbar Settings
         Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
@@ -70,11 +72,14 @@ public class HomePage extends AppCompatActivity {
         cartSharedPreferenceEdit = cartSharedPreference.edit();
 
         //Body
-        RecyclerView.LayoutManager layoutManager = new GridLayoutManager(contextpage, 4, LinearLayoutManager.HORIZONTAL, false);
-        binding.productListRv.setLayoutManager(layoutManager);
-        //TODO create product object and declare the below variable as global, the info get from database
-        ArrayList<String> products = null;
-        //product_list_rv.setAdapter(new ProductsAdapter(contextpage, products));
+        //Recycler view
+        binding.productListRv.setLayoutManager(new GridLayoutManager(contextpage, 4, LinearLayoutManager.VERTICAL, false));
+        binding.productListRv.setHasFixedSize(true);
+        list = new ArrayList<Product>();
+        productAdapter = new ProductAdapter(list);
+        getProductFromRealm();
+        binding.productListRv.setAdapter(productAdapter);
+
         //Cart Note
         if(!cartSharedPreference.getString("cartNote", "").equalsIgnoreCase("")){
             binding.cartInclude.cartOrderNoteBtn.setTextColor(contextpage.getResources().getColor(R.color.green));
@@ -282,6 +287,12 @@ public class HomePage extends AppCompatActivity {
         }
     }
 
+    private void getProductFromRealm(){
+        RealmResults<Product> results = realm.where(Product.class).findAll();
+        list.addAll(realm.copyFromRealm(results));
+        productAdapter.notifyDataSetChanged();
+    }
+
     private void showCashInOut() {
         PopupWindow popup = new PopupWindow(contextpage);
         View layout = getLayoutInflater().inflate(R.layout.cash_in_out_popup, null);
@@ -425,69 +436,4 @@ public class HomePage extends AppCompatActivity {
             }
         });
     }
-
-//    public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ProductsViewHolder>{
-//        Context c;
-//        //TODO change all the words 'String' below to the product object name
-//        ArrayList<String> products;
-//
-//        public ProductsAdapter(Context c, ArrayList<String> products){
-//            this.c = c;
-//            this.products = products;
-//        }
-//
-//        @Override
-//        public ProductsViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-//            View v= LayoutInflater.from(c).inflate(R.layout.view_product_menu, parent, false);
-//            return new ProductsViewHolder(v);
-//        }
-//
-//        @Override
-//        public void onBindViewHolder(final ProductsViewHolder holder, int position) {
-//            final String product = products.get(position);
-//
-//            holder.menu_product_name.setText(product);
-//            holder.menu_product_price.setText(product);
-////            holder.menu_product_image.setImageResource();
-//
-//            holder.setItemClickListener(new ItemClickListener() {
-//                @Override
-//                public void onItemClick(int position) {
-//                    //go somewhere
-//                }
-//            });
-//        }
-//
-//        @Override
-//        public int getItemCount() {
-//            return products.size();
-//        }
-//
-//        public class ProductsViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
-//
-//           // private ViewProductMenuBinding binding;
-//
-//            TextView menu_product_name, menu_product_price;
-//            ImageView menu_product_image;
-//            ItemClickListener itemClickListener;
-//
-//            public ProductsViewHolder(View itemView) {
-//                super(itemView);
-//                menu_product_name = (TextView)itemView.findViewById(R.id.menu_product_name);
-//                menu_product_price = (TextView)itemView.findViewById(R.id.menu_product_price);
-//                menu_product_image = (ImageView)itemView.findViewById(R.id.menu_product_image);
-//                itemView.setOnClickListener(this);
-//            }
-//
-//            public void setItemClickListener(ItemClickListener itemClickListener){
-//                this.itemClickListener = itemClickListener;
-//            }
-//
-//            @Override
-//            public void onClick(View v) {
-//                this.itemClickListener.onItemClick(getLayoutPosition());
-//            }
-//        }
-//    }
-
 }

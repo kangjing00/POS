@@ -1,4 +1,4 @@
-package com.example.pos.Objects;
+package com.example.pos;
 
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
@@ -10,6 +10,7 @@ public class Product extends RealmObject {
     private String product_name;
     private double product_price;
 
+    //Constructor
     public Product(int product_id, String product_name, double product_price) {
         this.product_id = product_id;
         this.product_name = product_name;
@@ -24,6 +25,8 @@ public class Product extends RealmObject {
     public int getProduct_id() {
         return product_id;
     }
+
+    public void setProduct_id(int product_id){ this.product_id = product_id; }
 
     public String getProduct_name() {
         return product_name;

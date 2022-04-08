@@ -3,11 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
-
+        <variable
+            name="product"
+            type="com.example.pos.Product" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/box_coner_nopadding_white"
         android:padding="15dp"
@@ -28,7 +30,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
-            android:text="Schezwan Egg Noodles"
+            android:text="@{product.product_name}"
             android:fontFamily="@font/roboto_regular"
             android:textAlignment="center"
             app:layout_constraintTop_toBottomOf="@+id/menu_product_image"
@@ -39,7 +41,7 @@
             android:id="@+id/menu_product_price"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="RM 25.00"
+            android:text='@{"RM " + String.valueOf(product.product_price)}'
             android:textStyle="bold"
             app:layout_constraintTop_toBottomOf="@+id/menu_product_name"
             app:layout_constraintStart_toStartOf="parent"
