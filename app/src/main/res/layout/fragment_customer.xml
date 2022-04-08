@@ -75,11 +75,13 @@
             android:layout_below="@+id/line1"
             android:layout_margin="15dp">
 
-            <ImageView
+            <com.google.android.material.imageview.ShapeableImageView
                 android:id="@+id/customer_current_customer_image"
                 android:layout_width="150dp"
                 android:layout_height="150dp"
-                android:src="@drawable/face2" />
+                android:scaleType="fitCenter"
+                app:shapeAppearance="@style/ImageWithRadius"
+                android:src="@drawable/face1" />
 
             <TextView
                 android:id="@+id/customer_current_customer_name"

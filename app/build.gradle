@@ -28,6 +28,8 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
+    //Data binding with xml
+    //
     buildFeatures {
         dataBinding true
     }
@@ -48,4 +50,7 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-viewmodel:$lifecycle_version"
     // Live Data
     implementation "androidx.lifecycle:lifecycle-livedata:$lifecycle_version"
+
+    //Dependency for circular ImageView
+    implementation "de.hdodenhof:circleimageview:3.1.0"
 }

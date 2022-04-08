@@ -37,6 +37,8 @@
             android:maxLines="1"
             android:paddingStart="15dp"
             android:paddingEnd="15dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
             android:textSize="15dp"/>
 
         <TextView
@@ -58,7 +60,10 @@
             android:hint="Enter the customer phone number"
             android:background="@drawable/custom_input"
             android:maxLines="1"
-            android:padding="15dp"
+            android:paddingStart="15dp"
+            android:paddingEnd="15dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
             android:textSize="15dp"/>
 
         <TextView
@@ -80,7 +85,10 @@
             android:hint="Enter the customer email"
             android:background="@drawable/custom_input"
             android:maxLines="1"
-            android:padding="15dp"
+            android:paddingStart="15dp"
+            android:paddingEnd="15dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
             android:textSize="15dp"/>
 
         <TextView
@@ -102,7 +110,10 @@
             android:hint="Enter the customer address"
             android:background="@drawable/custom_input"
             android:maxLines="1"
-            android:padding="15dp"
+            android:paddingStart="15dp"
+            android:paddingEnd="15dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
             android:textSize="15dp"/>
 
         <TextView
@@ -125,7 +136,10 @@
             android:hint="Enter the customer country"
             android:background="@drawable/custom_input"
             android:maxLines="1"
-            android:padding="15dp"
+            android:paddingStart="15dp"
+            android:paddingEnd="15dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
             android:textSize="15dp"/>
 
         <TextView
@@ -150,7 +164,10 @@
             android:hint="Enter the customer state"
             android:background="@drawable/custom_input"
             android:maxLines="1"
-            android:padding="15dp"
+            android:paddingStart="15dp"
+            android:paddingEnd="15dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
             android:textSize="15dp"/>
 
 
@@ -174,7 +191,10 @@
             android:hint="Enter the customer city"
             android:background="@drawable/custom_input"
             android:maxLines="1"
-            android:padding="15dp"
+            android:paddingStart="15dp"
+            android:paddingEnd="15dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
             android:textSize="15dp"/>
 
         <TextView
@@ -199,7 +219,10 @@
             android:hint="Enter the customer postcode"
             android:background="@drawable/custom_input"
             android:maxLines="1"
-            android:padding="15dp"
+            android:paddingStart="15dp"
+            android:paddingEnd="15dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
             android:textSize="15dp"/>
 
         <com.google.android.material.button.MaterialButton
@@ -217,6 +240,7 @@
             android:paddingEnd="80dp"
             android:layout_marginTop="15dp"
             app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@id/add_customer_city_et"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

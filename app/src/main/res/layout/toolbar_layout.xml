@@ -104,18 +104,17 @@
             android:id="@+id/cash_in_out_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Cash In / Out"
-            android:textAllCaps="false"
-            app:icon="@drawable/ic_cash"
-            android:backgroundTint="@color/darkOrange"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
             android:layout_marginTop="-5dp"
             android:layout_marginRight="15dp"
             android:layout_marginBottom="-5dp"
+            android:backgroundTint="@color/darkOrange"
             android:drawableLeft="@drawable/ic_select_table"
             android:drawablePadding="10dp"
             android:padding="8dp"
-            />
+            android:text="Cash In / Out"
+            android:textAllCaps="false"
+            app:icon="@drawable/ic_cash" />
     </RelativeLayout>
 </layout>

@@ -207,6 +207,9 @@ public class CustomerPage extends AppCompatActivity {
         binding.navbarLayoutInclude.navBarSettings.setOnClickListener(new View.OnClickListener(){
                @Override
                public void onClick(View view) {
+                   Intent intent = new Intent(contextpage, SettingPage.class);
+                   startActivity(intent);
+                   finish();
                    Toast.makeText(contextpage, "Settings Button Clicked", Toast.LENGTH_SHORT).show();
                }
            }
@@ -280,7 +283,7 @@ public class CustomerPage extends AppCompatActivity {
                 Toast.makeText(contextpage, "Scan Button Clicked", Toast.LENGTH_SHORT).show();
             }
         });
-        binding.cartInclude.cartBtnReload.setOnClickListener(new View.OnClickListener(){
+        binding.cartInclude.cartBtnPosType.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
                 Toast.makeText(contextpage, "Reload Button Clicked", Toast.LENGTH_SHORT).show();

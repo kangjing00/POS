@@ -12,6 +12,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
@@ -31,7 +32,6 @@ import java.util.ArrayList;
 public class HomePage extends AppCompatActivity {
 
     private HomePageBinding binding;
-
     //Cart //Popup
     private Button add_discount_popup_negative_btn, add_discount_popup_positive_btn;
     private EditText add_discount_popup_et;
@@ -48,6 +48,7 @@ public class HomePage extends AppCompatActivity {
 
     private String statuslogin;
     private Context contextpage;
+    private LoginPage login_page;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +56,7 @@ public class HomePage extends AppCompatActivity {
         contextpage = HomePage.this;
 
         binding = DataBindingUtil.setContentView(this, R.layout.home_page);
+
         //Appbar Settings
         Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
         toolbar.setTitle("");
@@ -181,6 +183,9 @@ public class HomePage extends AppCompatActivity {
         binding.navbarLayoutInclude.navBarSettings.setOnClickListener(new View.OnClickListener(){
                @Override
                public void onClick(View view) {
+                   Intent intent = new Intent(contextpage, SettingPage.class);
+                   startActivity(intent);
+                   finish();
                    Toast.makeText(contextpage, "Settings Button Clicked", Toast.LENGTH_SHORT).show();
                }
            }
@@ -195,6 +200,10 @@ public class HomePage extends AppCompatActivity {
         binding.navbarLayoutInclude.navbarLogout.setOnClickListener(new View.OnClickListener(){
                @Override
                public void onClick(View view) {
+                   Intent intent = new Intent(contextpage, LoginPage.class);
+                   startActivity(intent);
+                   finish();
+
                    Toast.makeText(contextpage, "Logout Button Clicked", Toast.LENGTH_SHORT).show();
                }
            }
@@ -254,7 +263,7 @@ public class HomePage extends AppCompatActivity {
                 Toast.makeText(contextpage, "Scan Button Clicked", Toast.LENGTH_SHORT).show();
             }
         });
-        binding.cartInclude.cartBtnReload.setOnClickListener(new View.OnClickListener(){
+        binding.cartInclude.cartBtnPosType.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
                 Toast.makeText(contextpage, "Reload Button Clicked", Toast.LENGTH_SHORT).show();

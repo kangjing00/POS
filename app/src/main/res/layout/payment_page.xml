@@ -402,13 +402,13 @@
                 android:layout_centerVertical="true"
                 android:layout_toRightOf="@+id/textView2">
 
-                <ImageView
+                <de.hdodenhof.circleimageview.CircleImageView
                     android:id="@+id/payment_bar_customer_image"
                     android:layout_width="60dp"
                     android:layout_height="60dp"
                     android:layout_centerVertical="true"
                     android:layout_toLeftOf="@+id/payment_bar_customer_name"
-                    android:src="@drawable/face2" />
+                    android:src="@drawable/face1" />
 
                 <TextView
                     android:id="@+id/payment_bar_customer_name"

@@ -193,7 +193,7 @@ public class SplashScreen extends Activity {
                         startActivity(a);
                     }
                     else {
-                        Intent a = new Intent(contextpage, HomePage.class);
+                        Intent a = new Intent(contextpage, LoginPage.class);
                         a.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(a);
                     }

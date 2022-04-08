@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/lightGrey"
+        tools:context=".SettingPage">
+
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/appBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <include android:id="@+id/toolbar_layout_incl" layout="@layout/toolbar_layout" />
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <ScrollView
+            android:id="@+id/navbar_layout_include_sv"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:background="@color/white"
+            android:fillViewport="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/appBar">
+
+            <include android:id="@+id/navbar_layout_include" layout="@layout/navbar_layout" />
+        </ScrollView>
+
+        <RadioGroup
+            android:id="@+id/setting_radioGroup"
+            android:layout_width="650dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="20dp"
+            android:paddingStart="10dp"
+            android:paddingTop="5dp"
+            android:paddingEnd="10dp"
+            android:paddingBottom="5dp"
+            android:orientation="horizontal"
+            android:background="@drawable/box_coner_nopadding_white"
+            app:layout_constraintStart_toEndOf="@+id/navbar_layout_include_sv"
+            app:layout_constraintTop_toBottomOf="@+id/appBar">
+
+            <RadioButton
+                android:id="@+id/setting_account_rb"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Account Settings"
+                android:background="@drawable/navbtn_selector"
+                android:button="@android:color/transparent"
+                android:textColor="@drawable/categorybtn_text_color"
+                android:padding="8dp"
+                android:layout_margin="5dp"/>
+
+            <RadioButton
+                android:id="@+id/other_rb"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Other"
+                android:background="@drawable/navbtn_selector"
+                android:button="@android:color/transparent"
+                android:textColor="@drawable/categorybtn_text_color"
+                android:padding="8dp"
+                android:layout_margin="5dp"/>
+        </RadioGroup>
+
+        <FrameLayout
+            android:id="@+id/setting_fragment_fl"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_margin="20dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/setting_radioGroup"
+            app:layout_constraintStart_toEndOf="@id/navbar_layout_include_sv"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

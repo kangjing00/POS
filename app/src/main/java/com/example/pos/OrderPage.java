@@ -182,6 +182,9 @@ public class OrderPage extends AppCompatActivity {
         binding.navbarLayoutInclude.navBarSettings.setOnClickListener(new View.OnClickListener(){
                @Override
                public void onClick(View view) {
+                   Intent intent = new Intent(contextpage, SettingPage.class);
+                   startActivity(intent);
+                   finish();
                    Toast.makeText(contextpage, "Settings Button Clicked", Toast.LENGTH_SHORT).show();
                }
            }

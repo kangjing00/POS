@@ -140,13 +140,12 @@
                 android:textSize="10dp" />
         </RadioGroup>
 
-        <ImageButton
+        <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/navBar_profile"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:layout_margin="5dp"
-            android:background="@drawable/sphere_btn"
-            android:scaleType="fitCenter"
+            android:src="@drawable/face1"
             app:layout_constraintBottom_toTopOf="@id/navbar_logout"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />

@@ -1,11 +1,147 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".LoginPage">
+    xmlns:tools="http://schemas.android.com/tools">
 
-    
+    <data>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/login_background"
+        tools:context=".LoginPage">
+
+        <TextView
+            android:id="@+id/textView1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="100dp"
+            android:text="POS System"
+            android:textColor="@color/white"
+            android:textSize="55dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Welcome Back"
+            android:textColor="@color/white"
+            android:textSize="80dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textView1" />
+
+        <ImageView
+            android:id="@+id/user_id_icon"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginTop="105dp"
+            android:layout_marginRight="15dp"
+            android:src="@drawable/ic_customer"
+            app:layout_constraintEnd_toStartOf="@id/user_id_et"
+            app:layout_constraintHorizontal_chainStyle="packed"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/textView2" />
+
+        <EditText
+            android:id="@+id/user_id_et"
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginTop="100dp"
+            android:background="@drawable/custom_input"
+            android:hint="Enter user ID"
+            android:padding="15dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/user_id_icon"
+            app:layout_constraintTop_toBottomOf="@id/textView2" />
+
+
+        <ImageView
+            android:id="@+id/password_icon"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginTop="20dp"
+            android:layout_marginRight="15dp"
+            android:src="@drawable/ic_lock"
+            app:layout_constraintEnd_toStartOf="@id/password_et_rl"
+            app:layout_constraintHorizontal_chainStyle="packed"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/user_id_icon"
+            app:tint="@color/black" />
+
+        <RelativeLayout
+            android:id="@+id/password_et_rl"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="15dp"
+            android:background="@drawable/custom_input"
+            app:layout_constraintStart_toEndOf="@id/password_icon"
+            app:layout_constraintTop_toBottomOf="@id/user_id_et">
+
+            <EditText
+                android:id="@+id/password_et"
+                android:layout_width="250dp"
+                android:layout_height="wrap_content"
+                android:background="@null"
+                android:hint="Enter the password"
+                android:inputType="textPassword"
+                android:layout_centerVertical="true"
+                android:padding="15dp" />
+
+            <ImageButton
+                android:id="@+id/password_show_hide"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_toRightOf="@id/password_et"
+                android:backgroundTint="@color/white"
+                android:src="@drawable/ic_eye" />
+        </RelativeLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/login_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:backgroundTint="@color/darkOrange"
+            android:paddingStart="80dp"
+            android:paddingTop="15dp"
+            android:paddingEnd="80dp"
+            android:paddingBottom="15dp"
+            android:text="Log In"
+            android:textAllCaps="false"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/password_et_rl" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/register_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:textColor="@color/darkOrange"
+            android:backgroundTint="@color/white"
+            android:paddingStart="73dp"
+            android:paddingTop="15dp"
+            android:paddingEnd="73dp"
+            android:paddingBottom="15dp"
+            android:text="Register"
+            android:textAllCaps="false"
+            app:strokeWidth="2dp"
+            app:strokeColor="@color/darkOrange"
+            app:rippleColor="@color/lightOrange"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/login_btn" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

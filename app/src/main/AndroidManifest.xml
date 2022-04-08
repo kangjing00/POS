@@ -10,6 +10,15 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
+            android:name=".ChoosePOSPermissionPage"
+            android:exported="false" />
+        <activity
+            android:name=".RegisterPage"
+            android:exported="false" />
+        <activity
+            android:name=".SettingPage"
+            android:exported="false" />
+        <activity
             android:name=".OrderPage"
             android:exported="false" />
         <activity android:name=".CashierPage" />

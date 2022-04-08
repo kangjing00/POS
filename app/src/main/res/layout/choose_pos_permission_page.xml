@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/darkOrange"
+        tools:context=".ChoosePOSPermissionPage">
+
+        <RelativeLayout
+            android:id="@+id/info_rl"
+            android:layout_width="400dp"
+            android:layout_height="260dp"
+            android:background="@drawable/box_coner_nopadding_white"
+            android:elevation="20dp"
+            android:padding="15dp"
+            android:layout_margin="20dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/choose_pos_permission_rl"
+            app:layout_constraintHorizontal_chainStyle="packed"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/info_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Info Box"
+                android:textSize="18dp"
+                android:textStyle="bold"
+                android:layout_centerHorizontal="true"/>
+
+            <TextView
+                android:id="@+id/position_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/info_title"
+                android:layout_marginTop="10dp"
+                android:text="Position"
+                android:textSize="18dp" />
+
+            <TextView
+                android:id="@+id/position"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/info_title"
+                android:layout_alignParentEnd="true"
+                android:layout_marginTop="10dp"
+                android:text="Manager"
+                android:textSize="18dp" />
+
+            <TextView
+                android:id="@+id/textView1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/position_title"
+                android:layout_marginTop="10dp"
+                android:text="Today Date"
+                android:textSize="18dp" />
+
+            <TextView
+                android:id="@+id/today_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/position_title"
+                android:layout_alignParentEnd="true"
+                android:layout_marginTop="10dp"
+                android:text="Null"
+                android:textSize="18dp" />
+
+            <TextView
+                android:id="@+id/textView2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/textView1"
+                android:layout_marginTop="10dp"
+                android:text="Last Login"
+                android:textSize="16dp" />
+
+            <TextView
+                android:id="@+id/last_login_date"
+                android:layout_marginTop="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/textView1"
+                android:layout_alignParentEnd="true"
+                android:textSize="16dp"
+                android:text="01/04/2022, 12:00:00" />
+
+            <TextView
+                android:id="@+id/textView3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/textView2"
+                android:layout_marginTop="10dp"
+                android:text="Last Logout"
+                android:textSize="16dp" />
+
+            <TextView
+                android:id="@+id/last_logout_date"
+                android:layout_marginTop="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/textView2"
+                android:layout_alignParentEnd="true"
+                android:textSize="16dp"
+                android:text="01/04/2022, 18:00:00" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/logout_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentBottom="true"
+                android:backgroundTint="@color/white"
+                android:padding="15dp"
+                android:text="Logout"
+                android:textAllCaps="false"
+                android:textColor="@color/darkOrange"
+                app:rippleColor="@color/lightOrange"
+                app:strokeColor="@color/darkOrange"
+                app:strokeWidth="2dp" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/choose_pos_permission_rl"
+            android:layout_width="400dp"
+            android:layout_height="260dp"
+            android:layout_margin="20dp"
+            android:elevation="20dp"
+            android:padding="15dp"
+            android:background="@drawable/box_coner_nopadding_white"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/info_rl"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/textView4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:text="Action Type"
+                android:textSize="18dp"
+                android:textStyle="bold" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/order_only_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/textView4"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentEnd="true"
+                android:layout_marginTop="15dp"
+                android:backgroundTint="@color/darkOrange"
+                android:padding="15dp"
+                android:text="Order Only"
+                android:textAllCaps="false"
+                app:rippleColor="@color/lightGrey" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/cashier_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/order_only_btn"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentEnd="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="5dp"
+                android:backgroundTint="@color/darkOrange"
+                android:padding="15dp"
+                android:text="Cashier"
+                android:textAllCaps="false"
+                app:rippleColor="@color/lightGrey" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/kds_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/cashier_btn"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentEnd="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="5dp"
+                android:backgroundTint="@color/darkOrange"
+                android:paddingTop="15dp"
+                android:paddingBottom="15dp"
+                android:text="Kitchen Display System (KDS)"
+                android:textAllCaps="false"
+                app:rippleColor="@color/lightGrey" />
+        </RelativeLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>
