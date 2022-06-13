@@ -28,6 +28,8 @@ public class TablePage extends AppCompatActivity {
     private RadioButton cash_in_rb, cash_out_rb;
     private EditText cash_in_out_amount, cash_in_out_reason;
     private MaterialButton cash_in_out_cancel, cash_in_out_confirm;
+    //Sync popup
+    private TextView product_sync_btn, transactions_sync_btn;
 
     private String statuslogin;
     private Context contextpage;
@@ -72,6 +74,7 @@ public class TablePage extends AppCompatActivity {
         binding.toolbarLayoutIncl.toolbarRefresh.setOnClickListener(new View.OnClickListener(){
                 @Override
                 public void onClick(View view) {
+                    showRefreshPopup(view);
                     Toast.makeText(contextpage, "Refresh Button Clicked", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -234,5 +237,41 @@ public class TablePage extends AppCompatActivity {
 //        //Popup Buttons
 //        add_popup_negative_btn = (Button)layout.findViewById(R.id.add_discount_popup_negative_btn);
 //        add_popup_positive_btn = (Button)layout.findViewById(R.id.add_discount_popup_positive_btn);
+    }
+
+    private void showRefreshPopup(View view) {
+        PopupWindow popup = new PopupWindow(contextpage);
+        View layout = getLayoutInflater().inflate(R.layout.toolbar_sync_popup, null);
+        popup.setContentView(layout);
+        // Set content width and height
+        popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
+        popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
+        // Closes the popup window when touch outside of it - when looses focus
+        popup.setOutsideTouchable(true);
+        popup.setFocusable(true);
+        // Show anchored to button
+        popup.setElevation(8);
+        popup.setBackgroundDrawable(null);
+        popup.showAsDropDown(binding.toolbarLayoutIncl.toolbarRefresh, -120, 0);
+
+        //Popup Buttons
+        product_sync_btn = (TextView) layout.findViewById(R.id.sync_product_btn);
+        transactions_sync_btn = (TextView)layout.findViewById(R.id.sync_transaction_btn);
+
+        product_sync_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(contextpage, "refresh / sync products", Toast.LENGTH_SHORT).show();
+                popup.dismiss();
+            }
+        });
+
+        transactions_sync_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(contextpage, "refresh / sync transactions", Toast.LENGTH_SHORT).show();
+                popup.dismiss();
+            }
+        });
     }
 }

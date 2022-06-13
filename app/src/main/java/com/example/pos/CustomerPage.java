@@ -21,6 +21,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.PopupWindow;
 import android.widget.RadioButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.pos.CashierFragments.FragmentCashierDrawer;
@@ -42,6 +43,8 @@ public class CustomerPage extends AppCompatActivity {
     private EditText add_discount_popup_et;
     private MaterialButton  add_note_popup_negative_btn, add_note_popup_positive_btn;
     private EditText add_note_popup_et;
+    //Sync popup
+    private TextView product_sync_btn, transactions_sync_btn;
     // Storing data into SharedPreferences
     private SharedPreferences cartSharedPreference;
     // Creating an Editor object to edit(write to the file)
@@ -128,6 +131,7 @@ public class CustomerPage extends AppCompatActivity {
         binding.toolbarLayoutIncl.toolbarRefresh.setOnClickListener(new View.OnClickListener(){
                 @Override
                 public void onClick(View view) {
+                    showRefreshPopup(view);
                     Toast.makeText(contextpage, "Refresh Button Clicked", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -456,6 +460,42 @@ public class CustomerPage extends AppCompatActivity {
             @Override
             public void onDismiss() {
                 binding.cartInclude.tvDiscount.setTextColor(contextpage.getResources().getColor(R.color.black));
+            }
+        });
+    }
+
+    private void showRefreshPopup(View view) {
+        PopupWindow popup = new PopupWindow(contextpage);
+        View layout = getLayoutInflater().inflate(R.layout.toolbar_sync_popup, null);
+        popup.setContentView(layout);
+        // Set content width and height
+        popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
+        popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
+        // Closes the popup window when touch outside of it - when looses focus
+        popup.setOutsideTouchable(true);
+        popup.setFocusable(true);
+        // Show anchored to button
+        popup.setElevation(8);
+        popup.setBackgroundDrawable(null);
+        popup.showAsDropDown(binding.toolbarLayoutIncl.toolbarRefresh, -120, 0);
+
+        //Popup Buttons
+        product_sync_btn = (TextView) layout.findViewById(R.id.sync_product_btn);
+        transactions_sync_btn = (TextView)layout.findViewById(R.id.sync_transaction_btn);
+
+        product_sync_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(contextpage, "refresh / sync products", Toast.LENGTH_SHORT).show();
+                popup.dismiss();
+            }
+        });
+
+        transactions_sync_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(contextpage, "refresh / sync transactions", Toast.LENGTH_SHORT).show();
+                popup.dismiss();
             }
         });
     }
