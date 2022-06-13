@@ -45,6 +45,7 @@ public class LoginPage extends AppCompatActivity {
         binding.loginBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                //insertDummyProductData();
                 Intent intent = new Intent(contextpage, ChoosePOSPermissionPage.class);
                 startActivity(intent);
                 finish();
@@ -53,7 +54,7 @@ public class LoginPage extends AppCompatActivity {
         binding.registerBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                deleteRealm();
+                //deleteRealm();
                 Intent intent = new Intent(contextpage, RegisterPage.class);
                 startActivity(intent);
                 finish();

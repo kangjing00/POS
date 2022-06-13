@@ -13,6 +13,8 @@ import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.PopupWindow;
@@ -268,12 +270,30 @@ public class HomePage extends AppCompatActivity {
                 Toast.makeText(contextpage, "Scan Button Clicked", Toast.LENGTH_SHORT).show();
             }
         });
-        binding.cartInclude.cartBtnPosType.setOnClickListener(new View.OnClickListener(){
+//        binding.cartInclude.cartBtnPosType.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View view) {
+//                //showOrderTypeChoicePopup(view);
+//                Toast.makeText(contextpage, "Order Type Button Clicked", Toast.LENGTH_SHORT).show();
+//            }
+//        });
+        ArrayAdapter<String> orderTypes = new ArrayAdapter<String>(contextpage, android.R.layout.simple_list_item_1, getResources().getStringArray(R.array.order_types));
+        orderTypes.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        binding.cartInclude.cartBtnPosType.setAdapter(orderTypes);
+        binding.cartInclude.cartBtnPosType.setDropDownVerticalOffset(100);
+        binding.cartInclude.cartBtnPosType.setSelection(cartSharedPreference.getInt("orderTypePosition", 1));
+        binding.cartInclude.cartBtnPosType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
-            public void onClick(View view) {
-                Toast.makeText(contextpage, "Reload Button Clicked", Toast.LENGTH_SHORT).show();
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                cartSharedPreferenceEdit.putInt("orderTypePosition", binding.cartInclude.cartBtnPosType.getSelectedItemPosition());
+                cartSharedPreferenceEdit.commit();
+                Toast.makeText(contextpage, "item selected", Toast.LENGTH_SHORT);
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
             }
         });
+
         binding.cartInclude.cartOrderSummaryDiscountCancelBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -436,4 +456,13 @@ public class HomePage extends AppCompatActivity {
             }
         });
     }
+
+//    private void showOrderTypeChoicePopup(View view) {
+//        PopupWindow popup = new PopupWindow(contextpage);
+//        View layout = getLayoutInflater().inflate(R.layout.cart_order_add_discount_popup, null);
+//        popup.setContentView(layout);
+//        // Set content width and height
+//        popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
+//        popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
+//    }
 }

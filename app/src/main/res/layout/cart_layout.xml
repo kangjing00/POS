@@ -63,16 +63,16 @@
                     android:id="@+id/cart_current_customer_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Vincent Lobo"
                     android:layout_marginLeft="10dp"
                     android:layout_marginTop="5dp"
-                    android:layout_toRightOf="@+id/cart_current_customer_image" />
+                    android:layout_toRightOf="@+id/cart_current_customer_image"
+                    android:text="General Customer" />
 
                 <TextView
                     android:id="@+id/cart_current_customer_id"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="#999999"
+                    android:text="#000000"
                     android:textColor="@color/darkGrey"
                     android:textSize="12dp"
                     android:layout_marginLeft="10dp"
@@ -101,30 +101,28 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
-                android:layout_margin="5dp"
+                android:layout_marginStart="5dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginEnd="5dp"
+                android:layout_marginBottom="5dp"
                 android:layout_toLeftOf="@+id/cart_btnPos_type"
                 android:background="@drawable/box_corner_icon_btn"
                 android:padding="12dp"
                 android:src="@drawable/ic_barcode"
                 app:tint="@color/raisinBlack" />
 
-            <com.google.android.material.button.MaterialButton
+            <Spinner
                 android:id="@+id/cart_btnPos_type"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:layout_marginStart="5dp"
                 android:layout_marginTop="5dp"
-                android:layout_marginEnd="5dp"
                 android:layout_marginBottom="5dp"
-                android:backgroundTint="@color/lightGrey"
-                android:text="Type"
-                android:textAllCaps="false"
-                android:textColor="@color/black"
-                android:padding="12dp"
-                android:src="@drawable/ic_reload"
-                app:tint="@color/raisinBlack" />
+                android:layout_marginEnd="5dp"
+                android:layout_marginStart="5dp"
+                android:popupBackground="@drawable/box_corner_nopadding"
+                android:background="@drawable/box_corner_nopadding" />
         </RelativeLayout>
 
         <View
