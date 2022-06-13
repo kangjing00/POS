@@ -5,7 +5,6 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.databinding.DataBindingUtil;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -22,12 +21,14 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.example.pos.DataAdapters.ProductAdapter;
+import com.example.pos.Network.CheckConnection;
+import com.example.pos.Network.NetworkUtils;
 import com.example.pos.databinding.HomePageBinding;
 import com.google.android.material.button.MaterialButton;
 
-import org.w3c.dom.Text;
-
 import java.util.ArrayList;
+import java.util.Timer;
+
 import io.realm.Realm;
 import io.realm.RealmResults;
 
@@ -78,6 +79,11 @@ public class HomePage extends AppCompatActivity {
         cartSharedPreference = getSharedPreferences("CurrentOrder",MODE_MULTI_PROCESS);
         cartSharedPreferenceEdit = cartSharedPreference.edit();
 
+        //Internet Connection Checking
+        Timer timer = new Timer();
+        final int MILLISECONDS = 5000; //5 seconds
+        timer.schedule(new CheckConnection(contextpage), 0, MILLISECONDS);
+
         //Body
         //Recycler view
         binding.productListRv.setLayoutManager(new GridLayoutManager(contextpage, 4, LinearLayoutManager.VERTICAL, false));
@@ -123,7 +129,10 @@ public class HomePage extends AppCompatActivity {
         binding.toolbarLayoutIncl.toolbarWifi.setOnClickListener(new View.OnClickListener(){
                  @Override
                  public void onClick(View view) {
-                     Toast.makeText(contextpage, "Wifi Button Clicked", Toast.LENGTH_SHORT).show();
+                     if(NetworkUtils.isNetworkAvailable(contextpage))
+                        Toast.makeText(contextpage, "Wifi Connected", Toast.LENGTH_SHORT).show();
+                     else
+                        Toast.makeText(contextpage, "Wifi Loss", Toast.LENGTH_SHORT).show();
                  }
              }
         );
