@@ -121,7 +121,8 @@
                 android:layout_marginBottom="5dp"
                 android:layout_marginEnd="5dp"
                 android:layout_marginStart="5dp"
-                android:popupBackground="@drawable/box_corner_nopadding"
+                android:popupElevation="0dp"
+                android:popupBackground="@drawable/box_btm_corner_light_grey"
                 android:background="@drawable/box_corner_nopadding" />
         </RelativeLayout>
 

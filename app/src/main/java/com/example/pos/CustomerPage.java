@@ -13,6 +13,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -289,10 +290,34 @@ public class CustomerPage extends AppCompatActivity {
                 Toast.makeText(contextpage, "Scan Button Clicked", Toast.LENGTH_SHORT).show();
             }
         });
-        ArrayAdapter<String> orderTypes = new ArrayAdapter<String>(contextpage, android.R.layout.simple_list_item_1, getResources().getStringArray(R.array.order_types));
+        ArrayAdapter<String> orderTypes = new ArrayAdapter<String>(contextpage, android.R.layout.simple_list_item_1, getResources().getStringArray(R.array.order_types)){
+            @Override
+            public View getDropDownView(int position, View convertView, ViewGroup parent){
+                View v = null;
+                v = super.getDropDownView(position, null, parent);
+
+                // If this is the selected item position
+                if (position == binding.cartInclude.cartBtnPosType.getSelectedItemPosition()) {
+                    if(position == (binding.cartInclude.cartBtnPosType.getCount() - 1)){
+                        v.setBackground(getResources().getDrawable(R.drawable.box_btm_corner_dark_orange));
+                    }else {
+                        v.setBackgroundColor(getResources().getColor(R.color.darkOrange));
+                    }
+                }
+                else {
+                    // for other views
+                    if(position != (binding.cartInclude.cartBtnPosType.getCount() - 1)) {
+                        v.setBackgroundColor(getResources().getColor(R.color.lightGrey));
+                    }else{
+                        v.setBackground(getResources().getDrawable(R.drawable.box_btm_corner_light_grey));
+                    }
+                }
+                return v;
+            }
+        };
         orderTypes.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         binding.cartInclude.cartBtnPosType.setAdapter(orderTypes);
-        binding.cartInclude.cartBtnPosType.setDropDownVerticalOffset(100);
+        binding.cartInclude.cartBtnPosType.setDropDownVerticalOffset(80);
         binding.cartInclude.cartBtnPosType.setSelection(cartSharedPreference.getInt("orderTypePosition", 1));
         binding.cartInclude.cartBtnPosType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -498,5 +523,15 @@ public class CustomerPage extends AppCompatActivity {
                 popup.dismiss();
             }
         });
+    }
+
+    public void editCurrentCustomer(){
+        ft = fm.beginTransaction();
+        ft.replace(binding.customerPageFl.getId(), new FragmentAddCustomer()).commit();
+        binding.customerPageActionBtn.setText("Customer");
+        binding.customerPageActionBtn.setIcon(getDrawable(R.drawable.ic_customer));
+        binding.customerPageTitle.setText("Add New Customer");
+
+        customerFragment = !customerFragment;
     }
 }

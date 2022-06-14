@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.pos.ItemClickListener;
 import com.example.pos.Product;
 import com.example.pos.databinding.ViewProductMenuBinding;
+
 import java.util.ArrayList;
 
 public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductViewHolder> {

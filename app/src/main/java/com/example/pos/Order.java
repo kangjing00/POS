@@ -1,7 +1,5 @@
 package com.example.pos;
 
-import com.example.pos.Product;
-
 import io.realm.RealmObject;
 import io.realm.RealmResults;
 import io.realm.annotations.PrimaryKey;

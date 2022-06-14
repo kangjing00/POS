@@ -2,10 +2,13 @@ package com.example.pos;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.databinding.DataBindingUtil;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -15,15 +18,19 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.RadioButton;
+import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.pos.databinding.TablePageBinding;
 import com.google.android.material.button.MaterialButton;
 
-public class TablePage extends AppCompatActivity {
+import org.w3c.dom.Text;
+
+public class TablePage extends AppCompatActivity implements View.OnClickListener {
 
     private TablePageBinding binding;
+
     //Cash in out popup
     private RadioButton cash_in_rb, cash_out_rb;
     private EditText cash_in_out_amount, cash_in_out_reason;
@@ -48,8 +55,12 @@ public class TablePage extends AppCompatActivity {
         //Nav Settings
         binding.navbarLayoutInclude.navBarTables.setChecked(true);
 
+        int[][] empty = {
+                {1,5},{1,10},{2,5},{2,10},{3,5},{3,10},
+                {4,5},{4,10},{5,5},{5,10},{1,2},{7,8}
+        };
         //Body Settings
-
+        displayTables(7,18, empty);
 
         //OnClickListener
         //body
@@ -57,12 +68,12 @@ public class TablePage extends AppCompatActivity {
         binding.tableNoticeBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showAddonAndProceed(view);
                 Toast.makeText(contextpage, "Show all table Button Clicked", Toast.LENGTH_SHORT).show();
             }
         });
-
+        }
         //Toolbar buttons
+        {
         binding.toolbarLayoutIncl.toolbarSearchIcon.setOnClickListener(new View.OnClickListener(){
                @Override
                public void onClick(View view) {
@@ -218,7 +229,7 @@ public class TablePage extends AppCompatActivity {
         });
     }
 
-    private void showAddonAndProceed(View view) {
+    private void showAddonAndProceed(View view, TextView tv) {
         PopupWindow popup = new PopupWindow(contextpage);
         View layout = getLayoutInflater().inflate(R.layout.table_addon_proceed_popup, null);
         popup.setContentView(layout);
@@ -233,6 +244,15 @@ public class TablePage extends AppCompatActivity {
         popup.setBackgroundDrawable(null);
         popup.showAsDropDown(view);
 //        popup.showAsDropDown(tv_discount, -620, -180);
+
+        TextView tvTableID = layout.findViewById(R.id.table_addon_proceed_popup_table_name);
+        TextView tvOrderID = layout.findViewById(R.id.table_addon_proceed_popup_order_id);
+        for(int i = 0; i < tv.getText().length(); i++){
+            if(tv.getText().toString().substring(i,i+1).equalsIgnoreCase("\n")){
+                tvTableID.setText(tv.getText().toString().substring(0, i));
+                tvOrderID.setText(tv.getText().toString().substring(i+1, tv.getText().length()));
+            }
+        }
 
 //        //Popup Buttons
 //        add_popup_negative_btn = (Button)layout.findViewById(R.id.add_discount_popup_negative_btn);
@@ -273,5 +293,60 @@ public class TablePage extends AppCompatActivity {
                 popup.dismiss();
             }
         });
+    }
+
+    private void displayTables(int noRow, int noColumn, int[][] empty){
+        int tableNumber = 1;
+
+        for(int row = 1; row <= noRow; row++){
+            TableRow tr = new TableRow(contextpage);
+            for(int column = 1; column <= noColumn; column++){
+                TextView table = new TextView(contextpage);
+
+                table.setText("T"+ tableNumber +"\n"+"#00000");
+                table.setWidth((int) (80 * getResources().getDisplayMetrics().density));
+                table.setHeight((int) (80 * getResources().getDisplayMetrics().density));
+
+                Drawable tvDrawable;
+                tvDrawable = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
+                //the color is a direct color int and not a color resource
+                DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.green));
+                table.setBackground(tvDrawable);
+
+                table.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                table.setGravity(Gravity.CENTER);
+                table.setTextColor(Color.BLACK);
+                table.setClickable(true);
+
+                for(int x = 0; x < empty.length; x++){
+                    for(int y = 0; y < empty[x].length; y++){
+                        if(empty[x][0] == row)
+                            if(empty[x][1] == column)
+                                table.setVisibility(View.INVISIBLE);
+                    }
+                }
+
+                table.setId(tableNumber);
+                table.setOnClickListener(TablePage.this);
+
+                tr.addView(table);
+                tableNumber++;
+            }
+            binding.tableManagementLayout.addView(tr);
+        }
+    }
+
+    @Override
+    public void onClick(View v) {
+        int clicked_id = v.getId();
+        Drawable tvDrawable;
+        tvDrawable = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
+        //the color is a direct color int and not a color resource
+        DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.red));
+        v.setBackground(tvDrawable);
+        TextView tv = (TextView) v.findViewById(v.getId());
+        showAddonAndProceed(v, tv);
+
+        Toast.makeText(TablePage.this, "table clicked" + v.getId() + "'" + tv.getText().charAt(2) + "'", Toast.LENGTH_SHORT).show();
     }
 }

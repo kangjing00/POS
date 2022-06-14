@@ -23,6 +23,9 @@
         <entry key="..\:/Users/PC/Desktop/RSF2G3 Y2S3/Mobile Application/POS/app/src/main/res/layout/table_addon_proceed_popup.xml" value="0.36666666666666664" />
         <entry key="..\:/Users/PC/Desktop/RSF2G3 Y2S3/Mobile Application/POS/app/src/main/res/layout/view_cart_orders.xml" value="0.36666666666666664" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/box_btm_corner.xml" value="0.2715" />
+        <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/box_btm_corner_dark_orange.xml" value="0.2255" />
+        <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/box_btm_corner_grey.xml" value="0.2255" />
+        <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/box_btm_corner_light_grey.xml" value="0.2255" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/box_coner_nopadding_white.xml" value="0.2255" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/box_corner_icon_btn.xml" value="0.2255" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/box_corner_nopadding.xml" value="0.2585" />
@@ -38,7 +41,13 @@
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/ic_hide.xml" value="0.2655" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/ic_left.xml" value="0.2655" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/ic_lock.xml" value="0.2655" />
+        <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/ic_logout.xml" value="0.2255" />
+        <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/ic_no_internet.xml" value="0.2255" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/ic_order.xml" value="0.2715" />
+        <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/ic_square_table_4.xml" value="0.2865" />
+        <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/ic_square_table_4_modified.xml" value="0.2865" />
+        <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/ic_touch_n_go.xml" value="0.2865" />
+        <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/ic_wifi.xml" value="0.2255" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/login_background.xml" value="0.2655" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/navbtn_selected.xml" value="0.2585" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/navbtn_selector.xml" value="0.2585" />
@@ -61,6 +70,7 @@
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/fragment_offline_order.xml" value="0.33" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/fragment_order_history.xml" value="0.25" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/fragment_order_on_hold.xml" value="0.33" />
+        <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/fragment_other_modes.xml" value="0.16" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/fragment_sale_history.xml" value="0.22" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/fragment_today_sale.xml" value="0.18" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/home_page.xml" value="0.14" />
@@ -69,10 +79,11 @@
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/offline_order_detail_layout.xml" value="0.22" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/order_history_detail_layout.xml" value="0.36666666666666664" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/order_page.xml" value="0.2" />
-        <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/payment_page.xml" value="0.16" />
+        <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/payment_page.xml" value="0.18" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/register_page.xml" value="0.2" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/setting_page.xml" value="0.18" />
-        <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/table_page.xml" value="0.17831813576494426" />
+        <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/table_addon_proceed_popup.xml" value="0.67" />
+        <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/table_page.xml" value="0.25" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/toolbar_layout.xml" value="0.2" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/toolbar_refresh_popup.xml" value="0.75" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/view_cart_orders.xml" value="0.22509057971014493" />

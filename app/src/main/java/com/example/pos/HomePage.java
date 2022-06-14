@@ -11,6 +11,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -129,10 +130,16 @@ public class HomePage extends AppCompatActivity {
         binding.toolbarLayoutIncl.toolbarWifi.setOnClickListener(new View.OnClickListener(){
                  @Override
                  public void onClick(View view) {
-                     if(NetworkUtils.isNetworkAvailable(contextpage))
-                        Toast.makeText(contextpage, "Wifi Connected", Toast.LENGTH_SHORT).show();
-                     else
-                        Toast.makeText(contextpage, "Wifi Loss", Toast.LENGTH_SHORT).show();
+                     if(NetworkUtils.isNetworkAvailable(contextpage)) {
+                         binding.toolbarLayoutIncl.toolbarWifi.setImageResource(R.drawable.ic_wifi);
+                         binding.toolbarLayoutIncl.toolbarWifi.setColorFilter(getResources().getColor(R.color.green));
+                         Toast.makeText(contextpage, "Wifi Connected", Toast.LENGTH_SHORT).show();
+                     }
+                     else {
+                         binding.toolbarLayoutIncl.toolbarWifi.setImageResource(R.drawable.ic_no_internet);
+                         binding.toolbarLayoutIncl.toolbarWifi.setColorFilter(getResources().getColor(R.color.red));
+                         Toast.makeText(contextpage, "Wifi Loss", Toast.LENGTH_SHORT).show();
+                     }
                  }
              }
         );
@@ -292,17 +299,41 @@ public class HomePage extends AppCompatActivity {
 //                Toast.makeText(contextpage, "Order Type Button Clicked", Toast.LENGTH_SHORT).show();
 //            }
 //        });
-        ArrayAdapter<String> orderTypes = new ArrayAdapter<String>(contextpage, android.R.layout.simple_list_item_1, getResources().getStringArray(R.array.order_types));
+        ArrayAdapter<String> orderTypes = new ArrayAdapter<String>(contextpage, android.R.layout.simple_list_item_1, getResources().getStringArray(R.array.order_types)){
+            @Override
+            public View getDropDownView(int position, View convertView, ViewGroup parent){
+                View v = null;
+                v = super.getDropDownView(position, null, parent);
+
+                // If this is the selected item position
+                if (position == binding.cartInclude.cartBtnPosType.getSelectedItemPosition()) {
+                    if(position == (binding.cartInclude.cartBtnPosType.getCount() - 1)){
+                        v.setBackground(getResources().getDrawable(R.drawable.box_btm_corner_dark_orange));
+                    }else {
+                        v.setBackgroundColor(getResources().getColor(R.color.darkOrange));
+                    }
+                }
+                else {
+                    // for other views
+                    if(position != (binding.cartInclude.cartBtnPosType.getCount() - 1)) {
+                        v.setBackgroundColor(getResources().getColor(R.color.lightGrey));
+                    }else{
+                        v.setBackground(getResources().getDrawable(R.drawable.box_btm_corner_light_grey));
+                    }
+                }
+                return v;
+            }
+        };
         orderTypes.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         binding.cartInclude.cartBtnPosType.setAdapter(orderTypes);
-        binding.cartInclude.cartBtnPosType.setDropDownVerticalOffset(100);
+        binding.cartInclude.cartBtnPosType.setDropDownVerticalOffset(80);
         binding.cartInclude.cartBtnPosType.setSelection(cartSharedPreference.getInt("orderTypePosition", 1));
         binding.cartInclude.cartBtnPosType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 cartSharedPreferenceEdit.putInt("orderTypePosition", binding.cartInclude.cartBtnPosType.getSelectedItemPosition());
                 cartSharedPreferenceEdit.commit();
-                Toast.makeText(contextpage, "item selected", Toast.LENGTH_SHORT);
+                Toast.makeText(contextpage, "item selected", Toast.LENGTH_SHORT).show();
             }
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {
