@@ -4,7 +4,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.databinding.DataBindingUtil;
-
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -14,29 +13,35 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
-import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.RadioButton;
 import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.example.pos.databinding.TablePageBinding;
 import com.google.android.material.button.MaterialButton;
 
-import org.w3c.dom.Text;
+import java.util.ArrayList;
 
-public class TablePage extends AppCompatActivity implements View.OnClickListener {
+import io.realm.Realm;
+import io.realm.RealmConfiguration;
+import io.realm.RealmResults;
+
+public class TablePage extends AppCompatActivity implements View.OnClickListener, View.OnLongClickListener {
 
     private TablePageBinding binding;
-
+    //Body
+    private boolean tableSelecting;
+    private View lastClickedTableView;
+    private ArrayList<Table> tableList;
     //Cash in out popup
     private RadioButton cash_in_rb, cash_out_rb;
     private EditText cash_in_out_amount, cash_in_out_reason;
     private MaterialButton cash_in_out_cancel, cash_in_out_confirm;
     //Sync popup
     private TextView product_sync_btn, transactions_sync_btn;
+    //Realm
+    private Realm realm;
 
     private String statuslogin;
     private Context contextpage;
@@ -45,7 +50,10 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         contextpage = TablePage.this;
+
         binding = DataBindingUtil.setContentView(this, R.layout.table_page);
+
+        realm = Realm.getDefaultInstance();
 
         //Toolbar Settings
         Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
@@ -55,12 +63,21 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
         //Nav Settings
         binding.navbarLayoutInclude.navBarTables.setChecked(true);
 
-        int[][] empty = {
-                {1,5},{1,10},{2,5},{2,10},{3,5},{3,10},
-                {4,5},{4,10},{5,5},{5,10},{1,2},{7,8}
-        };
         //Body Settings
-        displayTables(7,18, empty);
+        tableSelecting = false;
+        lastClickedTableView = null;
+        tableList = new ArrayList<Table>();
+        getProductFromRealm();
+        tableList.get(0).setOccupied(true);
+        tableList.get(0).setVacant(false);
+        tableList.get(18).setOnHold(true);
+        tableList.get(18).setVacant(false);
+//        int[][] empty = {
+//                {1,5},{1,10},{2,5},{2,10},{3,5},{3,10},
+//                {4,5},{4,10},{5,5},{5,10},{1,2},{7,8}
+//        };
+        displayTables(7,18, tableList);
+        //insertDummyTableData();
 
         //OnClickListener
         //body
@@ -69,6 +86,16 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
             @Override
             public void onClick(View view) {
                 Toast.makeText(contextpage, "Show all table Button Clicked", Toast.LENGTH_SHORT).show();
+            }
+        });
+        binding.tableInformationBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(tableSelecting){
+                    Toast.makeText(contextpage, "Select & Place Order", Toast.LENGTH_SHORT).show();
+                }else{
+                    Toast.makeText(contextpage, "Please select a table", Toast.LENGTH_SHORT).show();
+                }
             }
         });
         }
@@ -243,16 +270,12 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
         popup.setElevation(8);
         popup.setBackgroundDrawable(null);
         popup.showAsDropDown(view);
-//        popup.showAsDropDown(tv_discount, -620, -180);
 
-        TextView tvTableID = layout.findViewById(R.id.table_addon_proceed_popup_table_name);
+        TextView tvTableName = layout.findViewById(R.id.table_addon_proceed_popup_table_name);
         TextView tvOrderID = layout.findViewById(R.id.table_addon_proceed_popup_order_id);
-        for(int i = 0; i < tv.getText().length(); i++){
-            if(tv.getText().toString().substring(i,i+1).equalsIgnoreCase("\n")){
-                tvTableID.setText(tv.getText().toString().substring(0, i));
-                tvOrderID.setText(tv.getText().toString().substring(i+1, tv.getText().length()));
-            }
-        }
+
+        tvTableName.setText(getTableName(tv.getText().toString()));
+        tvOrderID.setText(getTableOrderID(tv.getText().toString()));
 
 //        //Popup Buttons
 //        add_popup_negative_btn = (Button)layout.findViewById(R.id.add_discount_popup_negative_btn);
@@ -295,22 +318,30 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
         });
     }
 
-    private void displayTables(int noRow, int noColumn, int[][] empty){
-        int tableNumber = 1;
+    //Display tables
+    private void displayTables(int noRow, int noColumn, ArrayList<Table> tableList){
+        //int tableNumber = 1;
+        int tableListCount = 0;
 
         for(int row = 1; row <= noRow; row++){
             TableRow tr = new TableRow(contextpage);
             for(int column = 1; column <= noColumn; column++){
                 TextView table = new TextView(contextpage);
 
-                table.setText("T"+ tableNumber +"\n"+"#00000");
+//                table.setText("T"+ tableNumber +"\n"+"#00000");
+                table.setText(tableList.get(tableListCount).getTable_name() + "\n" + "#00000");
                 table.setWidth((int) (80 * getResources().getDisplayMetrics().density));
                 table.setHeight((int) (80 * getResources().getDisplayMetrics().density));
 
                 Drawable tvDrawable;
                 tvDrawable = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
-                //the color is a direct color int and not a color resource
-                DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.green));
+                if(tableList.get(tableListCount).isVacant()) {
+                    DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.green));
+                }else if(tableList.get(tableListCount).isOnHold()){
+                    DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.blue));
+                }else{
+                    DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.red));
+                }
                 table.setBackground(tvDrawable);
 
                 table.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
@@ -318,35 +349,170 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
                 table.setTextColor(Color.BLACK);
                 table.setClickable(true);
 
-                for(int x = 0; x < empty.length; x++){
-                    for(int y = 0; y < empty[x].length; y++){
-                        if(empty[x][0] == row)
-                            if(empty[x][1] == column)
-                                table.setVisibility(View.INVISIBLE);
-                    }
+                if(!tableList.get(tableListCount).isAvailable()){
+                    table.setVisibility(View.INVISIBLE);
                 }
+//                for(int x = 0; x < empty.length; x++){
+//                    for(int y = 0; y < empty[x].length; y++){
+//                        if(empty[x][0] == row)
+//                            if(empty[x][1] == column)
+//                                table.setVisibility(View.INVISIBLE);
+//                    }
+//                }
 
-                table.setId(tableNumber);
+                table.setId(tableList.get(tableListCount).getTable_id());
                 table.setOnClickListener(TablePage.this);
+                table.setOnLongClickListener(TablePage.this);
 
                 tr.addView(table);
-                tableNumber++;
+//                tableNumber++;
+                tableListCount++;
             }
             binding.tableManagementLayout.addView(tr);
         }
     }
 
+    //Tables clicking setting
     @Override
     public void onClick(View v) {
         int clicked_id = v.getId();
+        Table clickedTable = null;
+
+        for(int i = 0; i < tableList.size(); i++){
+            if(tableList.get(i).getTable_id() == v.getId()){
+                clickedTable = tableList.get(i);
+                break;
+            }
+        }
+
+        TextView tv = (TextView) v.findViewById(v.getId());
+        Drawable tvDrawable;
+        tvDrawable = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
+
+        if(clickedTable.isVacant()){
+            if(!tableSelecting) {
+                //case: table is not selecting, operation: select a table
+                tableSelecting = true;
+                DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.darkOrange));
+                v.setBackground(tvDrawable);
+                lastClickedTableView = v;
+            }else if(lastClickedTableView == v){
+                //case: table is selecting and click on the selecting table, operation: make it unselect on same table
+                tableSelecting = false;
+                Drawable tvDrawable1;
+                tvDrawable1 = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
+                DrawableCompat.setTint(tvDrawable1, getResources().getColor(R.color.green));
+                lastClickedTableView.setBackground(tvDrawable1);
+            }else{
+                //case: selecting one table, and click to select another table, operation: unselect on last table & select table
+                tableSelecting = true;
+                DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.darkOrange));
+                v.setBackground(tvDrawable);
+                Drawable tvDrawable1;
+                tvDrawable1 = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
+                DrawableCompat.setTint(tvDrawable1, getResources().getColor(R.color.green));
+                lastClickedTableView.setBackground(tvDrawable1);
+                lastClickedTableView = v;
+            }
+//            if(!tableSelecting || clickedTable.isVacant()) { //case: table is not selecting, operation: select the table
+//                tableSelecting = true;
+//                DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.darkOrange));
+//                v.setBackground(tvDrawable);
+//                lastClickedTableView = v;
+//                clickedTable.setVacant(false);
+//                lastClickedTable = clickedTable;
+//            }
+//
+//            if(tableSelecting && !clickedTable.isVacant()){ //case: table is selecting, operation: make it unselect on last table
+//                Drawable tvDrawable1;
+//                tvDrawable1 = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
+//                DrawableCompat.setTint(tvDrawable1, getResources().getColor(R.color.green));
+//                lastClickedTableView.setBackground(tvDrawable1);
+//                clickedTable.setVacant(true);
+//                tableSelecting = false;
+//            }
+//            Toast.makeText(TablePage.this, "vacant", Toast.LENGTH_SHORT).show();
+        }else if(clickedTable.isOnHold()){
+            showAddonAndProceed(v, tv);
+        }else{
+            showAddonAndProceed(v, tv);
+        }
+
+        Toast.makeText(TablePage.this, "table clicked" + v.getId() + "'" + tv.getText().charAt(2) + "'", Toast.LENGTH_SHORT).show();
+    }
+    @Override
+    public boolean onLongClick(View v) {
+        TextView tv = (TextView) v.findViewById(v.getId());
+        String tableName = getTableName(tv.getText().toString());
+
         Drawable tvDrawable;
         tvDrawable = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
         //the color is a direct color int and not a color resource
         DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.red));
         v.setBackground(tvDrawable);
-        TextView tv = (TextView) v.findViewById(v.getId());
-        showAddonAndProceed(v, tv);
+        Toast.makeText(TablePage.this, "" + tableName + " occupy successfully", Toast.LENGTH_SHORT).show();
+        return true;
+    }
 
-        Toast.makeText(TablePage.this, "table clicked" + v.getId() + "'" + tv.getText().charAt(2) + "'", Toast.LENGTH_SHORT).show();
+
+
+    //Insert dummy data with alternatively available
+    private void insertDummyTableData(){
+        boolean available = true;
+        for(int i = 1; i < 127; i++){
+            saveTableToDb("T " + i, true, false, false, available);
+            available = !available;
+        }
+    }
+    //Save table data to Realm local database
+    private void saveTableToDb(String tableName, boolean vacant, boolean onHold, boolean occupied, boolean available){
+        Table table = new Table();
+        Number id = realm.where(Table.class).max("table_id");
+
+        int nextID = -1;
+        System.out.println(id);
+        if(id == null){
+            nextID = 1;
+        }else{
+            nextID = id.intValue() + 1;
+        }
+
+        table.setTable_id(nextID);
+        table.setTable_name(tableName);
+        table.setVacant(vacant);
+        table.setOnHold(onHold);
+        table.setOccupied(occupied);
+        table.setAvailable(available);
+
+        realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.insertOrUpdate(table);
+            }
+        });
+    }
+    //Get table data from Realm local database
+    private void getProductFromRealm() {
+        RealmResults<Table> results = realm.where(Table.class).findAll();
+        tableList.addAll(realm.copyFromRealm(results));
+    }
+    //Get table info
+    private String getTableName(String string){
+        String tableName = null;
+        for(int i = 0; i < string.length(); i++){
+            if(string.substring(i,i+1).equalsIgnoreCase("\n")){
+                tableName = string.substring(0, i);
+            }
+        }
+        return tableName;
+    }
+    private String getTableOrderID(String string){
+        String orderID = null;
+        for(int i = 0; i < string.length(); i++){
+            if(string.substring(i,i+1).equalsIgnoreCase("\n")){
+                orderID = string.substring(i+1);
+            }
+        }
+        return orderID;
     }
 }

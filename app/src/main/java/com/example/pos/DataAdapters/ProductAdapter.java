@@ -13,10 +13,10 @@ import java.util.ArrayList;
 public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductViewHolder> {
 
     private ArrayList<Product> products;
+    private ItemClickListener listener;
 
     public class ProductViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
         private final ViewProductMenuBinding binding;
-        ItemClickListener itemClickListener;
 
         public ProductViewHolder(ViewProductMenuBinding binding) {
             super(binding.getRoot());
@@ -24,18 +24,15 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
             binding.getRoot().setOnClickListener(this);
         }
 
-        public void setItemClickListener(ItemClickListener itemClickListener){
-            this.itemClickListener = itemClickListener;
-        }
-
         @Override
         public void onClick(View v) {
-            this.itemClickListener.onItemClick(getLayoutPosition());
+            listener.onItemClick(this.getAdapterPosition());
         }
     }
 
-    public ProductAdapter(ArrayList<Product> products){
+    public ProductAdapter(ArrayList<Product> products, ItemClickListener listener){
         this.products = products;
+        this.listener = listener;
     }
 
     @Override

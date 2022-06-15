@@ -17,6 +17,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.RadioButton;
 import android.widget.TextView;
@@ -31,15 +32,20 @@ import java.util.ArrayList;
 import java.util.Timer;
 
 import io.realm.Realm;
+import io.realm.RealmList;
 import io.realm.RealmResults;
 
-public class HomePage extends AppCompatActivity {
+public class HomePage extends AppCompatActivity implements ItemClickListener {
 
     private HomePageBinding binding;
+    //Product Modifier Choice Popup
+    private TextView product_name_modifier;
+    private LinearLayout product_modifier_ll;
+    private MaterialButton product_modifier_popup_negative_btn, product_modifier_popup_positive_btn;
     //Cart //Popup
     private Button add_discount_popup_negative_btn, add_discount_popup_positive_btn;
     private EditText add_discount_popup_et;
-    private MaterialButton  add_note_popup_negative_btn, add_note_popup_positive_btn;
+    private MaterialButton add_note_popup_negative_btn, add_note_popup_positive_btn;
     private EditText add_note_popup_et;
     //Cash in out popup
     private RadioButton cash_in_rb, cash_out_rb;
@@ -52,8 +58,9 @@ public class HomePage extends AppCompatActivity {
     // Creating an Editor object to edit(write to the file)
     private SharedPreferences.Editor cartSharedPreferenceEdit;
     private ProductAdapter productAdapter;
-    private  ArrayList<Product> list;
+    private ArrayList<Product> list;
     private Realm realm;
+    private RealmList<Product> cartProducts;
 
     private String statuslogin;
     private Context contextpage;
@@ -86,13 +93,17 @@ public class HomePage extends AppCompatActivity {
         timer.schedule(new CheckConnection(contextpage), 0, MILLISECONDS);
 
         //Body
-        //Recycler view
+        //Menu Recycler view
         binding.productListRv.setLayoutManager(new GridLayoutManager(contextpage, 4, LinearLayoutManager.VERTICAL, false));
         binding.productListRv.setHasFixedSize(true);
         list = new ArrayList<Product>();
-        productAdapter = new ProductAdapter(list);
+        productAdapter = new ProductAdapter(list, this);
         getProductFromRealm();
         binding.productListRv.setAdapter(productAdapter);
+        //Cart Recycler view
+        binding.cartInclude.cartOrdersRv.setLayoutManager(new LinearLayoutManager(contextpage, LinearLayoutManager.VERTICAL, false));
+        binding.cartInclude.cartOrdersRv.setHasFixedSize(true);
+        cartProducts = new RealmList<>();
 
         //Cart Note
         if(!cartSharedPreference.getString("cartNote", "").equalsIgnoreCase("")){
@@ -537,5 +548,63 @@ public class HomePage extends AppCompatActivity {
                 popup.dismiss();
             }
         });
+    }
+
+    private void showProductModifier(Product product, boolean fromMenu){
+        PopupWindow popup = new PopupWindow(contextpage);
+        View layout = getLayoutInflater().inflate(R.layout.product_modifier_popup, null);
+        popup.setContentView(layout);
+        // Set content width and height
+        popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
+        popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
+        // Closes the popup window when touch outside of it - when looses focus
+        popup.setOutsideTouchable(true);
+        popup.setFocusable(true);
+        // Show anchored to button
+        popup.setElevation(8);
+        popup.setBackgroundDrawable(null);
+        popup.showAtLocation(binding.getRoot(), Gravity.CENTER, 0, 0);
+
+        product_name_modifier = layout.findViewById(R.id.product_name_modifier_popup);
+        product_modifier_ll = layout.findViewById(R.id.product_modifier_ll);
+        product_modifier_popup_negative_btn = layout.findViewById(R.id.product_modifier_popup_negative_btn);
+        product_modifier_popup_positive_btn = layout.findViewById(R.id.product_modifier_popup_positive_btn);
+
+        product_name_modifier.setText(product.getProduct_name());
+
+        // Add view for extra modifier
+        TextView size_tv = new TextView(contextpage);
+        size_tv.setText("Size");
+        size_tv.setTextSize(20);
+        product_modifier_ll.addView(size_tv);
+
+        if(fromMenu){
+            product_modifier_popup_positive_btn.setText("Add to Cart");
+        }else{
+            product_modifier_popup_positive_btn.setText("Update");
+        }
+
+        product_modifier_popup_negative_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                popup.dismiss();
+            }
+        });
+
+        product_modifier_popup_positive_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                cartProducts.add(product);
+                popup.dismiss();
+            }
+        });
+    }
+
+    // Menu Products onItemClick
+    @Override
+    public void onItemClick(int position) {
+        showProductModifier(list.get(position), true);
+
+        Toast.makeText(this, "" + list.get(position).getProduct_name(), Toast.LENGTH_SHORT).show();
     }
 }
