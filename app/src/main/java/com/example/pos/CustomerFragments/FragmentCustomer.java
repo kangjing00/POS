@@ -35,7 +35,8 @@ public class FragmentCustomer extends Fragment {
         binding.customerCurrentEditBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ((CustomerPage)getActivity()).editCurrentCustomer();
+                int id = 0;
+                ((CustomerPage)getActivity()).editCurrentCustomer(id);
             }
         });
 

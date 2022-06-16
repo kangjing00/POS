@@ -525,12 +525,17 @@ public class CustomerPage extends AppCompatActivity {
         });
     }
 
-    public void editCurrentCustomer(){
+    public void editCurrentCustomer(int customer_id){
+        Bundle bundle = new Bundle();
+        bundle.putInt("customer_id", customer_id);
+        FragmentAddCustomer fragmentAddCustomer = new FragmentAddCustomer();
+        fragmentAddCustomer.setArguments(bundle);
+
         ft = fm.beginTransaction();
-        ft.replace(binding.customerPageFl.getId(), new FragmentAddCustomer()).commit();
+        ft.replace(binding.customerPageFl.getId(), fragmentAddCustomer).commit();
         binding.customerPageActionBtn.setText("Customer");
         binding.customerPageActionBtn.setIcon(getDrawable(R.drawable.ic_customer));
-        binding.customerPageTitle.setText("Add New Customer");
+        binding.customerPageTitle.setText("Update Customer Detail");
 
         customerFragment = !customerFragment;
     }

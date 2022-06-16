@@ -64,6 +64,7 @@
             android:paddingEnd="15dp"
             android:paddingTop="10dp"
             android:paddingBottom="10dp"
+            android:inputType="phone"
             android:textSize="15dp"/>
 
         <TextView
@@ -89,6 +90,7 @@
             android:paddingEnd="15dp"
             android:paddingTop="10dp"
             android:paddingBottom="10dp"
+            android:inputType="textEmailAddress"
             android:textSize="15dp"/>
 
         <TextView
@@ -226,7 +228,7 @@
             android:textSize="15dp"/>
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/add_customer_btn"
+            android:id="@+id/add_or_update_customer_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Add Customer"

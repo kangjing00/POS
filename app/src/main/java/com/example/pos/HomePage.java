@@ -700,6 +700,7 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
     @Override
     public void onOrderLineClick(int position) {
         //order_lines
+        showProductModifier(order_lines.get(position).getProduct(), false);
         Toast.makeText(contextpage, "" + order_lines.get(position).getOrder_line_id(), Toast.LENGTH_SHORT).show();
     }
     @Override
