@@ -28,8 +28,8 @@
         <activity android:name=".CashierPage" />
         <activity android:name=".PaymentPage" />
         <activity android:name=".TablePage" />
-        <activity android:name=".CustomerPage" />
-        <activity android:name=".HomePage" />
+        <activity android:name=".CustomerPage" android:windowSoftInputMode="stateHidden|adjustPan"/>
+        <activity android:name=".HomePage" android:windowSoftInputMode="stateHidden|adjustPan"/>
         <activity android:name=".LoginPage" />
         <activity
             android:name=".SplashScreen"

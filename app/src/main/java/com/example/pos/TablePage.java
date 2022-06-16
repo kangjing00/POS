@@ -64,6 +64,7 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
         binding.navbarLayoutInclude.navBarTables.setChecked(true);
 
         //Body Settings
+        //insertDummyTableData();
         tableSelecting = false;
         lastClickedTableView = null;
         tableList = new ArrayList<Table>();
@@ -72,12 +73,9 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
         tableList.get(0).setVacant(false);
         tableList.get(18).setOnHold(true);
         tableList.get(18).setVacant(false);
-//        int[][] empty = {
-//                {1,5},{1,10},{2,5},{2,10},{3,5},{3,10},
-//                {4,5},{4,10},{5,5},{5,10},{1,2},{7,8}
-//        };
+
         displayTables(7,18, tableList);
-        //insertDummyTableData();
+
 
         //OnClickListener
         //body
@@ -328,7 +326,6 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
             for(int column = 1; column <= noColumn; column++){
                 TextView table = new TextView(contextpage);
 
-//                table.setText("T"+ tableNumber +"\n"+"#00000");
                 table.setText(tableList.get(tableListCount).getTable_name() + "\n" + "#00000");
                 table.setWidth((int) (80 * getResources().getDisplayMetrics().density));
                 table.setHeight((int) (80 * getResources().getDisplayMetrics().density));
@@ -349,7 +346,7 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
                 table.setTextColor(Color.BLACK);
                 table.setClickable(true);
 
-                if(!tableList.get(tableListCount).isAvailable()){
+                if(!tableList.get(tableListCount).isActive()){
                     table.setVisibility(View.INVISIBLE);
                 }
 //                for(int x = 0; x < empty.length; x++){
@@ -414,24 +411,6 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
                 lastClickedTableView.setBackground(tvDrawable1);
                 lastClickedTableView = v;
             }
-//            if(!tableSelecting || clickedTable.isVacant()) { //case: table is not selecting, operation: select the table
-//                tableSelecting = true;
-//                DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.darkOrange));
-//                v.setBackground(tvDrawable);
-//                lastClickedTableView = v;
-//                clickedTable.setVacant(false);
-//                lastClickedTable = clickedTable;
-//            }
-//
-//            if(tableSelecting && !clickedTable.isVacant()){ //case: table is selecting, operation: make it unselect on last table
-//                Drawable tvDrawable1;
-//                tvDrawable1 = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
-//                DrawableCompat.setTint(tvDrawable1, getResources().getColor(R.color.green));
-//                lastClickedTableView.setBackground(tvDrawable1);
-//                clickedTable.setVacant(true);
-//                tableSelecting = false;
-//            }
-//            Toast.makeText(TablePage.this, "vacant", Toast.LENGTH_SHORT).show();
         }else if(clickedTable.isOnHold()){
             showAddonAndProceed(v, tv);
         }else{
@@ -454,18 +433,20 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
         return true;
     }
 
-
-
     //Insert dummy data with alternatively available
     private void insertDummyTableData(){
-        boolean available = true;
+        boolean active = true;
         for(int i = 1; i < 127; i++){
-            saveTableToDb("T " + i, true, false, false, available);
-            available = !available;
+            saveTableToDb("T" + i, true, false, false, active);
+            if(i < 60) {
+                active = !active;
+            }else{
+                active = true;
+            }
         }
     }
     //Save table data to Realm local database
-    private void saveTableToDb(String tableName, boolean vacant, boolean onHold, boolean occupied, boolean available){
+    private void saveTableToDb(String tableName, boolean vacant, boolean onHold, boolean occupied, boolean active){
         Table table = new Table();
         Number id = realm.where(Table.class).max("table_id");
 
@@ -482,7 +463,7 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
         table.setVacant(vacant);
         table.setOnHold(onHold);
         table.setOccupied(occupied);
-        table.setAvailable(available);
+        table.setActive(active);
 
         realm.executeTransaction(new Realm.Transaction() {
             @Override

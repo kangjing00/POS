@@ -22,20 +22,26 @@ import android.widget.PopupWindow;
 import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.example.pos.DataAdapters.OrderLineAdapter;
 import com.example.pos.DataAdapters.ProductAdapter;
 import com.example.pos.Network.CheckConnection;
 import com.example.pos.Network.NetworkUtils;
 import com.example.pos.databinding.HomePageBinding;
 import com.google.android.material.button.MaterialButton;
 
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Timer;
 
 import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmResults;
 
-public class HomePage extends AppCompatActivity implements ItemClickListener {
+public class HomePage extends AppCompatActivity implements ProductAdapter.OnItemClickListener, OrderLineAdapter.OnItemClickListener{
 
     private HomePageBinding binding;
     //Product Modifier Choice Popup
@@ -60,7 +66,10 @@ public class HomePage extends AppCompatActivity implements ItemClickListener {
     private ProductAdapter productAdapter;
     private ArrayList<Product> list;
     private Realm realm;
-    private RealmList<Product> cartProducts;
+    private OrderLineAdapter orderLineAdapter;
+    private ArrayList<Order_Line> order_lines;
+    //Current order
+    private Order currentOrder;
 
     private String statuslogin;
     private Context contextpage;
@@ -93,17 +102,21 @@ public class HomePage extends AppCompatActivity implements ItemClickListener {
         timer.schedule(new CheckConnection(contextpage), 0, MILLISECONDS);
 
         //Body
+        currentOrder = new Order();
         //Menu Recycler view
         binding.productListRv.setLayoutManager(new GridLayoutManager(contextpage, 4, LinearLayoutManager.VERTICAL, false));
         binding.productListRv.setHasFixedSize(true);
-        list = new ArrayList<Product>();
+        list = new ArrayList<>();
         productAdapter = new ProductAdapter(list, this);
         getProductFromRealm();
         binding.productListRv.setAdapter(productAdapter);
-        //Cart Recycler view
+        //Cart / Order Line Recycler view
         binding.cartInclude.cartOrdersRv.setLayoutManager(new LinearLayoutManager(contextpage, LinearLayoutManager.VERTICAL, false));
         binding.cartInclude.cartOrdersRv.setHasFixedSize(true);
-        cartProducts = new RealmList<>();
+        order_lines = new ArrayList<>();
+        orderLineAdapter = new OrderLineAdapter(order_lines, this);
+        getOrderLineFromRealm();
+        binding.cartInclude.cartOrdersRv.setAdapter(orderLineAdapter);
 
         //Cart Note
         if(!cartSharedPreference.getString("cartNote", "").equalsIgnoreCase("")){
@@ -370,6 +383,18 @@ public class HomePage extends AppCompatActivity implements ItemClickListener {
         productAdapter.notifyDataSetChanged();
     }
 
+    private void getOrderLineFromRealm(){
+        int orderId = cartSharedPreference.getInt("orderId", -1);
+        if(orderId > -1) {
+            RealmResults<Order_Line> results = realm.where(Order_Line.class).equalTo("order.order_id", orderId).findAll();
+            order_lines.addAll(realm.copyFromRealm(results));
+            orderLineAdapter.notifyDataSetChanged();
+        }else{
+            order_lines.clear();
+            orderLineAdapter.notifyDataSetChanged();
+        }
+    }
+
     private void showCashInOut() {
         PopupWindow popup = new PopupWindow(contextpage);
         View layout = getLayoutInflater().inflate(R.layout.cash_in_out_popup, null);
@@ -594,17 +619,123 @@ public class HomePage extends AppCompatActivity implements ItemClickListener {
         product_modifier_popup_positive_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                cartProducts.add(product);
+                if(fromMenu) {
+                    addProductToOrder(product);
+                }else{
+                    addOrUpdateProductToOrder(product);
+                }
                 popup.dismiss();
             }
         });
     }
 
-    // Menu Products onItemClick
+    //Add & Update product to order
+    private void addProductToOrder(Product product){
+        int orderState = cartSharedPreference.getInt("orderingState", 0);
+        if(orderState == 0) {
+            cartSharedPreferenceEdit.putInt("orderingState", 1);
+            cartSharedPreferenceEdit.commit();
+            addNewOrder();
+        }
+
+        Number id = realm.where(Order_Line.class).max("order_line_id");
+
+        int nextID = -1;
+        System.out.println(id);
+        if(id == null){
+            nextID = 1;
+        }else{
+            nextID = id.intValue() + 1;
+        }
+        double amount_total = currentOrder.getAmount_total() + product.getProduct_price();
+        currentOrder.setAmount_total(amount_total);
+        Order_Line newOrderLine = new Order_Line(nextID, String.valueOf(nextID), 1,
+                product.getProduct_price(), product.getProduct_price(), 0, currentOrder,product);
+
+        realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.insertOrUpdate(newOrderLine);
+                realm.insertOrUpdate(currentOrder);
+            }
+        });
+        order_lines.add(newOrderLine);
+        orderLineAdapter.notifyDataSetChanged();
+    }
+    //NOT YET DONE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    private void addOrUpdateProductToOrder(Product product){
+
+    }
+    private void addNewOrder(){
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+        Date date = new Date();
+        Order order = new Order();
+        Number id = realm.where(Order.class).max("order_id");
+
+        int nextID = -1;
+        System.out.println(id);
+        if(id == null){
+            nextID = 1;
+        }else{
+            nextID = id.intValue() + 1;
+        }
+
+        order.setOrder_id(nextID);
+        order.setDate_order(formatter.format(date));
+        order.setState("draft");
+
+        currentOrder = order;
+        realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.insertOrUpdate(order);
+            }
+        });
+        cartSharedPreferenceEdit.putInt("orderId", order.getOrder_id());
+        cartSharedPreferenceEdit.commit();
+    }
+
+    //Cart / order line
+    //NOT YET DONE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     @Override
-    public void onItemClick(int position) {
+    public void onOrderLineClick(int position) {
+        //order_lines
+        Toast.makeText(contextpage, "" + order_lines.get(position).getOrder_line_id(), Toast.LENGTH_SHORT).show();
+    }
+    @Override
+    public void onOrderLineCancelClick(int position) {
+        Order_Line deleteOrderLine = realm.where(Order_Line.class)
+                .equalTo("order_line_id", order_lines.get(position).getOrder_line_id())
+                .equalTo("order.order_id", currentOrder.getOrder_id())
+                .findFirst();
+        realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                deleteOrderLine.deleteFromRealm();
+            }
+        });
+        Toast.makeText(contextpage, "Cancel: " + order_lines.get(position).getOrder_line_id(), Toast.LENGTH_SHORT).show();
+        order_lines.remove(position);
+        orderLineAdapter.notifyDataSetChanged();
+    }
+
+    //Menu
+    @Override
+    public void onMenuProductClick(int position) {
         showProductModifier(list.get(position), true);
 
         Toast.makeText(this, "" + list.get(position).getProduct_name(), Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        int currentOrderId = cartSharedPreference.getInt("orderId", -1);
+        Order order = realm.where(Order.class).equalTo("order_id", currentOrderId).findFirst();
+        if(order != null) {
+            currentOrder = realm.copyFromRealm(order);
+        }
+        order_lines.clear();
+        getOrderLineFromRealm();
     }
 }

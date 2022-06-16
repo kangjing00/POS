@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -34,6 +35,9 @@ public class PaymentPage extends AppCompatActivity {
     //Sync popup
     private TextView product_sync_btn, transactions_sync_btn;
 
+    private SharedPreferences currentOrderSharePreference;
+    private SharedPreferences.Editor currentOrderSharePreferenceEdit;
+
     String statuslogin;
     Context contextpage;
 
@@ -45,6 +49,10 @@ public class PaymentPage extends AppCompatActivity {
         viewModel = new ViewModelProvider(this).get(PaymentPageViewModel.class);
         binding.setPaymentPageViewModel(viewModel);
         binding.setLifecycleOwner(this);
+
+        currentOrderSharePreference = getSharedPreferences("CurrentOrder",MODE_MULTI_PROCESS);
+        currentOrderSharePreferenceEdit = currentOrderSharePreference.edit();
+
         //Body Setting
         paymentMethodPagerAdapter = new PaymentMethodPagerAdapter(this);
 
@@ -90,7 +98,19 @@ public class PaymentPage extends AppCompatActivity {
                 binding.paymentTipCancelBtn.setVisibility(View.GONE);
             }
         });
+        binding.paymentOrderDetailConfirmBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                currentOrderSharePreferenceEdit.putInt("orderingState", 0);
+                currentOrderSharePreferenceEdit.putInt("orderId", -1);
+                currentOrderSharePreferenceEdit.commit();
+                Toast.makeText(contextpage, "Payment Success", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        });
+        }
         //Toolbar buttons
+        {
         binding.toolbarLayoutIncl.toolbarSearchIcon.setOnClickListener(new View.OnClickListener(){
               @Override
               public void onClick(View view) {

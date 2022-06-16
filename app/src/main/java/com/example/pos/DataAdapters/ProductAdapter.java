@@ -4,7 +4,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import androidx.recyclerview.widget.RecyclerView;
-import com.example.pos.ItemClickListener;
+
 import com.example.pos.Product;
 import com.example.pos.databinding.ViewProductMenuBinding;
 
@@ -13,7 +13,7 @@ import java.util.ArrayList;
 public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductViewHolder> {
 
     private ArrayList<Product> products;
-    private ItemClickListener listener;
+    private OnItemClickListener listener;
 
     public class ProductViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
         private final ViewProductMenuBinding binding;
@@ -26,11 +26,11 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
 
         @Override
         public void onClick(View v) {
-            listener.onItemClick(this.getAdapterPosition());
+            listener.onMenuProductClick(this.getAdapterPosition());
         }
     }
 
-    public ProductAdapter(ArrayList<Product> products, ItemClickListener listener){
+    public ProductAdapter(ArrayList<Product> products, OnItemClickListener listener){
         this.products = products;
         this.listener = listener;
     }
@@ -51,5 +51,9 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
     @Override
     public int getItemCount() {
         return products.size();
+    }
+
+    public interface OnItemClickListener{
+        void onMenuProductClick(int position);
     }
 }

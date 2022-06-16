@@ -5,20 +5,22 @@
 
     <data>
         <variable
-            name="product"
-            type="com.example.pos.Product" />
+            name="orderLine"
+            type="com.example.pos.Order_Line" />
     </data>
 
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:cardCornerRadius="10dp"
+        android:layout_marginBottom="5dp"
         app:cardPreventCornerOverlap="true"
         android:id="@+id/item_card">
 
         <View
             android:id="@+id/product_order_green_line"
             android:layout_width="5dp"
+            android:visibility="invisible"
             android:layout_height="match_parent"
             android:background="@color/green" />
 
@@ -34,7 +36,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:backgroundTint="@android:color/transparent"
-                android:src="@drawable/ic_down"
+                android:src="@drawable/ic_right"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:tint="@color/darkGrey" />
@@ -44,7 +46,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_margin="10dp"
-                android:text="1"
+                android:text="@{String.valueOf(orderLine.qty)}"
                 app:layout_constraintStart_toEndOf="@+id/product_order_setting_btn"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -53,7 +55,7 @@
                 android:id="@+id/product_order_product_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@{product.product_name}"
+                android:text="@{orderLine.product.product_name}"
                 android:layout_margin="10dp"
                 app:layout_constraintBottom_toTopOf="@+id/product_order_product_option"
                 app:layout_constraintStart_toEndOf="@id/product_order_quantity"
@@ -75,7 +77,7 @@
                 android:id="@+id/product_order_product_subtotal"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="RM 100"
+                android:text='@{"RM " + String.valueOf(orderLine.price_subtotal)}'
                 android:layout_marginTop="10dp"
                 android:layout_marginRight="20dp"
                 app:layout_constraintEnd_toStartOf="@+id/product_order_cancel_product"
@@ -86,7 +88,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginRight="20dp"
-                android:text="RM 150"
+                android:text='@{"RM " + String.valueOf(orderLine.total_cost)}'
                 android:textSize="8dp"
                 android:background="@drawable/strike_through"
                 android:textColor="@color/darkGrey"
@@ -121,7 +123,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/roboto_regular"
-                    android:text="Quantity" />
+                    android:text="Quantity"
+                    android:visibility="gone"/>
 
                 <EditText
                     android:id="@+id/product_order_quantity_et"
@@ -129,20 +132,23 @@
                     android:layout_height="wrap_content"
                     android:layout_below="@+id/textView"
                     android:background="@drawable/custom_input"
-                    android:hint="1"
+                    android:gravity="end"
+                    android:inputType="number"
                     android:maxLines="1"
                     android:padding="15dp"
-                    android:gravity="end"
-                    android:textSize="12dp" />
+                    android:text="@{String.valueOf(orderLine.qty)}"
+                    android:textSize="12dp"
+                    android:visibility="gone"/>
 
                 <TextView
                     android:id="@+id/textView1"
                     android:layout_width="150dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginLeft="20dp"
+                    android:layout_toRightOf="@+id/product_order_quantity_et"
                     android:fontFamily="@font/roboto_regular"
                     android:text="Discount(%)"
-                    android:layout_marginLeft="20dp"
-                    android:layout_toRightOf="@+id/product_order_quantity_et" />
+                    android:visibility="gone"/>
 
                 <EditText
                     android:id="@+id/product_order_discount_et"
@@ -152,11 +158,13 @@
                     android:layout_marginLeft="20dp"
                     android:layout_toRightOf="@+id/product_order_quantity_et"
                     android:background="@drawable/custom_input"
-                    android:hint="20"
+                    android:gravity="end"
                     android:maxLines="1"
                     android:padding="15dp"
-                    android:gravity="end"
-                    android:textSize="12dp" />
+                    android:text='@{String.valueOf(orderLine.discount)}'
+                    android:textSize="12dp"
+                    android:inputType="number"
+                    android:visibility="gone"/>
             </RelativeLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.cardview.widget.CardView>
