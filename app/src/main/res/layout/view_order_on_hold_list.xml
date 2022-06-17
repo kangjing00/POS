@@ -10,7 +10,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/box_coner_nopadding_white"
+        android:background="@drawable/box_corner_nopadding_white"
         android:elevation="3dp"
         android:layout_margin="10dp"
         android:padding="10dp">
@@ -45,7 +45,7 @@
             android:id="@+id/note_rl"
             android:layout_width="300dp"
             android:layout_height="wrap_content"
-            android:background="@drawable/box_coner_nopadding_white"
+            android:background="@drawable/box_corner_nopadding_white"
             android:backgroundTint="@color/linen"
             android:layout_marginTop="10dp"
             android:padding="10dp"

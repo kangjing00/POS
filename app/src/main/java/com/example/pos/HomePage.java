@@ -30,11 +30,13 @@ import com.example.pos.Network.NetworkUtils;
 import com.example.pos.databinding.HomePageBinding;
 import com.google.android.material.button.MaterialButton;
 
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.TimeZone;
 import java.util.Timer;
 
 import io.realm.Realm;
@@ -672,8 +674,9 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
 
     }
     private void addNewOrder(){
-        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-        Date date = new Date();
+        DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+        df.setTimeZone(TimeZone.getTimeZone("Asia/Kuala_Lumpur"));
+        Date today = new Date();
         Order order = new Order();
         Number id = realm.where(Order.class).max("order_id");
 
@@ -686,7 +689,7 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
         }
 
         order.setOrder_id(nextID);
-        order.setDate_order(formatter.format(date));
+        order.setDate_order(df.format(today));
         order.setState("draft");
 
         currentOrder = order;

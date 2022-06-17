@@ -47,7 +47,7 @@
             android:paddingEnd="10dp"
             android:paddingBottom="5dp"
             android:orientation="horizontal"
-            android:background="@drawable/box_coner_nopadding_white"
+            android:background="@drawable/box_corner_nopadding_white"
             app:layout_constraintStart_toEndOf="@+id/navbar_layout_include_sv"
             app:layout_constraintTop_toBottomOf="@+id/appBar">
 

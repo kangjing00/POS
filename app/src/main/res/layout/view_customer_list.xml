@@ -16,7 +16,7 @@
         android:paddingBottom="10dp"
         android:paddingRight="15dp"
         android:paddingLeft="15dp"
-        android:background="@drawable/box_coner_nopadding_white"
+        android:background="@drawable/box_corner_nopadding_white"
         android:clickable="true">
 
         <ImageView

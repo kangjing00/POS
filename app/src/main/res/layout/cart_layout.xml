@@ -154,7 +154,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="10dp"
-            android:background="@drawable/box_coner_nopadding_white"
+            android:background="@drawable/box_corner_nopadding_white"
             android:backgroundTint="@color/linen"
             android:padding="15dp"
             app:layout_constraintBottom_toTopOf="@+id/cart_order_summary_rl"
