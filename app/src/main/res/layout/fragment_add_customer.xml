@@ -233,6 +233,7 @@
             android:layout_height="wrap_content"
             android:text="Add Customer"
             android:textAllCaps="false"
+            android:maxWidth="1000dp"
             app:icon="@drawable/ic_add"
             app:iconPadding="12dp"
             android:backgroundTint="@color/darkOrange"

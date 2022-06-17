@@ -299,9 +299,14 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
         binding.cartInclude.cartOrderSummaryProceedBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(contextpage, PaymentPage.class);
-                startActivity(intent);
-                Toast.makeText(contextpage, "Proceed Button Clicked", Toast.LENGTH_SHORT).show();
+                int current_order_id = cartSharedPreference.getInt("orderId", -1);
+                if(current_order_id == -1){
+                    Toast.makeText(contextpage, "Please proceed payment with at least 1 product", Toast.LENGTH_SHORT).show();
+                }else {
+                    Intent intent = new Intent(contextpage, PaymentPage.class);
+                    startActivity(intent);
+                    Toast.makeText(contextpage, "Proceed Button Clicked", Toast.LENGTH_SHORT).show();
+                }
             }
         });
         binding.cartInclude.cartBtnAdd.setOnClickListener(new View.OnClickListener(){
@@ -709,15 +714,28 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
                 .equalTo("order_line_id", order_lines.get(position).getOrder_line_id())
                 .equalTo("order.order_id", currentOrder.getOrder_id())
                 .findFirst();
+        Order deleteOrder = realm.where(Order.class)
+                .equalTo("order_id", currentOrder.getOrder_id())
+                .findFirst();
+        Toast.makeText(contextpage, "Cancel: " + order_lines.get(position).getOrder_line_id(), Toast.LENGTH_SHORT).show();
+        order_lines.remove(position);
+        orderLineAdapter.notifyDataSetChanged();
+        if(order_lines.isEmpty()){
+            //delete order
+            cartSharedPreferenceEdit.putInt("orderingState", 0);
+            cartSharedPreferenceEdit.putInt("orderId", -1);
+            cartSharedPreferenceEdit.commit();
+            currentOrder = new Order();
+        }
         realm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
                 deleteOrderLine.deleteFromRealm();
+                if(order_lines.isEmpty()){
+                    deleteOrder.deleteFromRealm();
+                }
             }
         });
-        Toast.makeText(contextpage, "Cancel: " + order_lines.get(position).getOrder_line_id(), Toast.LENGTH_SHORT).show();
-        order_lines.remove(position);
-        orderLineAdapter.notifyDataSetChanged();
     }
 
     //Menu

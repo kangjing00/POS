@@ -3,10 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
-
+        <variable
+            name="customer"
+            type="com.example.pos.Customer" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/customer_list_cl"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="10dp"
@@ -29,7 +32,7 @@
             android:id="@+id/customer_list_customer_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Benjamin Cole"
+            android:text="@{customer.customer_name}"
             android:layout_marginLeft="15dp"
             android:textSize="15dp"
             android:fontFamily="@font/roboto_regular"
@@ -40,7 +43,7 @@
             android:id="@+id/customer_list_customer_email"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="benjaminCole123@gmail.com"
+            android:text="@{customer.customer_email}"
             android:layout_marginLeft="15dp"
             android:textColor="@color/darkGrey"
             android:layout_marginTop="2dp"

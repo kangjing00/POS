@@ -45,6 +45,12 @@ public class OrderLineAdapter extends RecyclerView.Adapter<OrderLineAdapter.Orde
     public void onBindViewHolder(OrderLineProductViewHolder holder, int position) {
         Order_Line order_line = order_lines.get(position);
         holder.binding.setOrderLine(order_line);
+        if((position % 2) == 0) {
+            //even number (recyclerview start from zero) [array]
+            holder.binding.itemCard.setCardBackgroundColor(holder.binding.getRoot().getContext().getResources().getColor(R.color.lightGrey));
+            holder.binding.productOrderCancelProduct.setBackgroundColor(holder.binding.getRoot().getContext().getResources().getColor(R.color.lightGrey));
+        }
+
         holder.binding.productOrderSettingBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -58,7 +64,7 @@ public class OrderLineAdapter extends RecyclerView.Adapter<OrderLineAdapter.Orde
         holder.binding.productOrderCancelProduct.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                listener.onOrderLineCancelClick(position);
+                listener.onOrderLineCancelClick(holder.getAdapterPosition());
             }
         });
     }
@@ -77,20 +83,14 @@ public class OrderLineAdapter extends RecyclerView.Adapter<OrderLineAdapter.Orde
         //case: close the setting
         holder.binding.productOrderGreenLine.setVisibility(View.INVISIBLE);
         holder.binding.productOrderSettingBtn.setImageResource(R.drawable.ic_right);
-        holder.binding.textView.setVisibility(View.GONE);
-        holder.binding.textView1.setVisibility(View.GONE);
-        holder.binding.productOrderQuantityEt.setVisibility(View.GONE);
-        holder.binding.productOrderDiscountEt.setVisibility(View.GONE);
+        holder.binding.productOrderQuantityDiscountRl.setVisibility(View.GONE);
         holder.binding.productOrderSettingBtn.setSelected(false);
     }
     private void openSetting(OrderLineProductViewHolder holder){
         //case: open the setting
         holder.binding.productOrderGreenLine.setVisibility(View.VISIBLE);
         holder.binding.productOrderSettingBtn.setImageResource(R.drawable.ic_down);
-        holder.binding.textView.setVisibility(View.VISIBLE);
-        holder.binding.textView1.setVisibility(View.VISIBLE);
-        holder.binding.productOrderQuantityEt.setVisibility(View.VISIBLE);
-        holder.binding.productOrderDiscountEt.setVisibility(View.VISIBLE);
+        holder.binding.productOrderQuantityDiscountRl.setVisibility(View.VISIBLE);
         holder.binding.productOrderSettingBtn.setSelected(true);
     }
 }

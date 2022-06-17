@@ -20,6 +20,8 @@ import com.example.pos.databinding.PaymentPageBinding;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.tabs.TabLayoutMediator;
 
+import io.realm.Realm;
+
 public class PaymentPage extends AppCompatActivity {
 
     private PaymentPageBinding binding;
@@ -34,6 +36,8 @@ public class PaymentPage extends AppCompatActivity {
     private MaterialButton cash_in_out_cancel, cash_in_out_confirm;
     //Sync popup
     private TextView product_sync_btn, transactions_sync_btn;
+
+    private Realm realm;
 
     private SharedPreferences currentOrderSharePreference;
     private SharedPreferences.Editor currentOrderSharePreferenceEdit;
@@ -50,6 +54,7 @@ public class PaymentPage extends AppCompatActivity {
         binding.setPaymentPageViewModel(viewModel);
         binding.setLifecycleOwner(this);
 
+        realm = Realm.getDefaultInstance();
         currentOrderSharePreference = getSharedPreferences("CurrentOrder",MODE_MULTI_PROCESS);
         currentOrderSharePreferenceEdit = currentOrderSharePreference.edit();
 
@@ -101,9 +106,21 @@ public class PaymentPage extends AppCompatActivity {
         binding.paymentOrderDetailConfirmBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                int current_order_id = currentOrderSharePreference.getInt("orderId", -1);
                 currentOrderSharePreferenceEdit.putInt("orderingState", 0);
                 currentOrderSharePreferenceEdit.putInt("orderId", -1);
                 currentOrderSharePreferenceEdit.commit();
+
+                Order current_order = realm.where(Order.class).equalTo("order_id", current_order_id).findFirst();
+                Order updated_current_order = realm.copyFromRealm(current_order);
+                updated_current_order.setState("paid");
+                realm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        realm.insertOrUpdate(updated_current_order);
+                    }
+                });
+
                 Toast.makeText(contextpage, "Payment Success", Toast.LENGTH_SHORT).show();
                 finish();
             }
