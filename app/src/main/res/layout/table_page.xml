@@ -232,6 +232,25 @@
                 android:gravity="center"
                 android:text="Vacant" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/table_information_swap_transfer_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginRight="15dp"
+                android:layout_toLeftOf="@id/table_information_order_title"
+                android:backgroundTint="@color/white"
+                android:paddingStart="25dp"
+                android:paddingTop="15dp"
+                android:paddingEnd="25dp"
+                android:paddingBottom="15dp"
+                android:text="Swap / Transfer"
+                android:textAllCaps="false"
+                android:textColor="@color/darkOrange"
+                app:icon="@drawable/ic_swap"
+                app:iconTint="@color/darkOrange"
+                app:strokeColor="@color/darkOrange"
+                app:strokeWidth="2dp" />
 
             <TextView
                 android:id="@+id/table_information_table_name"

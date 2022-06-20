@@ -42,6 +42,7 @@ import java.util.Timer;
 import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmResults;
+import io.realm.RealmSchema;
 
 public class HomePage extends AppCompatActivity implements ProductAdapter.OnItemClickListener, OrderLineAdapter.OnItemClickListener{
 
@@ -72,6 +73,8 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
     private ArrayList<Order_Line> order_lines;
     //Current order
     private Order currentOrder;
+    //Internet Connection
+    private Timer timer;
 
     private String statuslogin;
     private Context contextpage;
@@ -97,11 +100,6 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
         //Cart Settings
         cartSharedPreference = getSharedPreferences("CurrentOrder",MODE_MULTI_PROCESS);
         cartSharedPreferenceEdit = cartSharedPreference.edit();
-
-        //Internet Connection Checking
-        Timer timer = new Timer();
-        final int MILLISECONDS = 5000; //5 seconds
-        timer.schedule(new CheckConnection(contextpage), 0, MILLISECONDS);
 
         //Body
         currentOrder = new Order();
@@ -654,8 +652,8 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
         }else{
             nextID = id.intValue() + 1;
         }
-        double amount_total = currentOrder.getAmount_total() + product.getProduct_price();
-        currentOrder.setAmount_total(amount_total);
+//        double amount_total = currentOrder.getAmount_total() + product.getProduct_price();
+//        currentOrder.setAmount_total(amount_total);
         Order_Line newOrderLine = new Order_Line(nextID, String.valueOf(nextID), 1,
                 product.getProduct_price(), product.getProduct_price(), 0, currentOrder,product);
 
@@ -663,11 +661,12 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
             @Override
             public void execute(Realm realm) {
                 realm.insertOrUpdate(newOrderLine);
-                realm.insertOrUpdate(currentOrder);
+//                realm.insertOrUpdate(currentOrder);
             }
         });
         order_lines.add(newOrderLine);
         orderLineAdapter.notifyDataSetChanged();
+        updateOrderTotalAmount();
     }
     //NOT YET DONE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     private void addOrUpdateProductToOrder(Product product){
@@ -704,7 +703,6 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
     }
 
     //Cart / order line
-    //NOT YET DONE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     @Override
     public void onOrderLineClick(int position) {
         //order_lines
@@ -739,6 +737,69 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
                 }
             }
         });
+        if(!order_lines.isEmpty()) {
+            updateOrderTotalAmount();
+        }
+    }
+    @Override
+    public void discountUpdateOrderLine(int position, double subtotal, int discount) {
+        order_lines.get(position).setPrice_subtotal(subtotal);
+        order_lines.get(position).setDiscount(discount);
+        Order_Line updateOrderLine = order_lines.get(position);
+        realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.insertOrUpdate(updateOrderLine);
+            }
+        });
+        binding.cartInclude.cartOrdersRv.post(new Runnable() {
+            @Override
+            public void run() {
+                orderLineAdapter.notifyDataSetChanged();
+            }
+        });
+        updateOrderTotalAmount();
+    }
+    @Override
+    public void quantityUpdateOrderLine(int position, double subtotal, double price_total, int quantity) {
+        order_lines.get(position).setPrice_subtotal(subtotal);
+        order_lines.get(position).setQty(quantity);
+        order_lines.get(position).setPrice_total(price_total);
+        Order_Line updateOrderLine = order_lines.get(position);
+        realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.insertOrUpdate(updateOrderLine);
+            }
+        });
+        binding.cartInclude.cartOrdersRv.post(new Runnable() {
+            @Override
+            public void run() {
+                orderLineAdapter.notifyDataSetChanged();
+            }
+        });
+        updateOrderTotalAmount();
+    }
+
+    private void updateOrderTotalAmount(){
+        double amount_total = 0.0;
+        for(int i = 0; i < order_lines.size(); i++){
+            amount_total += order_lines.get(i).getPrice_subtotal();
+        }
+        currentOrder.setAmount_total(amount_total);
+
+        realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.insertOrUpdate(currentOrder);
+            }
+        });
+
+        binding.cartInclude.cartOrderSummarySubtotal.setText(String.format("RM %.2f", amount_total));
+        //Default / testing tax = 10%
+        double tax = (amount_total * 10) / 100;
+        binding.cartInclude.cartOrderSummaryTax.setText(String.format("RM %.2f", tax));
+        binding.cartInclude.cartOrderSummaryPayableAmount.setText(String.format("RM %.2f", amount_total + tax));
     }
 
     //Menu
@@ -752,6 +813,11 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
     @Override
     public void onResume() {
         super.onResume();
+        //Internet Connection Checking
+        timer = new Timer();
+        final int MILLISECONDS = 5000; //5 seconds
+        timer.schedule(new CheckConnection(contextpage), 0, MILLISECONDS);
+
         int currentOrderId = cartSharedPreference.getInt("orderId", -1);
         Order order = realm.where(Order.class).equalTo("order_id", currentOrderId).findFirst();
         if(order != null) {
@@ -759,5 +825,11 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
         }
         order_lines.clear();
         getOrderLineFromRealm();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        timer.cancel();
     }
 }

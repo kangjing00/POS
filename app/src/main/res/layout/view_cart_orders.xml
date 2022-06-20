@@ -77,18 +77,18 @@
                 android:id="@+id/product_order_product_subtotal"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text='@{"RM " + String.valueOf(orderLine.price_subtotal)}'
+                android:text='@{String.format("RM %.2f", orderLine.price_subtotal)}'
                 android:layout_marginTop="10dp"
                 android:layout_marginRight="20dp"
                 app:layout_constraintEnd_toStartOf="@+id/product_order_cancel_product"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
-                android:id="@+id/product_order_product_price"
+                android:id="@+id/product_order_product_total_price"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginRight="20dp"
-                android:text='@{"RM " + String.valueOf(orderLine.total_cost)}'
+                android:text='@{"RM " + String.valueOf(orderLine.price_total)}'
                 android:textSize="8dp"
                 android:background="@drawable/strike_through"
                 android:textColor="@color/darkGrey"

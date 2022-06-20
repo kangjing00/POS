@@ -86,6 +86,12 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
                 Toast.makeText(contextpage, "Show all table Button Clicked", Toast.LENGTH_SHORT).show();
             }
         });
+        binding.tableInformationSwapTransferBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(contextpage, "Swap / Transfer Table Btn", Toast.LENGTH_SHORT).show();
+            }
+        });
         binding.tableInformationBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

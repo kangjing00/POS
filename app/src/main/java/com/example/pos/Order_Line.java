@@ -9,18 +9,18 @@ public class Order_Line extends RealmObject {
     private int order_line_id;
     private String order_line_name;
     private int qty, discount;
-    private double price_subtotal, total_cost;
+    private double price_subtotal, price_total;
 
     private Order order;
     private Product product;
 
     //Constructor
-    public Order_Line(int order_line_id, String order_line_name, int qty, double price_subtotal, double total_cost, int discount, Order order, Product product){
+    public Order_Line(int order_line_id, String order_line_name, int qty, double price_subtotal, double price_total, int discount, Order order, Product product){
         this.order_line_id = order_line_id;
         this.order_line_name = order_line_name;
         this.qty = qty;
         this.price_subtotal = price_subtotal;
-        this.total_cost = total_cost;
+        this.price_total = price_total;
         this.discount = discount;
         this.order = order;
         this.product = product;
@@ -30,7 +30,7 @@ public class Order_Line extends RealmObject {
         order_line_name = null;
         qty = 0;
         price_subtotal = 0.0;
-        total_cost = 0.0;
+        price_total = 0.0;
         discount = 0;
         order = null;
         product = null;
@@ -68,12 +68,12 @@ public class Order_Line extends RealmObject {
         this.price_subtotal = price_subtotal;
     }
 
-    public double getTotal_cost() {
-        return total_cost;
+    public double getPrice_total() {
+        return price_total;
     }
 
-    public void setTotal_cost(double total_cost) {
-        this.total_cost = total_cost;
+    public void setPrice_total(double price_total) {
+        this.price_total = price_total;
     }
 
     public int getDiscount() {

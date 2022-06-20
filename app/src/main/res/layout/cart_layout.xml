@@ -281,7 +281,7 @@
                 android:layout_marginTop="5dp"
                 android:layout_marginRight="35dp"
                 android:layout_marginBottom="5dp"
-                android:text="RM 200.00"
+                android:text="RM 0.00"
                 android:textDirection="rtl" />
 
             <TextView
@@ -293,7 +293,7 @@
                 android:layout_marginTop="5dp"
                 android:layout_marginRight="35dp"
                 android:layout_marginBottom="5dp"
-                android:text="RM 45.00"
+                android:text="RM 0.00"
                 android:textDirection="rtl" />
 
             <TextView
@@ -305,7 +305,7 @@
                 android:layout_marginTop="5dp"
                 android:layout_marginRight="35dp"
                 android:layout_marginBottom="5dp"
-                android:text="RM 195.00"
+                android:text="RM 0.00"
                 android:textDirection="rtl" />
 
             <LinearLayout
