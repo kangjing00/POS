@@ -13,14 +13,13 @@ public class Order  extends RealmObject {
     private double amount_total, amount_paid, amount_tax, tip_amount;
     private boolean is_tipped;
     @LinkingObjects("order")
-    private final RealmResults<Order_Line> order_lines;
+    private final RealmResults<Order_Line> order_lines = null;
 
     //Constructor
-    public Order(int order_id, String date_order, String state, RealmResults<Order_Line> order_lines, double amount_total, double amount_paid, double amount_tax, double tip_amount, boolean is_tipped){
+    public Order(int order_id, String date_order, String state, double amount_total, double amount_paid, double amount_tax, double tip_amount, boolean is_tipped){
         this.order_id = order_id;
         this.date_order = date_order;
         this.state = state;
-        this.order_lines = order_lines;
         this.amount_total = amount_total;
         this.amount_paid = amount_paid;
         this.amount_tax = amount_tax;
@@ -31,7 +30,6 @@ public class Order  extends RealmObject {
         order_id = -1;
         date_order = null;
         state = null;
-        order_lines = null;
         amount_total = 0.0;
         amount_paid = 0.0;
         amount_tax = 0.0;

@@ -7,10 +7,12 @@ import android.view.ViewGroup;
 
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.pos.Adapters.OrderHistoryAdapter;
 import com.example.pos.Order;
+import com.example.pos.OrderPage;
 import com.example.pos.R;
 import com.example.pos.databinding.FragmentOrderHistoryBinding;
 
@@ -27,12 +29,12 @@ public class FragmentOrderHistory extends Fragment implements OrderHistoryAdapte
     private OrderHistoryAdapter orderHistoryAdapter;
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_order_history, container, false);
         View view = binding.getRoot();
 
         realm = Realm.getDefaultInstance();
+
         binding.orderHistoryRv.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
         binding.orderHistoryRv.setHasFixedSize(true);
         orders = new ArrayList<>();
@@ -51,6 +53,6 @@ public class FragmentOrderHistory extends Fragment implements OrderHistoryAdapte
 
     @Override
     public void onOrderHistoryOrderClick(int position) {
-
+        ((OrderPage)getActivity()).setOrderSelected(orders.get(position));
     }
 }

@@ -17,18 +17,12 @@ public class OrderHistoryAdapter extends RecyclerView.Adapter<OrderHistoryAdapte
     private View lastOrderHistoryClicked;
     private int lastOrderHistoryClickedPosition;
 
-    public class OrderHistoryViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+    public class OrderHistoryViewHolder extends RecyclerView.ViewHolder{
         private ViewOrderHistoryListBinding binding;
 
         public OrderHistoryViewHolder(ViewOrderHistoryListBinding binding){
             super(binding.getRoot());
             this.binding = binding;
-            binding.getRoot().setOnClickListener(this);
-        }
-
-        @Override
-        public void onClick(View v) {
-            listener.onOrderHistoryOrderClick(this.getAdapterPosition());
         }
     }
 
@@ -56,7 +50,7 @@ public class OrderHistoryAdapter extends RecyclerView.Adapter<OrderHistoryAdapte
             holder.binding.viewOrderHistoryLl.setBackgroundResource(R.drawable.box_corner_nopadding_white);
         }
 
-        holder.binding.getRoot().setOnClickListener(new View.OnClickListener() {
+        holder.binding.viewOrderHistoryLl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if(lastOrderHistoryClicked != null && lastOrderHistoryClickedPosition > -1){
@@ -73,6 +67,7 @@ public class OrderHistoryAdapter extends RecyclerView.Adapter<OrderHistoryAdapte
                 }else{
                     holder.binding.viewOrderHistoryLl.setBackgroundResource(R.drawable.box_corner_border_orange);
                 }
+                listener.onOrderHistoryOrderClick(holder.getAdapterPosition());
             }
         });
     }

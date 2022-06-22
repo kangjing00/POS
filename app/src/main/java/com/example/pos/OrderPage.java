@@ -5,6 +5,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import android.content.Context;
 import android.content.Intent;
@@ -18,12 +19,18 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.pos.Adapters.OrderOrderLineAdapter;
 import com.example.pos.CashierFragments.FragmentCashierDrawer;
 import com.example.pos.OrderFragments.FragmentOfflineOrder;
 import com.example.pos.OrderFragments.FragmentOrderHistory;
 import com.example.pos.OrderFragments.FragmentOrderOnHold;
 import com.example.pos.databinding.OrderPageBinding;
 import com.google.android.material.button.MaterialButton;
+
+import java.util.ArrayList;
+
+import io.realm.Realm;
+import io.realm.RealmResults;
 
 public class OrderPage extends AppCompatActivity {
 
@@ -36,15 +43,31 @@ public class OrderPage extends AppCompatActivity {
     private MaterialButton cash_in_out_cancel, cash_in_out_confirm;
     //Sync popup
     private TextView product_sync_btn, transactions_sync_btn;
+    //Order Selected
+    private Order orderSelected;
+    //Recyclerview
+    private OrderOrderLineAdapter orderOrderLineAdapter;
+    private ArrayList<Order_Line> order_lines;
+    //Realm
+    private Realm realm;
+    //Fragments
+//    private FragmentOrderHistory fragmentOrderHistory;
+//    private FragmentOrderOnHold fragmentOrderOnHold;
+//    private FragmentOfflineOrder fragmentOfflineOrder;
 
     private String statuslogin;
     private Context contextpage;
+
+    public OrderPage() {
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         contextpage = OrderPage.this;
         binding = DataBindingUtil.setContentView(this, R.layout.order_page);
+
+        realm = Realm.getDefaultInstance();
         //Appbar Settings
         Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
         toolbar.setTitle("");
@@ -55,6 +78,14 @@ public class OrderPage extends AppCompatActivity {
 
         //Body Settings
         binding.orderHistoryRb.setChecked(true);
+        orderSelected = new Order();
+        //Recyclerview
+        binding.orderDetailProductRv.setLayoutManager(new LinearLayoutManager(contextpage, LinearLayoutManager.VERTICAL, false));
+        binding.orderDetailProductRv.setHasFixedSize(true);
+        order_lines = new ArrayList<>();
+        orderOrderLineAdapter = new OrderOrderLineAdapter(order_lines);
+        binding.orderDetailProductRv.setAdapter(orderOrderLineAdapter);
+
         //Fragment Settings
         fm = getSupportFragmentManager();
         ft = fm.beginTransaction();
@@ -71,6 +102,7 @@ public class OrderPage extends AppCompatActivity {
                 ft.replace(binding.orderFragmentFl.getId(), new FragmentOrderHistory()).commit();
                 binding.syncOrderBtn.setVisibility(View.GONE);
                 binding.orderRelativeLayout.setVisibility(View.VISIBLE);
+                resetOrderSelected();
             }
         });
         binding.offlineOrderRb.setOnClickListener(new View.OnClickListener() {
@@ -80,6 +112,7 @@ public class OrderPage extends AppCompatActivity {
                 ft.replace(binding.orderFragmentFl.getId(), new FragmentOfflineOrder()).commit();
                 binding.syncOrderBtn.setVisibility(View.VISIBLE);
                 binding.orderRelativeLayout.setVisibility(View.VISIBLE);
+                resetOrderSelected();
             }
         });
         binding.orderOnHoldRb.setOnClickListener(new View.OnClickListener() {
@@ -88,6 +121,7 @@ public class OrderPage extends AppCompatActivity {
                 ft = fm.beginTransaction();
                 ft.replace(binding.orderFragmentFl.getId(), new FragmentOrderOnHold()).commit();
                 binding.orderRelativeLayout.setVisibility(View.GONE);
+                resetOrderSelected();
             }
         });
         }
@@ -281,5 +315,46 @@ public class OrderPage extends AppCompatActivity {
                 popup.dismiss();
             }
         });
+    }
+
+    public void setOrderSelected(Order order){
+        orderSelected = order;
+        RealmResults<Order_Line> results = realm.where(Order_Line.class).equalTo("order.order_id", orderSelected.getOrder_id()).findAll();
+        order_lines.clear();
+        order_lines.addAll(realm.copyFromRealm(results));
+        orderOrderLineAdapter.notifyDataSetChanged();
+
+        double tax = orderSelected.getAmount_tax();
+        double tip = orderSelected.getTip_amount();
+        double amount_total = orderSelected.getAmount_total();
+        double amount_paid = orderSelected.getAmount_paid();
+        double balance = amount_paid - amount_total;
+        double subtotal = 0.0, discount = 0.0;
+        for(int i = 0; i < order_lines.size(); i++){
+            subtotal += order_lines.get(i).getPrice_total();
+            discount += ((order_lines.get(i).getPrice_total() * order_lines.get(i).getDiscount()) / 100);
+        }
+        if(discount != 0.0){
+            discount = -discount;
+        }
+
+        binding.orderDetailTax.setText(String.format("%.2f", tax));
+        binding.orderDetailTip.setText(String.format("%.2f", tip));
+        binding.orderDetailGrandTotal.setText(String.format("%.2f", amount_total));
+        binding.orderDetailCash.setText(String.format("%.2f", amount_paid));
+        binding.orderDetailBalance.setText(String.format("%.2f", balance));
+        binding.orderDetailSubtotal.setText(String.format("%.2f", subtotal));
+        binding.orderDetailDiscount.setText(String.format("%.2f", discount));
+    }
+    public void resetOrderSelected(){
+        order_lines.clear();
+        orderOrderLineAdapter.notifyDataSetChanged();
+        binding.orderDetailTax.setText("0.00");
+        binding.orderDetailTip.setText("0.00");
+        binding.orderDetailGrandTotal.setText("0.00");
+        binding.orderDetailCash.setText("0.00");
+        binding.orderDetailBalance.setText("0.00");
+        binding.orderDetailSubtotal.setText("0.00");
+        binding.orderDetailDiscount.setText("0.00");
     }
 }
