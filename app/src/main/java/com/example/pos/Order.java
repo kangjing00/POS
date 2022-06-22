@@ -10,18 +10,22 @@ public class Order  extends RealmObject {
     @PrimaryKey
     private int order_id;
     private String date_order, state; //State: "paid", "draft", "onHold"
-    private double amount_total, amount_paid;
+    private double amount_total, amount_paid, amount_tax, tip_amount;
+    private boolean is_tipped;
     @LinkingObjects("order")
     private final RealmResults<Order_Line> order_lines;
 
     //Constructor
-    public Order(int order_id, String date_order, String state, RealmResults<Order_Line> order_lines, double amount_total, double amount_paid){
+    public Order(int order_id, String date_order, String state, RealmResults<Order_Line> order_lines, double amount_total, double amount_paid, double amount_tax, double tip_amount, boolean is_tipped){
         this.order_id = order_id;
         this.date_order = date_order;
         this.state = state;
         this.order_lines = order_lines;
         this.amount_total = amount_total;
         this.amount_paid = amount_paid;
+        this.amount_tax = amount_tax;
+        this.tip_amount = tip_amount;
+        this.is_tipped = is_tipped;
     }
     public Order(){
         order_id = -1;
@@ -30,6 +34,9 @@ public class Order  extends RealmObject {
         order_lines = null;
         amount_total = 0.0;
         amount_paid = 0.0;
+        amount_tax = 0.0;
+        tip_amount = 0.0;
+        is_tipped = false;
     }
 
     public int getOrder_id() {
@@ -72,6 +79,30 @@ public class Order  extends RealmObject {
 
     public void setState(String state) {
         this.state = state;
+    }
+
+    public double getAmount_tax() {
+        return amount_tax;
+    }
+
+    public void setAmount_tax(double amount_tax) {
+        this.amount_tax = amount_tax;
+    }
+
+    public double getTip_amount() {
+        return tip_amount;
+    }
+
+    public void setTip_amount(double tip_amount) {
+        this.tip_amount = tip_amount;
+    }
+
+    public boolean isIs_tipped() {
+        return is_tipped;
+    }
+
+    public void setIs_tipped(boolean is_tipped) {
+        this.is_tipped = is_tipped;
     }
 
 //    public void setOrder_lines(){

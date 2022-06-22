@@ -117,6 +117,13 @@ public class FragmentCash extends Fragment {
                 binding.getPaymentPageViewModel().keypadBackSpace();
             }
         });
+        binding.cashKeypadExact.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                double amount_total = binding.getPaymentPageViewModel().getAmount_total();
+                binding.getPaymentPageViewModel().setCash_amount_et(String.format("%.2f", amount_total));
+            }
+        });
         }
 
         // Inflate the layout for this fragment

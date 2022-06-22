@@ -3,6 +3,7 @@ package com.example.pos;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -15,12 +16,16 @@ import android.widget.PopupWindow;
 import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.example.pos.Adapters.PaymentOrderLineAdapter;
 import com.example.pos.PaymentTab.PaymentMethodPagerAdapter;
 import com.example.pos.databinding.PaymentPageBinding;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.tabs.TabLayoutMediator;
 
+import java.util.ArrayList;
+
 import io.realm.Realm;
+import io.realm.RealmResults;
 
 public class PaymentPage extends AppCompatActivity {
 
@@ -36,9 +41,13 @@ public class PaymentPage extends AppCompatActivity {
     private MaterialButton cash_in_out_cancel, cash_in_out_confirm;
     //Sync popup
     private TextView product_sync_btn, transactions_sync_btn;
+    //RecyclerView
+    private ArrayList<Order_Line> order_lines;
+    private PaymentOrderLineAdapter orderLineAdapter;
+    //Current order
+    private Order currentOrder;
 
     private Realm realm;
-
     private SharedPreferences currentOrderSharePreference;
     private SharedPreferences.Editor currentOrderSharePreferenceEdit;
 
@@ -57,10 +66,36 @@ public class PaymentPage extends AppCompatActivity {
         realm = Realm.getDefaultInstance();
         currentOrderSharePreference = getSharedPreferences("CurrentOrder",MODE_MULTI_PROCESS);
         currentOrderSharePreferenceEdit = currentOrderSharePreference.edit();
+        currentOrder = new Order();
+        int currentOrderId = currentOrderSharePreference.getInt("orderId", -1);
+        Order order = realm.where(Order.class).equalTo("order_id", currentOrderId).findFirst();
+        if(order != null) {
+            currentOrder = realm.copyFromRealm(order);
+        }
 
         //Body Setting
+        //Recycler View
+        binding.paymentOrderDetailProductRv.setLayoutManager(new LinearLayoutManager(contextpage, LinearLayoutManager.VERTICAL, false));
+        binding.paymentOrderDetailProductRv.setHasFixedSize(true);
+        order_lines = new ArrayList<>();
+        orderLineAdapter = new PaymentOrderLineAdapter(order_lines);
+        order_lines.addAll(order.getOrder_lines());
+        binding.paymentOrderDetailProductRv.setAdapter(orderLineAdapter);
         paymentMethodPagerAdapter = new PaymentMethodPagerAdapter(this);
 
+        double order_subtotal = 0.0;
+        double order_discount = 0.0;
+        for(int i = 0; i < order_lines.size(); i++){
+            order_subtotal += order_lines.get(i).getPrice_total();
+            order_discount += order_lines.get(i).getPrice_total() - order_lines.get(i).getPrice_subtotal();
+        }
+        binding.paymentSubtotal.setText(String.format("%.2f", order_subtotal));
+        binding.paymentTax.setText(String.format("%.2f", currentOrder.getAmount_tax()));
+        binding.paymentDiscount.setText(String.format("- %.2f", order_discount));
+        binding.paymentGrandTotal.setText(String.format("%.2f", currentOrder.getAmount_total()));
+        viewModel.setAmount_total(currentOrder.getAmount_total());
+
+        //Tabs
         binding.paymentMethodViewPager.setAdapter(paymentMethodPagerAdapter);
         new TabLayoutMediator(binding.paymentMethodTl, binding.paymentMethodViewPager,
             (
@@ -100,29 +135,47 @@ public class PaymentPage extends AppCompatActivity {
                 binding.textView9.setVisibility(View.GONE);
                 binding.paymentTip.setVisibility(View.GONE);
                 binding.getPaymentPageViewModel().setPayment_tip("0.00");
+                double amount_total = binding.getPaymentPageViewModel().getAmount_total();
+                binding.paymentGrandTotal.setText(String.format("%.2f", amount_total));
+                currentOrder.setAmount_total(amount_total);
                 binding.paymentTipCancelBtn.setVisibility(View.GONE);
             }
         });
         binding.paymentOrderDetailConfirmBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                int current_order_id = currentOrderSharePreference.getInt("orderId", -1);
-                currentOrderSharePreferenceEdit.putInt("orderingState", 0);
-                currentOrderSharePreferenceEdit.putInt("orderId", -1);
-                currentOrderSharePreferenceEdit.commit();
+                if(is_balanceZero()) {
+                    int current_order_id = currentOrderSharePreference.getInt("orderId", -1);
+                    currentOrderSharePreferenceEdit.putInt("orderingState", 0);
+                    currentOrderSharePreferenceEdit.putInt("orderId", -1);
+                    currentOrderSharePreferenceEdit.commit();
 
-                Order current_order = realm.where(Order.class).equalTo("order_id", current_order_id).findFirst();
-                Order updated_current_order = realm.copyFromRealm(current_order);
-                updated_current_order.setState("paid");
-                realm.executeTransaction(new Realm.Transaction() {
-                    @Override
-                    public void execute(Realm realm) {
-                        realm.insertOrUpdate(updated_current_order);
+                    Order current_order = realm.where(Order.class).equalTo("order_id", current_order_id).findFirst();
+                    Order updated_current_order = realm.copyFromRealm(current_order);
+                    double amount_total = binding.getPaymentPageViewModel().getAmount_total();
+                    double tip_amount = Double.valueOf(binding.getPaymentPageViewModel().getPayment_tip().getValue());
+                    if (tip_amount > 0) {
+                        if (updated_current_order.isIs_tipped() == false) {
+                            updated_current_order.setIs_tipped(true);
+                        }
+                        updated_current_order.setAmount_total(amount_total);
+                        updated_current_order.setTip_amount(tip_amount);
                     }
-                });
+                    updated_current_order.setState("paid");
+                    updated_current_order.setAmount_paid(Double.valueOf(viewModel.getPayment_order_detail_credit().getValue()));
 
-                Toast.makeText(contextpage, "Payment Success", Toast.LENGTH_SHORT).show();
-                finish();
+                    realm.executeTransaction(new Realm.Transaction() {
+                        @Override
+                        public void execute(Realm realm) {
+                            realm.insertOrUpdate(updated_current_order);
+                        }
+                    });
+
+                    Toast.makeText(contextpage, "Payment Success", Toast.LENGTH_SHORT).show();
+                    finish();
+                }else{
+                    Toast.makeText(contextpage, "Transaction is not completed", Toast.LENGTH_SHORT).show();
+                }
             }
         });
         }
@@ -238,9 +291,13 @@ public class PaymentPage extends AppCompatActivity {
         add_popup_positive_btn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                binding.getPaymentPageViewModel().setPayment_tip(add_popup_et.getText().toString());
+                String tip_amount = String.format("%.2f", Double.valueOf(add_popup_et.getText().toString()));
+                binding.getPaymentPageViewModel().setPayment_tip(tip_amount);
+                double amount_total = binding.getPaymentPageViewModel().getAmount_total();
+                binding.paymentGrandTotal.setText(String.format("%.2f", amount_total));
+                currentOrder.setAmount_total(amount_total);
                 popup.dismiss();
-                Toast.makeText(contextpage, "Positive button from popup", Toast.LENGTH_SHORT).show();
+                Toast.makeText(contextpage, "Tip Added", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -279,5 +336,13 @@ public class PaymentPage extends AppCompatActivity {
                 popup.dismiss();
             }
         });
+    }
+
+    private boolean is_balanceZero(){
+        double balance_amount = Double.valueOf(binding.getPaymentPageViewModel().getPayment_order_detail_balance().getValue());
+        if(balance_amount == 0){
+            return true;
+        }
+        return false;
     }
 }

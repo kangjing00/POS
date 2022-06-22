@@ -1,4 +1,4 @@
-package com.example.pos.DataAdapters;
+package com.example.pos.Adapters;
 
 import android.view.LayoutInflater;
 import android.view.View;

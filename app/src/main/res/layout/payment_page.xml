@@ -310,7 +310,7 @@
                     android:layout_below="@+id/payment_order_detail_credit"
                     android:layout_alignParentEnd="true"
                     android:layout_marginTop="5dp"
-                    android:text="- 5.00"
+                    android:text="@{paymentPageViewModel.payment_order_detail_balance}"
                     android:textSize="18dp" />
             </RelativeLayout>
 

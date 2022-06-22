@@ -23,8 +23,8 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.pos.DataAdapters.OrderLineAdapter;
-import com.example.pos.DataAdapters.ProductAdapter;
+import com.example.pos.Adapters.HomeOrderLineAdapter;
+import com.example.pos.Adapters.ProductAdapter;
 import com.example.pos.Network.CheckConnection;
 import com.example.pos.Network.NetworkUtils;
 import com.example.pos.databinding.HomePageBinding;
@@ -32,19 +32,15 @@ import com.google.android.material.button.MaterialButton;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.TimeZone;
 import java.util.Timer;
 
 import io.realm.Realm;
-import io.realm.RealmList;
 import io.realm.RealmResults;
-import io.realm.RealmSchema;
 
-public class HomePage extends AppCompatActivity implements ProductAdapter.OnItemClickListener, OrderLineAdapter.OnItemClickListener{
+public class HomePage extends AppCompatActivity implements ProductAdapter.OnItemClickListener, HomeOrderLineAdapter.OnItemClickListener{
 
     private HomePageBinding binding;
     //Product Modifier Choice Popup
@@ -69,7 +65,7 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
     private ProductAdapter productAdapter;
     private ArrayList<Product> list;
     private Realm realm;
-    private OrderLineAdapter orderLineAdapter;
+    private HomeOrderLineAdapter orderLineAdapter;
     private ArrayList<Order_Line> order_lines;
     //Current order
     private Order currentOrder;
@@ -114,7 +110,7 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
         binding.cartInclude.cartOrdersRv.setLayoutManager(new LinearLayoutManager(contextpage, LinearLayoutManager.VERTICAL, false));
         binding.cartInclude.cartOrdersRv.setHasFixedSize(true);
         order_lines = new ArrayList<>();
-        orderLineAdapter = new OrderLineAdapter(order_lines, this);
+        orderLineAdapter = new HomeOrderLineAdapter(order_lines, this);
         getOrderLineFromRealm();
         binding.cartInclude.cartOrdersRv.setAdapter(orderLineAdapter);
 
@@ -737,15 +733,19 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
                 }
             }
         });
-        if(!order_lines.isEmpty()) {
-            updateOrderTotalAmount();
-        }
+
+        updateOrderTotalAmount();
     }
     @Override
-    public void discountUpdateOrderLine(int position, double subtotal, int discount) {
+    public void discountUpdateOrderLine(int position, int discount) {
+        double subtotal;
+        double price_total = order_lines.get(position).getPrice_total();
+        subtotal = price_total - ((price_total * discount) / 100);
+        subtotal = Double.valueOf(String.format("%.2f", subtotal));
         order_lines.get(position).setPrice_subtotal(subtotal);
         order_lines.get(position).setDiscount(discount);
         Order_Line updateOrderLine = order_lines.get(position);
+
         realm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
@@ -761,11 +761,15 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
         updateOrderTotalAmount();
     }
     @Override
-    public void quantityUpdateOrderLine(int position, double subtotal, double price_total, int quantity) {
+    public void quantityUpdateOrderLine(int position, int quantity) {
+        double price_total = quantity * order_lines.get(position).getProduct().getProduct_price();
+        int discount = order_lines.get(position).getDiscount();
+        double subtotal = price_total - ((price_total * discount) / 100);
         order_lines.get(position).setPrice_subtotal(subtotal);
         order_lines.get(position).setQty(quantity);
         order_lines.get(position).setPrice_total(price_total);
         Order_Line updateOrderLine = order_lines.get(position);
+
         realm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
@@ -782,24 +786,31 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
     }
 
     private void updateOrderTotalAmount(){
-        double amount_total = 0.0;
-        for(int i = 0; i < order_lines.size(); i++){
-            amount_total += order_lines.get(i).getPrice_subtotal();
-        }
-        currentOrder.setAmount_total(amount_total);
-
-        realm.executeTransaction(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                realm.insertOrUpdate(currentOrder);
+        int orderState = cartSharedPreference.getInt("orderingState", 0);
+        double tax = 0.0, order_subtotal = 0.0, amount_total = 0.0;
+        if(orderState == 1) {
+            for(int i = 0; i < order_lines.size(); i++){
+                order_subtotal += order_lines.get(i).getPrice_subtotal();
             }
-        });
+            //Default / testing tax = 10%
+            tax = (order_subtotal * 10) / 100;
+            tax = Double.valueOf(String.format("%.2f", tax));
+            amount_total = order_subtotal + tax;
+            amount_total = Double.valueOf(String.format("%.2f", amount_total));
+            currentOrder.setAmount_total(amount_total);
+            currentOrder.setAmount_tax(tax);
 
-        binding.cartInclude.cartOrderSummarySubtotal.setText(String.format("RM %.2f", amount_total));
-        //Default / testing tax = 10%
-        double tax = (amount_total * 10) / 100;
+            realm.executeTransaction(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+                    realm.insertOrUpdate(currentOrder);
+                }
+            });
+        }
+
+        binding.cartInclude.cartOrderSummarySubtotal.setText(String.format("RM %.2f", order_subtotal));
         binding.cartInclude.cartOrderSummaryTax.setText(String.format("RM %.2f", tax));
-        binding.cartInclude.cartOrderSummaryPayableAmount.setText(String.format("RM %.2f", amount_total + tax));
+        binding.cartInclude.cartOrderSummaryPayableAmount.setText(String.format("RM %.2f", amount_total));
     }
 
     //Menu
@@ -825,6 +836,8 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
         }
         order_lines.clear();
         getOrderLineFromRealm();
+
+        updateOrderTotalAmount();
     }
 
     @Override

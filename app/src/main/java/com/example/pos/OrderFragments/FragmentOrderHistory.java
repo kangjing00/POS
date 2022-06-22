@@ -9,7 +9,7 @@ import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.example.pos.DataAdapters.OrderHistoryAdapter;
+import com.example.pos.Adapters.OrderHistoryAdapter;
 import com.example.pos.Order;
 import com.example.pos.R;
 import com.example.pos.databinding.FragmentOrderHistoryBinding;

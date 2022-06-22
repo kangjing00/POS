@@ -1,7 +1,5 @@
-package com.example.pos.DataAdapters;
+package com.example.pos.Adapters;
 
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,7 +9,7 @@ import com.example.pos.R;
 import com.example.pos.databinding.ViewCartOrdersBinding;
 import java.util.ArrayList;
 
-public class OrderLineAdapter extends RecyclerView.Adapter<OrderLineAdapter.OrderLineProductViewHolder> {
+public class HomeOrderLineAdapter extends RecyclerView.Adapter<HomeOrderLineAdapter.OrderLineProductViewHolder> {
 
     private ArrayList<Order_Line> order_lines;
     private OnItemClickListener listener;
@@ -23,7 +21,6 @@ public class OrderLineAdapter extends RecyclerView.Adapter<OrderLineAdapter.Orde
             super(binding.getRoot());
             this.binding = binding;
             binding.getRoot().setOnClickListener(this);
-
         }
 
         @Override
@@ -32,7 +29,7 @@ public class OrderLineAdapter extends RecyclerView.Adapter<OrderLineAdapter.Orde
         }
     }
 
-    public OrderLineAdapter(ArrayList<Order_Line> order_lines, OnItemClickListener listener){
+    public HomeOrderLineAdapter(ArrayList<Order_Line> order_lines, OnItemClickListener listener){
         this.order_lines = order_lines;
         this.listener = listener;
     }
@@ -46,12 +43,17 @@ public class OrderLineAdapter extends RecyclerView.Adapter<OrderLineAdapter.Orde
 
     @Override
     public void onBindViewHolder(OrderLineProductViewHolder holder, int position) {
+        int p = position;
         Order_Line order_line = order_lines.get(position);
         holder.binding.setOrderLine(order_line);
-        if((position % 2) == 0) {
+
+        if((holder.getAdapterPosition() % 2) == 0) {
             //even number (recyclerview start from zero) [array]
             holder.binding.itemCard.setCardBackgroundColor(holder.binding.getRoot().getContext().getResources().getColor(R.color.lightGrey));
             holder.binding.productOrderCancelProduct.setBackgroundColor(holder.binding.getRoot().getContext().getResources().getColor(R.color.lightGrey));
+        }else{
+            holder.binding.itemCard.setCardBackgroundColor(holder.binding.getRoot().getContext().getResources().getColor(R.color.white));
+            holder.binding.productOrderCancelProduct.setBackgroundColor(holder.binding.getRoot().getContext().getResources().getColor(R.color.white));
         }
 
         if(order_line.getDiscount() == 0){
@@ -64,44 +66,52 @@ public class OrderLineAdapter extends RecyclerView.Adapter<OrderLineAdapter.Orde
             @Override
             public void onFocusChange(View view, boolean hasFocus) {
                 if(!hasFocus){
-                    int discount = order_line.getDiscount();
                     int qty = 1;
-                    double product_price = order_line.getProduct().getProduct_price();
-                    double price_total = product_price * qty;
-                    double subtotal = price_total + ((price_total * discount) / 100);
 
                     if ((!holder.binding.productOrderQuantityEt.getText().toString().equalsIgnoreCase(""))
                             && (!holder.binding.productOrderQuantityEt.getText().toString().equalsIgnoreCase("0"))) {
                         qty = Integer.parseInt(holder.binding.productOrderQuantityEt.getText().toString());
-                        price_total = product_price * qty;
-                        subtotal = price_total - ((price_total * discount) / 100);
-                        subtotal = Double.valueOf(String.format("%.2f", subtotal));
-                        listener.quantityUpdateOrderLine(position, subtotal, price_total, qty);
-                    }else{
-                        listener.quantityUpdateOrderLine(position, subtotal, price_total, qty);
                     }
+                    listener.quantityUpdateOrderLine(p, qty);
                 }
             }
         });
 
+//        holder.binding.productOrderDiscountEt.addTextChangedListener(new TextWatcher() {
+//            @Override
+//            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+//
+//            }
+//            @Override
+//            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+//
+//            }
+//            @Override
+//            public void afterTextChanged(Editable editable) {
+//                int discount = 0;
+//                if((!editable.toString().equalsIgnoreCase(""))
+//                    && (!editable.toString().equalsIgnoreCase("0"))){
+//                    discount = Integer.parseInt(editable.toString());
+//                    holder.binding.productOrderProductTotalPrice.setVisibility(View.VISIBLE);
+//                }else{
+//                    holder.binding.productOrderProductTotalPrice.setVisibility(View.INVISIBLE);
+//                }
+//                listener.discountUpdateOrderLine(p, discount);
+//            }
+//        });
         holder.binding.productOrderDiscountEt.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View view, boolean hasFocus) {
                 if(!hasFocus) {
-                    double subtotal = order_line.getPrice_subtotal();
-                    double price_total = order_line.getPrice_total();
                     int discount = 0;
                     if ((!holder.binding.productOrderDiscountEt.getText().toString().equalsIgnoreCase(""))
                             && (!holder.binding.productOrderDiscountEt.getText().toString().equalsIgnoreCase("0"))) {
                         discount = Integer.parseInt(holder.binding.productOrderDiscountEt.getText().toString());
                         holder.binding.productOrderProductTotalPrice.setVisibility(View.VISIBLE);
-                        subtotal = price_total - ((price_total * discount) / 100);
-                        subtotal = Double.valueOf(String.format("%.2f", subtotal));
-                        listener.discountUpdateOrderLine(position, subtotal, discount);
                     } else {
-                        listener.discountUpdateOrderLine(position, subtotal, discount);
                         holder.binding.productOrderProductTotalPrice.setVisibility(View.INVISIBLE);
                     }
+                    listener.discountUpdateOrderLine(p, discount);
                 }
             }
         });
@@ -133,8 +143,8 @@ public class OrderLineAdapter extends RecyclerView.Adapter<OrderLineAdapter.Orde
     public interface OnItemClickListener{
         void onOrderLineClick(int position);
         void onOrderLineCancelClick(int position);
-        void discountUpdateOrderLine(int position, double subtotal, int discount);
-        void quantityUpdateOrderLine(int position, double subtotal, double price_total, int quantity);
+        void discountUpdateOrderLine(int position, int discount);
+        void quantityUpdateOrderLine(int position, int quantity);
     }
 
     private void closeSetting(OrderLineProductViewHolder holder){

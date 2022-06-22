@@ -1,9 +1,9 @@
-package com.example.pos.DataAdapters;
+package com.example.pos.Adapters;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import androidx.annotation.NonNull;
+
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.pos.Order;
 import com.example.pos.R;
