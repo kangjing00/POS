@@ -6,7 +6,7 @@
     <data>
         <variable
             name="paymentPageViewModel"
-            type="com.example.pos.PaymentPageViewModel" />
+            type="com.findbulous.pos.PaymentPageViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

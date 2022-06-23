@@ -6,7 +6,7 @@
     <data>
         <variable
             name="orderLine"
-            type="com.example.pos.Order_Line" />
+            type="com.findbulous.pos.Order_Line" />
     </data>
 
     <androidx.cardview.widget.CardView
