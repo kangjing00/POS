@@ -43,9 +43,9 @@ public class CustomerPage extends AppCompatActivity {
     //Sync popup
     private TextView product_sync_btn, transactions_sync_btn;
     // Storing data into SharedPreferences
-    private SharedPreferences cartSharedPreference;
+    private SharedPreferences cartSharedPreference, customerSharedPreference;
     // Creating an Editor object to edit(write to the file)
-    private SharedPreferences.Editor cartSharedPreferenceEdit;
+    private SharedPreferences.Editor cartSharedPreferenceEdit, customerSharedPreferenceEdit;
     //Cash in out popup
     private RadioButton cash_in_rb, cash_out_rb;
     private EditText cash_in_out_amount, cash_in_out_reason;
@@ -71,6 +71,19 @@ public class CustomerPage extends AppCompatActivity {
         //Cart Settings
         cartSharedPreference = getSharedPreferences("CurrentOrder",MODE_MULTI_PROCESS);
         cartSharedPreferenceEdit = cartSharedPreference.edit();
+        customerSharedPreference = getSharedPreferences("CurrentCustomer",MODE_MULTI_PROCESS);
+        customerSharedPreferenceEdit = customerSharedPreference.edit();
+
+        int currentCustomerId = customerSharedPreference.getInt("customerID", -1);
+        if(currentCustomerId != -1) {
+            binding.cartInclude.cartCurrentCustomerName.setText(customerSharedPreference.getString("customerName", null));
+            binding.cartInclude.cartCurrentCustomerId.setText("#" + customerSharedPreference.getInt("customerID", -1));
+            binding.cartInclude.cartAddCustomer.setVisibility(View.GONE);
+            binding.cartInclude.cartCurrentCustomerRl.setVisibility(View.VISIBLE);
+        }else{
+            binding.cartInclude.cartAddCustomer.setVisibility(View.VISIBLE);
+            binding.cartInclude.cartCurrentCustomerRl.setVisibility(View.GONE);
+        }
 
         //Body Settings
         //Fragment Settings

@@ -48,6 +48,8 @@ public class CustomerAdapter extends RecyclerView.Adapter<CustomerAdapter.Custom
         if((position % 2) == 0){
             //even number (recyclerview start from zero) [array]
             holder.binding.customerListCl.setBackgroundResource(R.drawable.box_corner_nopadding);
+        }else{
+            holder.binding.customerListCl.setBackgroundResource(R.drawable.box_corner_nopadding_white);
         }
     }
 

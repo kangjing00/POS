@@ -8,12 +8,11 @@ import android.view.ViewGroup;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
-
-import com.example.pos.R;
-import com.example.pos.databinding.FragmentOrderHistoryBinding;
 import com.findbulous.pos.Adapters.OrderHistoryAdapter;
 import com.findbulous.pos.Order;
 import com.findbulous.pos.OrderPage;
+import com.findbulous.pos.R;
+import com.findbulous.pos.databinding.FragmentOrderHistoryBinding;
 
 import java.util.ArrayList;
 

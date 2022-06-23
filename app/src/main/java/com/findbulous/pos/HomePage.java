@@ -22,9 +22,6 @@ import android.widget.PopupWindow;
 import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.example.pos.R;
-import com.example.pos.databinding.HomePageBinding;
 import com.findbulous.pos.Adapters.HomeOrderLineAdapter;
 import com.findbulous.pos.Adapters.ProductAdapter;
 import com.findbulous.pos.Network.CheckConnection;
@@ -108,6 +105,10 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
         productAdapter = new ProductAdapter(list, this);
         getProductFromRealm();
         binding.productListRv.setAdapter(productAdapter);
+
+        //Cart Current Customer
+
+
         //Cart / Order Line Recycler view
         binding.cartInclude.cartOrdersRv.setLayoutManager(new LinearLayoutManager(contextpage, LinearLayoutManager.VERTICAL, false));
         binding.cartInclude.cartOrdersRv.setHasFixedSize(true);
