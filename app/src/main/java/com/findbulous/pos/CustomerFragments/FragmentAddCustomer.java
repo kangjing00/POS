@@ -103,9 +103,8 @@ public class FragmentAddCustomer extends Fragment {
 
     private boolean inputCheck(){
         if(nullOrEmptyCheck(binding.addCustomerNameEt) && nullOrEmptyCheck(binding.addCustomerPhoneEt)
-                && nullOrEmptyCheck(binding.addCustomerEmailEt) && nullOrEmptyCheck(binding.addCustomerAddressEt)
-                && nullOrEmptyCheck(binding.addCustomerCountryEt) && nullOrEmptyCheck(binding.addCustomerStateEt)
-                && nullOrEmptyCheck(binding.addCustomerCityEt) && nullOrEmptyCheck(binding.addCustomerPostcodeEt)){
+                && nullOrEmptyCheck(binding.addCustomerEmailEt) && nullOrEmptyCheck(binding.addCustomerIcEt)
+                && nullOrEmptyCheck(binding.addCustomerBirthdateEt)){
             if(phoneNoCheck(binding.addCustomerPhoneEt)) {
                 if (!emailCheck(binding.addCustomerEmailEt)) {
                     Toast.makeText(getContext(), "Invalid Email Address", Toast.LENGTH_SHORT).show();

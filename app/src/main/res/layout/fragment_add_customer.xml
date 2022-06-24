@@ -94,48 +94,23 @@
             android:textSize="15dp"/>
 
         <TextView
-            android:id="@+id/textView4"
-            android:layout_width="wrap_content"
+            android:id="@+id/textView5"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Address"
+            android:text="Identity Card"
             android:layout_marginTop="15dp"
+            app:layout_constraintEnd_toStartOf="@id/textView6"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/add_customer_email_et"/>
 
         <EditText
-            android:id="@+id/add_customer_address_et"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/textView4"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:hint="Enter the customer address"
-            android:background="@drawable/custom_input"
-            android:maxLines="1"
-            android:paddingStart="15dp"
-            android:paddingEnd="15dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:textSize="15dp"/>
-
-        <TextView
-            android:id="@+id/textView5"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="Country"
-            android:layout_marginTop="15dp"
-            app:layout_constraintEnd_toStartOf="@id/textView6"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/add_customer_address_et"/>
-
-        <EditText
-            android:id="@+id/add_customer_country_et"
+            android:id="@+id/add_customer_ic_et"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/textView5"
-            app:layout_constraintEnd_toStartOf="@id/add_customer_state_et"
-            android:hint="Enter the customer country"
+            app:layout_constraintEnd_toStartOf="@id/add_customer_birthdate_et"
+            android:hint="Enter the identity card number"
             android:background="@drawable/custom_input"
             android:maxLines="1"
             android:paddingStart="15dp"
@@ -148,84 +123,33 @@
             android:id="@+id/textView6"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="State"
+            android:text="Birthdate"
             android:layout_marginTop="15dp"
             android:layout_marginStart="20dp"
             app:layout_constraintStart_toEndOf="@id/textView5"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/add_customer_address_et"/>
+            app:layout_constraintTop_toBottomOf="@id/add_customer_email_et"/>
 
         <EditText
-            android:id="@+id/add_customer_state_et"
+            android:id="@+id/add_customer_birthdate_et"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
-            app:layout_constraintStart_toEndOf="@id/add_customer_country_et"
+            app:layout_constraintStart_toEndOf="@id/add_customer_ic_et"
             app:layout_constraintTop_toBottomOf="@id/textView6"
             app:layout_constraintEnd_toEndOf="parent"
-            android:hint="Enter the customer state"
             android:background="@drawable/custom_input"
             android:maxLines="1"
             android:paddingStart="15dp"
             android:paddingEnd="15dp"
             android:paddingTop="10dp"
             android:paddingBottom="10dp"
+            android:hint="Enter the birthdate"
+            android:inputType="date"
             android:textSize="15dp"/>
 
 
-        <TextView
-            android:id="@+id/textView7"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="City"
-            android:layout_marginTop="15dp"
-            app:layout_constraintEnd_toStartOf="@id/textView8"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/add_customer_state_et"/>
 
-        <EditText
-            android:id="@+id/add_customer_city_et"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/textView7"
-            app:layout_constraintEnd_toStartOf="@id/add_customer_postcode_et"
-            android:hint="Enter the customer city"
-            android:background="@drawable/custom_input"
-            android:maxLines="1"
-            android:paddingStart="15dp"
-            android:paddingEnd="15dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:textSize="15dp"/>
-
-        <TextView
-            android:id="@+id/textView8"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="Postcode"
-            android:layout_marginTop="15dp"
-            android:layout_marginStart="20dp"
-            app:layout_constraintStart_toEndOf="@id/textView7"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/add_customer_state_et"/>
-
-        <EditText
-            android:id="@+id/add_customer_postcode_et"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
-            app:layout_constraintStart_toEndOf="@id/add_customer_city_et"
-            app:layout_constraintTop_toBottomOf="@id/textView8"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:hint="Enter the customer postcode"
-            android:background="@drawable/custom_input"
-            android:maxLines="1"
-            android:paddingStart="15dp"
-            android:paddingEnd="15dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:textSize="15dp"/>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/add_or_update_customer_btn"
@@ -244,7 +168,7 @@
             android:layout_marginTop="15dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/add_customer_city_et"/>
+            app:layout_constraintTop_toBottomOf="@id/add_customer_ic_et"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
