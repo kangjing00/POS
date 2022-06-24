@@ -1,11 +1,14 @@
 package com.findbulous.pos;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.databinding.DataBindingUtil;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -21,7 +24,12 @@ import android.widget.Toast;
 import com.findbulous.pos.databinding.TablePageBinding;
 import com.google.android.material.button.MaterialButton;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Random;
+import java.util.TimeZone;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -30,7 +38,9 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
 
     private TablePageBinding binding;
     //Body
+    private boolean onlyVacantTable;
     private boolean tableSelecting;
+    private Table vacantTableSelected;
     private View lastClickedTableView;
     private ArrayList<Table> tableList;
     //Cash in out popup
@@ -41,6 +51,9 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
     private TextView product_sync_btn, transactions_sync_btn;
     //Realm
     private Realm realm;
+    private SharedPreferences currentOrderSharedPreference;
+    // Creating an Editor object to edit(write to the file)
+    private SharedPreferences.Editor currentOrderSharedPreferenceEdit;
 
     private String statuslogin;
     private Context contextpage;
@@ -63,11 +76,27 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
         binding.navbarLayoutInclude.navBarTables.setChecked(true);
 
         //Body Settings
+        //CurrentOrder Settings
+        currentOrderSharedPreference = getSharedPreferences("CurrentOrder",MODE_MULTI_PROCESS);
+        currentOrderSharedPreferenceEdit = currentOrderSharedPreference.edit();
+
         //insertDummyTableData();
+        onlyVacantTable = false;
         tableSelecting = false;
+        vacantTableSelected = null;
         lastClickedTableView = null;
         tableList = new ArrayList<Table>();
         getProductFromRealm();
+//        for(int i=0; i< tableList.size(); i++){
+//            tableList.get(i).setOccupied(false);
+//            tableList.get(i).setVacant(true);
+//        }
+//        realm.executeTransaction(new Realm.Transaction() {
+//            @Override
+//            public void execute(Realm realm) {
+//                realm.insertOrUpdate(tableList);
+//            }
+//        });
         tableList.get(0).setOccupied(true);
         tableList.get(0).setVacant(false);
         tableList.get(18).setOnHold(true);
@@ -75,26 +104,91 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
 
         displayTables(7,18, tableList);
 
+        if(currentOrderSharedPreference.getInt("orderingState", -1) == 1){ //ordering
+            int orderId = currentOrderSharedPreference.getInt("orderId", -1);
+            Order result = realm.where(Order.class).equalTo("order_id", orderId).findFirst();
+            if(result.getTable() != null) {
+                binding.tableInformationTableName.setText("Table " + result.getTable().getTable_name());
+                binding.tableInformationOrderId.setText("#" + result.getOrder_id());
+            }
+            onlyVacantTable = true;
+            binding.tableInformationSwapTransferBtn.setVisibility(View.GONE);
+        }else{
+            binding.tableInformationSwapTransferBtn.setVisibility(View.VISIBLE);
+        }
 
         //OnClickListener
         //body
         {
-        binding.tableNoticeBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Toast.makeText(contextpage, "Show all table Button Clicked", Toast.LENGTH_SHORT).show();
-            }
-        });
         binding.tableInformationSwapTransferBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Toast.makeText(contextpage, "Swap / Transfer Table Btn", Toast.LENGTH_SHORT).show();
             }
         });
+        //popup
+        AlertDialog.Builder builder = new AlertDialog.Builder(TablePage.this);
+
         binding.tableInformationBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if(tableSelecting){
+                    if(vacantTableSelected != null){
+                        if(onlyVacantTable){ //only vacant table can be selected
+                            int orderId = currentOrderSharedPreference.getInt("orderId", -1);
+                            Order result = realm.where(Order.class).equalTo("order_id", orderId).findFirst();
+                            Order currentOrder = realm.copyFromRealm(result);
+
+                            if(currentOrder.getTable() != null){
+                                AlertDialog alert = builder.setMessage("Change table " + currentOrder.getTable().getTable_name() +
+                                    " to " + vacantTableSelected.getTable_name() + "?")
+                                    .setCancelable(false).setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialogInterface, int i) {
+                                            tableOccupiedToVacant(currentOrder.getTable());
+                                            currentOrder.setTable(vacantTableSelected);
+                                            //update table status
+                                            updateTableOccupied(vacantTableSelected);
+                                            realm.executeTransaction(new Realm.Transaction() {
+                                                @Override
+                                                public void execute(Realm realm) {
+                                                    realm.insertOrUpdate(currentOrder);
+                                                }
+                                            });
+                                            Intent intent = new Intent(contextpage, HomePage.class);
+                                            startActivity(intent);
+                                            finish();
+                                        }
+                                    }).setNegativeButton("No", null).create();
+                                alert.show();
+                            }else{
+                                currentOrder.setTable(vacantTableSelected);
+                                //update table status
+                                updateTableOccupied(vacantTableSelected);
+                                realm.executeTransaction(new Realm.Transaction() {
+                                    @Override
+                                    public void execute(Realm realm) {
+                                        realm.insertOrUpdate(currentOrder);
+                                    }
+                                });
+                                Intent intent = new Intent(contextpage, HomePage.class);
+                                startActivity(intent);
+                                finish();
+                            }
+                        }else {
+                            //select & place order
+                            //add new order, update current orderingState and orderType
+                            addNewOrder(vacantTableSelected);
+                            currentOrderSharedPreferenceEdit.putInt("orderingState", 1);    //ordering
+                            currentOrderSharedPreferenceEdit.putInt("orderTypePosition", 1); //dine-in
+                            currentOrderSharedPreferenceEdit.commit();
+                            //update table status
+                            updateTableOccupied(vacantTableSelected);
+                            Intent intent = new Intent(contextpage, HomePage.class);
+                            startActivity(intent);
+                            finish();
+                        }
+                    }
                     Toast.makeText(contextpage, "Select & Place Order", Toast.LENGTH_SHORT).show();
                 }else{
                     Toast.makeText(contextpage, "Please select a table", Toast.LENGTH_SHORT).show();
@@ -221,6 +315,59 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
         }
     }
 
+    //Create new order
+    private void addNewOrder(Table vacantTableSelected){
+        DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+        df.setTimeZone(TimeZone.getTimeZone("Asia/Kuala_Lumpur"));
+        Date today = new Date();
+        Order order = new Order();
+        Number id = realm.where(Order.class).max("order_id");
+
+        int nextID = -1;
+        System.out.println(id);
+        if(id == null){
+            nextID = 1;
+        }else{
+            nextID = id.intValue() + 1;
+        }
+
+        order.setOrder_id(nextID);
+        order.setDate_order(df.format(today));
+        order.setState("draft");
+        order.setTable(vacantTableSelected);
+
+        realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.insertOrUpdate(order);
+            }
+        });
+        currentOrderSharedPreferenceEdit.putInt("orderId", order.getOrder_id());
+        currentOrderSharedPreferenceEdit.commit();
+    }
+    //Update table occupied
+    private void updateTableOccupied(Table table){
+        table.setVacant(false);
+        table.setOccupied(true);
+        realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.insertOrUpdate(table);
+            }
+        });
+    }
+    //Update table occupied to vacant
+    private void tableOccupiedToVacant(Table table){
+        table.setOccupied(false);
+        table.setVacant(true);
+        realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.insertOrUpdate(table);
+            }
+        });
+    }
+
     private void showCashInOut() {
         PopupWindow popup = new PopupWindow(contextpage);
         View layout = getLayoutInflater().inflate(R.layout.cash_in_out_popup, null);
@@ -259,7 +406,7 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
         });
     }
 
-    private void showAddonAndProceed(View view, TextView tv) {
+    private void showAddonAndProceed(View view, Table clickedTable) {
         PopupWindow popup = new PopupWindow(contextpage);
         View layout = getLayoutInflater().inflate(R.layout.table_addon_proceed_popup, null);
         popup.setContentView(layout);
@@ -277,8 +424,8 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
         TextView tvTableName = layout.findViewById(R.id.table_addon_proceed_popup_table_name);
         TextView tvOrderID = layout.findViewById(R.id.table_addon_proceed_popup_order_id);
 
-        tvTableName.setText(getTableName(tv.getText().toString()));
-        tvOrderID.setText(getTableOrderID(tv.getText().toString()));
+        tvTableName.setText(clickedTable.getTable_name());
+//        tvOrderID.setText(clickedTable);
 
 //        //Popup Buttons
 //        add_popup_negative_btn = (Button)layout.findViewById(R.id.add_discount_popup_negative_btn);
@@ -331,7 +478,8 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
             for(int column = 1; column <= noColumn; column++){
                 TextView table = new TextView(contextpage);
 
-                table.setText(tableList.get(tableListCount).getTable_name() + "\n" + "#00000");
+                table.setText(tableList.get(tableListCount).getTable_name() + "\n"
+                        + tableList.get(tableListCount).getSeats());
                 table.setWidth((int) (80 * getResources().getDisplayMetrics().density));
                 table.setHeight((int) (80 * getResources().getDisplayMetrics().density));
 
@@ -398,6 +546,7 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
                 DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.darkOrange));
                 v.setBackground(tvDrawable);
                 lastClickedTableView = v;
+                vacantTableSelected = clickedTable;
             }else if(lastClickedTableView == v){
                 //case: table is selecting and click on the selecting table, operation: make it unselect on same table
                 tableSelecting = false;
@@ -405,6 +554,7 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
                 tvDrawable1 = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
                 DrawableCompat.setTint(tvDrawable1, getResources().getColor(R.color.green));
                 lastClickedTableView.setBackground(tvDrawable1);
+                vacantTableSelected = null;
             }else{
                 //case: selecting one table, and click to select another table, operation: unselect on last table & select table
                 tableSelecting = true;
@@ -415,11 +565,20 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
                 DrawableCompat.setTint(tvDrawable1, getResources().getColor(R.color.green));
                 lastClickedTableView.setBackground(tvDrawable1);
                 lastClickedTableView = v;
+                vacantTableSelected = clickedTable;
             }
         }else if(clickedTable.isOnHold()){
-            showAddonAndProceed(v, tv);
-        }else{
-            showAddonAndProceed(v, tv);
+            if(!onlyVacantTable){//not only vacant table can be selected
+                showAddonAndProceed(v, clickedTable);
+            }else{  //only vacant table can be selected
+                Toast.makeText(contextpage, "Only vacant table can be selected", Toast.LENGTH_SHORT).show();
+            }
+        }else{ //occupied
+            if(!onlyVacantTable){//not only vacant table can be selected
+                showAddonAndProceed(v, clickedTable);
+            }else{
+                Toast.makeText(contextpage, "Only vacant table can be selected", Toast.LENGTH_SHORT).show();
+            }
         }
 
         Toast.makeText(TablePage.this, "table clicked" + v.getId() + "'" + tv.getText().charAt(2) + "'", Toast.LENGTH_SHORT).show();
@@ -441,8 +600,12 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
     //Insert dummy data with alternatively available
     private void insertDummyTableData(){
         boolean active = true;
+        Random random = new Random();
+        int randomNo = 0;
+
         for(int i = 1; i < 127; i++){
-            saveTableToDb("T" + i, true, false, false, active);
+            randomNo = random.nextInt(9) + 2;
+            saveTableToDb("T" + i, randomNo,true, false, false, active);
             if(i < 60) {
                 active = !active;
             }else{
@@ -451,7 +614,7 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
         }
     }
     //Save table data to Realm local database
-    private void saveTableToDb(String tableName, boolean vacant, boolean onHold, boolean occupied, boolean active){
+    private void saveTableToDb(String tableName, int seats, boolean vacant, boolean onHold, boolean occupied, boolean active){
         Table table = new Table();
         Number id = realm.where(Table.class).max("table_id");
 
@@ -465,6 +628,7 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
 
         table.setTable_id(nextID);
         table.setTable_name(tableName);
+        table.setSeats(seats);
         table.setVacant(vacant);
         table.setOnHold(onHold);
         table.setOccupied(occupied);

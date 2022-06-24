@@ -78,11 +78,12 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="View Detail"
                 android:layout_centerInParent="true"
-                android:drawablePadding="10dp"
                 android:drawableStart="@drawable/ic_view_detail"
-                android:drawableTint="@color/black"/>
+                android:drawablePadding="10dp"
+                android:drawableTint="@color/white"
+                android:text="View Detail"
+                android:textColor="@color/white"/>
 
         </RelativeLayout>
 
@@ -104,9 +105,10 @@
                 android:layout_height="wrap_content"
                 android:layout_centerInParent="true"
                 android:drawableStart="@drawable/ic_add"
-                android:drawableTint="@color/black"
                 android:drawablePadding="10dp"
-                android:text="Current Customer" />
+                android:drawableTint="@color/white"
+                android:text="Apply Customer"
+                android:textColor="@color/white"/>
         </RelativeLayout>
 <!--        <Button-->
 <!--            android:id="@+id/add_current_cust_popup_negative_btn"-->

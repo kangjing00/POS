@@ -7,12 +7,14 @@ public class Table extends RealmObject {
     @PrimaryKey
     private int table_id;
     private String table_name;
+    private int seats;
     private boolean vacant, onHold, occupied, active;
 
     //Constructor
-    public Table(int table_id, String table_name, boolean vacant, boolean onHold, boolean occupied, boolean active){
+    public Table(int table_id, String table_name, int seats, boolean vacant, boolean onHold, boolean occupied, boolean active){
         this.table_id = table_id;
         this.table_name = table_name;
+        this.seats = seats;
         this.vacant = vacant;
         this.onHold = onHold;
         this.occupied = occupied;
@@ -21,6 +23,7 @@ public class Table extends RealmObject {
     public Table(){
         table_id = -1;
         table_name = null;
+        seats = -1;
         vacant = true;
         onHold = false;
         occupied = false;
@@ -73,5 +76,13 @@ public class Table extends RealmObject {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public int getSeats() {
+        return seats;
+    }
+
+    public void setSeats(int seats) {
+        this.seats = seats;
     }
 }

@@ -258,7 +258,7 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
-                    android:background="@color/white"
+                    android:background="@color/lightGrey"
                     android:src="@drawable/ic_cancel"
                     app:tint="@color/darkGrey" />
             </RelativeLayout>

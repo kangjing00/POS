@@ -162,7 +162,9 @@ public class PaymentPage extends AppCompatActivity {
                     }
                     updated_current_order.setState("paid");
                     updated_current_order.setAmount_paid(Double.valueOf(viewModel.getPayment_order_detail_credit().getValue()));
-
+                    if(current_order.getTable() != null){
+                        tableOccupiedToVacant(updated_current_order.getTable());
+                    }
                     realm.executeTransaction(new Realm.Transaction() {
                         @Override
                         public void execute(Realm realm) {
@@ -214,6 +216,17 @@ public class PaymentPage extends AppCompatActivity {
             }
         );
         }
+    }
+
+    private void tableOccupiedToVacant(Table table){
+        table.setOccupied(false);
+        table.setVacant(true);
+        realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.insertOrUpdate(table);
+            }
+        });
     }
 
     private void showCashInOut() {

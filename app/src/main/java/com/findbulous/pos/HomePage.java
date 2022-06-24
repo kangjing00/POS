@@ -1,11 +1,13 @@
 package com.findbulous.pos;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.databinding.DataBindingUtil;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -58,9 +60,9 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
     //Sync popup
     private TextView product_sync_btn, transactions_sync_btn;
     // Storing data into SharedPreferences
-    private SharedPreferences cartSharedPreference;
+    private SharedPreferences cartSharedPreference, customerSharedPreference;
     // Creating an Editor object to edit(write to the file)
-    private SharedPreferences.Editor cartSharedPreferenceEdit;
+    private SharedPreferences.Editor cartSharedPreferenceEdit, customerSharedPreferenceEdit;
     private ProductAdapter productAdapter;
     private ArrayList<Product> list;
     private Realm realm;
@@ -70,6 +72,7 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
     private Order currentOrder;
     //Internet Connection
     private Timer timer;
+    //Alert Dialog
 
     private String statuslogin;
     private Context contextpage;
@@ -96,6 +99,11 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
         cartSharedPreference = getSharedPreferences("CurrentOrder",MODE_MULTI_PROCESS);
         cartSharedPreferenceEdit = cartSharedPreference.edit();
 
+        customerSharedPreference = getSharedPreferences("CurrentCustomer", MODE_MULTI_PROCESS);
+        customerSharedPreferenceEdit = customerSharedPreference.edit();
+        //Cart Current Customer
+        refreshCartCurrentCustomer();
+
         //Body
         currentOrder = new Order();
         //Menu Recycler view
@@ -105,8 +113,6 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
         productAdapter = new ProductAdapter(list, this);
         getProductFromRealm();
         binding.productListRv.setAdapter(productAdapter);
-
-        //Cart Current Customer
 
 
         //Cart / Order Line Recycler view
@@ -285,7 +291,9 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
         binding.cartInclude.cartAddCustomer.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                Toast.makeText(contextpage, "Add Customer Button Clicked", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(contextpage, CustomerPage.class);
+                startActivity(intent);
+                finish();
             }
         });
         binding.cartInclude.cartOrderSummaryHoldBtn.setOnClickListener(new View.OnClickListener(){
@@ -299,12 +307,31 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
             @Override
             public void onClick(View view) {
                 int current_order_id = cartSharedPreference.getInt("orderId", -1);
-                if(current_order_id == -1){
+                int orderTypePosition = cartSharedPreference.getInt("orderTypePosition", -1);
+                if(current_order_id == -1){ //no order and no order_line(products)
                     Toast.makeText(contextpage, "Please proceed payment with at least 1 product", Toast.LENGTH_SHORT).show();
-                }else {
-                    Intent intent = new Intent(contextpage, PaymentPage.class);
-                    startActivity(intent);
-                    Toast.makeText(contextpage, "Proceed Button Clicked", Toast.LENGTH_SHORT).show();
+                }else {//got order
+                    RealmResults<Order_Line> results = realm.where(Order_Line.class).equalTo("order.order_id", current_order_id)
+                                                            .findAll();
+                    if(results.isEmpty()){//no order_line(products)
+                        Toast.makeText(contextpage, "Please proceed payment with at least 1 product", Toast.LENGTH_SHORT).show();
+                    }else {//got order_line(products)
+                        if(orderTypePosition == 1){ // dine-in
+                            if(currentOrder.getTable() == null){
+                                Intent intent = new Intent(contextpage, TablePage.class);
+                                startActivity(intent);
+                                finish();
+                            }else{
+                                Intent intent = new Intent(contextpage, PaymentPage.class);
+                                startActivity(intent);
+                                Toast.makeText(contextpage, "Proceed Button Clicked", Toast.LENGTH_SHORT).show();
+                            }
+                        }else if (orderTypePosition == 0) { //takeaway
+                            Intent intent = new Intent(contextpage, PaymentPage.class);
+                            startActivity(intent);
+                            Toast.makeText(contextpage, "Proceed Button Clicked", Toast.LENGTH_SHORT).show();
+                        }
+                    }
                 }
             }
         });
@@ -335,17 +362,17 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
 
                 // If this is the selected item position
                 if (position == binding.cartInclude.cartBtnPosType.getSelectedItemPosition()) {
-                    if(position == (binding.cartInclude.cartBtnPosType.getCount() - 1)){
+                    if(position == (binding.cartInclude.cartBtnPosType.getCount() - 1)){ //last one
                         v.setBackground(getResources().getDrawable(R.drawable.box_btm_corner_dark_orange));
-                    }else {
+                    }else { //not the last one
                         v.setBackgroundColor(getResources().getColor(R.color.darkOrange));
                     }
                 }
                 else {
                     // for other views
-                    if(position != (binding.cartInclude.cartBtnPosType.getCount() - 1)) {
+                    if(position != (binding.cartInclude.cartBtnPosType.getCount() - 1)) { // not the last one
                         v.setBackgroundColor(getResources().getColor(R.color.lightGrey));
-                    }else{
+                    }else{  //last one
                         v.setBackground(getResources().getDrawable(R.drawable.box_btm_corner_light_grey));
                     }
                 }
@@ -359,9 +386,43 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
         binding.cartInclude.cartBtnPosType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                int orderTypePosition = binding.cartInclude.cartBtnPosType.getSelectedItemPosition(); //0 = takeaway, 1 = dine-in
+                //if change from dine-in to takeaway \/ tkaeaway to dine-in
+                if((orderTypePosition == 0) && (currentOrder.getOrder_id() != -1)
+                    && (currentOrder.getTable() != null)){//takeaway && order now && order has table
+                    //update table
+                    tableOccupiedToVacant(currentOrder.getTable());
+
+                    RealmResults<Order_Line> order_lines = realm.where(Order_Line.class).equalTo("order.order_id", currentOrder.getOrder_id())
+                            .findAll();
+                    if(order_lines.size() < 1){// when order_lines empty, delete the order
+                        //delete order
+                        Order deleteOrder = realm.where(Order.class)
+                                .equalTo("order_id", currentOrder.getOrder_id())
+                                .findFirst();
+                        cartSharedPreferenceEdit.putInt("orderingState", 0);
+                        cartSharedPreferenceEdit.putInt("orderId", -1);
+                        cartSharedPreferenceEdit.commit();
+                        currentOrder = new Order();
+                        realm.executeTransaction(new Realm.Transaction() {
+                            @Override
+                            public void execute(Realm realm) {
+                                deleteOrder.deleteFromRealm();
+                            }
+                        });
+                    }else {     // when order_lines not empty, set order table to null
+                        currentOrder.setTable(null);
+                        realm.executeTransaction(new Realm.Transaction() {
+                            @Override
+                            public void execute(Realm realm) {
+                                realm.insertOrUpdate(currentOrder);
+                            }
+                        });
+                    }
+                }
+
                 cartSharedPreferenceEdit.putInt("orderTypePosition", binding.cartInclude.cartBtnPosType.getSelectedItemPosition());
                 cartSharedPreferenceEdit.commit();
-                Toast.makeText(contextpage, "item selected", Toast.LENGTH_SHORT).show();
             }
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {
@@ -378,6 +439,30 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
                 binding.cartInclude.cartOrderDiscountBtn.setTextColor(contextpage.getResources().getColor(R.color.darkOrange));
             }
         });
+        }
+    }
+
+    private void tableOccupiedToVacant(Table table){
+        table.setOccupied(false);
+        table.setVacant(true);
+        realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.insertOrUpdate(table);
+            }
+        });
+    }
+
+    private void refreshCartCurrentCustomer(){
+        int currentCustomerId = customerSharedPreference.getInt("customerID", -1);
+        if(currentCustomerId != -1) {
+            binding.cartInclude.cartCurrentCustomerName.setText(customerSharedPreference.getString("customerName", null));
+            binding.cartInclude.cartCurrentCustomerId.setText("#" + customerSharedPreference.getInt("customerID", -1));
+            binding.cartInclude.cartAddCustomer.setVisibility(View.GONE);
+            binding.cartInclude.cartCurrentCustomerRl.setVisibility(View.VISIBLE);
+        }else{
+            binding.cartInclude.cartAddCustomer.setVisibility(View.VISIBLE);
+            binding.cartInclude.cartCurrentCustomerRl.setVisibility(View.GONE);
         }
     }
 
@@ -717,27 +802,61 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
         Order deleteOrder = realm.where(Order.class)
                 .equalTo("order_id", currentOrder.getOrder_id())
                 .findFirst();
-        Toast.makeText(contextpage, "Cancel: " + order_lines.get(position).getOrder_line_id(), Toast.LENGTH_SHORT).show();
-        order_lines.remove(position);
-        orderLineAdapter.notifyDataSetChanged();
-        if(order_lines.isEmpty()){
-            //delete order
-            cartSharedPreferenceEdit.putInt("orderingState", 0);
-            cartSharedPreferenceEdit.putInt("orderId", -1);
-            cartSharedPreferenceEdit.commit();
-            currentOrder = new Order();
-        }
-        realm.executeTransaction(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                deleteOrderLine.deleteFromRealm();
-                if(order_lines.isEmpty()){
-                    deleteOrder.deleteFromRealm();
-                }
-            }
-        });
 
-        updateOrderTotalAmount();
+        //popup
+        AlertDialog.Builder builder = new AlertDialog.Builder(HomePage.this);
+        builder.setMessage("Do you want to cancel the current order?")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        order_lines.remove(position);
+                        orderLineAdapter.notifyDataSetChanged();
+                        if (order_lines.isEmpty()) {
+                            if(currentOrder.getTable() != null) {
+                                //Update table
+                                tableOccupiedToVacant(currentOrder.getTable());
+                            }
+                            //delete order
+                            cartSharedPreferenceEdit.putInt("orderingState", 0);
+                            cartSharedPreferenceEdit.putInt("orderId", -1);
+                            cartSharedPreferenceEdit.commit();
+                            currentOrder = new Order();
+                        }
+                        realm.executeTransaction(new Realm.Transaction() {
+                            @Override
+                            public void execute(Realm realm) {
+                                deleteOrderLine.deleteFromRealm();
+                                if (order_lines.isEmpty()) {
+                                    deleteOrder.deleteFromRealm();
+                                }
+                            }
+                        });
+                        Toast.makeText(contextpage, "Cancelled the current order", Toast.LENGTH_SHORT).show();
+                        updateOrderTotalAmount();
+                    }
+                }).setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        Toast.makeText(contextpage, "Continue to order", Toast.LENGTH_SHORT).show();
+                    }
+                 }).setCancelable(false);
+        AlertDialog alert = builder.create();
+
+        if(order_lines.size() == 1){
+            alert.show();
+        }else {
+            Toast.makeText(contextpage, "Cancel: " + order_lines.get(position).getOrder_line_id(), Toast.LENGTH_SHORT).show();
+            order_lines.remove(position);
+            orderLineAdapter.notifyDataSetChanged();
+
+            realm.executeTransaction(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+                    deleteOrderLine.deleteFromRealm();
+                }
+            });
+            updateOrderTotalAmount();
+        }
     }
     @Override
     public void discountUpdateOrderLine(int position, int discount) {
@@ -820,7 +939,6 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
     @Override
     public void onMenuProductClick(int position) {
         showProductModifier(list.get(position), true);
-
         Toast.makeText(this, "" + list.get(position).getProduct_name(), Toast.LENGTH_SHORT).show();
     }
 

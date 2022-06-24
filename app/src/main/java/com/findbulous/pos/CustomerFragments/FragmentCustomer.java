@@ -25,15 +25,14 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.findbulous.pos.Customer;
 import com.findbulous.pos.Adapters.CustomerAdapter;
+import com.findbulous.pos.CustomerPage;
 import com.findbulous.pos.Network.NetworkUtils;
-import com.findbulous.pos.Product;
 import com.findbulous.pos.R;
 import com.findbulous.pos.databinding.FragmentCustomerBinding;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -42,9 +41,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 
-import io.realm.Case;
 import io.realm.Realm;
-import io.realm.RealmResults;
 
 public class FragmentCustomer extends Fragment implements CustomerAdapter.OnItemClickListener{
 
@@ -90,7 +87,7 @@ public class FragmentCustomer extends Fragment implements CustomerAdapter.OnItem
             binding.customerCurrentCustomerPhone.setText(customerSharedPreference.getString("customerPhoneNo", null));
             binding.customerCurrentCustomerRl.setVisibility(View.VISIBLE);
         }else{
-            binding.customerCurrentCustomerRl.setVisibility(View.INVISIBLE);
+            binding.customerCurrentCustomerRl.setVisibility(View.GONE);
         }
 
         binding.customerCurrentRemoveBtn.setOnClickListener(new View.OnClickListener() {
@@ -102,6 +99,7 @@ public class FragmentCustomer extends Fragment implements CustomerAdapter.OnItem
                 customerSharedPreferenceEdit.putString("customerEmail", null);
                 customerSharedPreferenceEdit.putString("customerPhoneNo", null);
                 customerSharedPreferenceEdit.commit();
+                ((CustomerPage)getActivity()).refreshCartCurrentCustomer();
                 if(customers.isEmpty())
                     binding.emptyCustomerImg.setVisibility(View.VISIBLE);
                 binding.customerCurrentCustomerRl.setVisibility(View.GONE);
@@ -240,15 +238,13 @@ public class FragmentCustomer extends Fragment implements CustomerAdapter.OnItem
     @Override
     public void onCustomerClick(int position) {
         Customer clickedCustomer = customers.get(position);
-
-        showConfirmation(clickedCustomer);
-
+        showOptionsPopup(clickedCustomer);
         binding.emptyCustomerImg.setVisibility(View.GONE);
     }
 
-    private void showConfirmation(Customer customer){
+    private void showOptionsPopup(Customer customer){
         PopupWindow popup = new PopupWindow(getContext());
-        View layout = getLayoutInflater().inflate(R.layout.add_current_cust_confirmation_popup, null);
+        View layout = getLayoutInflater().inflate(R.layout.customer_list_clicked_popup, null);
         popup.setContentView(layout);
         // Set content width and height
         popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
@@ -302,6 +298,7 @@ public class FragmentCustomer extends Fragment implements CustomerAdapter.OnItem
                 customerSharedPreferenceEdit.putString("customerPhoneNo", customer.getCustomer_phoneNo());
                 customerSharedPreferenceEdit.commit();
 
+                ((CustomerPage)getActivity()).refreshCartCurrentCustomer();
                 binding.customerCurrentCustomerName.setText(customer.getCustomer_name());
                 binding.customerCurrentCustomerEmail.setText(customer.getCustomer_email());
                 binding.customerCurrentCustomerId.setText("#" + customer.getCustomer_id());

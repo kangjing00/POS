@@ -73,17 +73,8 @@ public class CustomerPage extends AppCompatActivity {
         cartSharedPreferenceEdit = cartSharedPreference.edit();
         customerSharedPreference = getSharedPreferences("CurrentCustomer",MODE_MULTI_PROCESS);
         customerSharedPreferenceEdit = customerSharedPreference.edit();
+        refreshCartCurrentCustomer();
 
-        int currentCustomerId = customerSharedPreference.getInt("customerID", -1);
-        if(currentCustomerId != -1) {
-            binding.cartInclude.cartCurrentCustomerName.setText(customerSharedPreference.getString("customerName", null));
-            binding.cartInclude.cartCurrentCustomerId.setText("#" + customerSharedPreference.getInt("customerID", -1));
-            binding.cartInclude.cartAddCustomer.setVisibility(View.GONE);
-            binding.cartInclude.cartCurrentCustomerRl.setVisibility(View.VISIBLE);
-        }else{
-            binding.cartInclude.cartAddCustomer.setVisibility(View.VISIBLE);
-            binding.cartInclude.cartCurrentCustomerRl.setVisibility(View.GONE);
-        }
 
         //Body Settings
         //Fragment Settings
@@ -269,7 +260,7 @@ public class CustomerPage extends AppCompatActivity {
         binding.cartInclude.cartAddCustomer.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                Toast.makeText(contextpage, "Add Customer Button Clicked", Toast.LENGTH_SHORT).show();
+                Toast.makeText(contextpage, "Select a customer from the customer search list.", Toast.LENGTH_SHORT).show();
             }
         });
         binding.cartInclude.cartOrderSummaryHoldBtn.setOnClickListener(new View.OnClickListener(){
@@ -350,6 +341,19 @@ public class CustomerPage extends AppCompatActivity {
                 binding.cartInclude.cartOrderDiscountBtn.setTextColor(contextpage.getResources().getColor(R.color.darkOrange));
             }
         });
+        }
+    }
+
+    public void refreshCartCurrentCustomer(){
+        int currentCustomerId = customerSharedPreference.getInt("customerID", -1);
+        if(currentCustomerId != -1) {
+            binding.cartInclude.cartCurrentCustomerName.setText(customerSharedPreference.getString("customerName", null));
+            binding.cartInclude.cartCurrentCustomerId.setText("#" + customerSharedPreference.getInt("customerID", -1));
+            binding.cartInclude.cartAddCustomer.setVisibility(View.GONE);
+            binding.cartInclude.cartCurrentCustomerRl.setVisibility(View.VISIBLE);
+        }else{
+            binding.cartInclude.cartAddCustomer.setVisibility(View.VISIBLE);
+            binding.cartInclude.cartCurrentCustomerRl.setVisibility(View.GONE);
         }
     }
 

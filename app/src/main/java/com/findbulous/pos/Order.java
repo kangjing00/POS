@@ -15,7 +15,20 @@ public class Order  extends RealmObject {
     @LinkingObjects("order")
     private final RealmResults<Order_Line> order_lines = null;
 
-    //Constructor
+    private Table table;
+
+    //Constructors
+    public Order(int order_id, String date_order, String state, double amount_total, double amount_paid, double amount_tax, double tip_amount, boolean is_tipped, Table table){
+        this.order_id = order_id;
+        this.date_order = date_order;
+        this.state = state;
+        this.amount_total = amount_total;
+        this.amount_paid = amount_paid;
+        this.amount_tax = amount_tax;
+        this.tip_amount = tip_amount;
+        this.is_tipped = is_tipped;
+        this.table = table;
+    }
     public Order(int order_id, String date_order, String state, double amount_total, double amount_paid, double amount_tax, double tip_amount, boolean is_tipped){
         this.order_id = order_id;
         this.date_order = date_order;
@@ -25,6 +38,7 @@ public class Order  extends RealmObject {
         this.amount_tax = amount_tax;
         this.tip_amount = tip_amount;
         this.is_tipped = is_tipped;
+        this.table = null;
     }
     public Order(){
         order_id = -1;
@@ -35,6 +49,7 @@ public class Order  extends RealmObject {
         amount_tax = 0.0;
         tip_amount = 0.0;
         is_tipped = false;
+        this.table = null;
     }
 
     public int getOrder_id() {
@@ -101,6 +116,14 @@ public class Order  extends RealmObject {
 
     public void setIs_tipped(boolean is_tipped) {
         this.is_tipped = is_tipped;
+    }
+
+    public Table getTable() {
+        return table;
+    }
+
+    public void setTable(Table table) {
+        this.table = table;
     }
 
 //    public void setOrder_lines(){
