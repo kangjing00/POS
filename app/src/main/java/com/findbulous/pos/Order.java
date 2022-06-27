@@ -10,8 +10,8 @@ public class Order  extends RealmObject {
     @PrimaryKey
     private int order_id;
     private String date_order, state; //State: "paid", "draft", "onHold"
-    private double amount_total, amount_paid, amount_tax, tip_amount;
-    private boolean is_tipped;
+    private double amount_total, amount_paid, amount_tax, tip_amount; //order_discount_cash
+    private boolean is_tipped; //has_order_discount, is_percentage
     @LinkingObjects("order")
     private final RealmResults<Order_Line> order_lines = null;
 

@@ -157,6 +157,7 @@
             android:background="@drawable/box_corner_nopadding_white"
             android:backgroundTint="@color/linen"
             android:padding="15dp"
+            app:layout_constraintTop_toBottomOf="@id/cart_orders_rv"
             app:layout_constraintBottom_toTopOf="@+id/cart_order_summary_rl"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent">
@@ -203,6 +204,7 @@
             android:layout_height="wrap_content"
             android:background="@color/lightGrey"
             android:padding="10dp"
+            app:layout_constraintTop_toBottomOf="@id/cart_order_add_rl"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent">

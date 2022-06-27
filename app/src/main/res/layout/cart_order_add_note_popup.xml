@@ -47,6 +47,7 @@
             android:textAllCaps="false"
             android:padding="15dp"
             app:strokeColor="@color/darkOrange"
+            app:rippleColor="@color/linen"
             app:strokeWidth="2dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/add_note_popup_positive_btn"

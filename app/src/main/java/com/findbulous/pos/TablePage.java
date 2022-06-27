@@ -112,20 +112,11 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
                 binding.tableInformationOrderId.setText("#" + result.getOrder_id());
             }
             onlyVacantTable = true;
-            binding.tableInformationSwapTransferBtn.setVisibility(View.GONE);
-        }else{
-            binding.tableInformationSwapTransferBtn.setVisibility(View.VISIBLE);
         }
 
         //OnClickListener
         //body
         {
-        binding.tableInformationSwapTransferBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Toast.makeText(contextpage, "Swap / Transfer Table Btn", Toast.LENGTH_SHORT).show();
-            }
-        });
         //popup
         AlertDialog.Builder builder = new AlertDialog.Builder(TablePage.this);
 

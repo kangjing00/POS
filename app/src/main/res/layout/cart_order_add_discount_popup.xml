@@ -16,7 +16,7 @@
             android:id="@+id/add_discount_popup_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Add Discount"
+            android:text="Add Order Discount"
             android:padding="5dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -55,24 +55,6 @@
                 android:background="@drawable/cart_order_add_popup_radio_btn_selector"
                 android:gravity="center"
                 android:layout_gravity="center" />
-            <!--        <ImageButton-->
-            <!--            android:id="@+id/add_popup_discount_amount"-->
-            <!--            android:layout_width="wrap_content"-->
-            <!--            android:layout_height="wrap_content"-->
-            <!--            android:src="@drawable/ic_amount"-->
-            <!--            android:tint="@color/darkGrey"-->
-            <!--            android:layout_marginRight="10dp"-->
-            <!--            android:padding="10dp"-->
-            <!--            android:background="@color/lightGrey" />-->
-
-            <!--        <ImageButton-->
-            <!--            android:id="@+id/add_popup_discount_percent"-->
-            <!--            android:layout_width="wrap_content"-->
-            <!--            android:layout_height="wrap_content"-->
-            <!--            android:src="@drawable/ic_percentage"-->
-            <!--            android:tint="@color/darkGrey"-->
-            <!--            android:padding="10dp"-->
-            <!--            android:background="@color/lightGrey"/>-->
         </RadioGroup>
 
         <EditText
