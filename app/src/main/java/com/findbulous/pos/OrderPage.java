@@ -344,6 +344,18 @@ public class OrderPage extends AppCompatActivity {
         binding.orderDetailBalance.setText(String.format("%.2f", balance));
         binding.orderDetailSubtotal.setText(String.format("%.2f", subtotal));
         binding.orderDetailDiscount.setText(String.format("%.2f", discount));
+
+        binding.orderDetailOrderId.setText("#" + orderSelected.getOrder_id());
+        if(orderSelected.getTable() != null){
+            binding.orderDetailType.setText("Dine-in - " + orderSelected.getTable().getTable_name());
+        }else {
+            binding.orderDetailType.setText("Takeaway");
+        }
+        if(orderSelected.getCustomer() != null){
+            binding.orderDetailCustomerName.setText(orderSelected.getCustomer().getCustomer_name());
+        }else{
+            binding.orderDetailCustomerName.setText("[Customer]");
+        }
     }
     public void resetOrderSelected(){
         order_lines.clear();
@@ -355,5 +367,9 @@ public class OrderPage extends AppCompatActivity {
         binding.orderDetailBalance.setText("0.00");
         binding.orderDetailSubtotal.setText("0.00");
         binding.orderDetailDiscount.setText("0.00");
+
+        binding.orderDetailOrderId.setText("#00000");
+        binding.orderDetailType.setText("[Order Type]");
+        binding.orderDetailCustomerName.setText("[Customer Name]");
     }
 }

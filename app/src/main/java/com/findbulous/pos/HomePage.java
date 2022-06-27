@@ -959,6 +959,7 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
         getOrderLineFromRealm();
 
         updateOrderTotalAmount();
+        refreshCartCurrentCustomer();
     }
 
     @Override

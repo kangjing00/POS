@@ -16,9 +16,11 @@ public class Order  extends RealmObject {
     private final RealmResults<Order_Line> order_lines = null;
 
     private Table table;
+    private Customer customer;
 
     //Constructors
-    public Order(int order_id, String date_order, String state, double amount_total, double amount_paid, double amount_tax, double tip_amount, boolean is_tipped, Table table){
+    //Dine-in
+    public Order(int order_id, String date_order, String state, double amount_total, double amount_paid, double amount_tax, double tip_amount, boolean is_tipped, Table table, Customer customer){
         this.order_id = order_id;
         this.date_order = date_order;
         this.state = state;
@@ -28,18 +30,9 @@ public class Order  extends RealmObject {
         this.tip_amount = tip_amount;
         this.is_tipped = is_tipped;
         this.table = table;
+        this.customer = customer;
     }
-    public Order(int order_id, String date_order, String state, double amount_total, double amount_paid, double amount_tax, double tip_amount, boolean is_tipped){
-        this.order_id = order_id;
-        this.date_order = date_order;
-        this.state = state;
-        this.amount_total = amount_total;
-        this.amount_paid = amount_paid;
-        this.amount_tax = amount_tax;
-        this.tip_amount = tip_amount;
-        this.is_tipped = is_tipped;
-        this.table = null;
-    }
+
     public Order(){
         order_id = -1;
         date_order = null;
@@ -49,7 +42,8 @@ public class Order  extends RealmObject {
         amount_tax = 0.0;
         tip_amount = 0.0;
         is_tipped = false;
-        this.table = null;
+        table = null;
+        customer = null;
     }
 
     public int getOrder_id() {
@@ -124,6 +118,14 @@ public class Order  extends RealmObject {
 
     public void setTable(Table table) {
         this.table = table;
+    }
+
+    public Customer getCustomer() {
+        return customer;
+    }
+
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
     }
 
 //    public void setOrder_lines(){

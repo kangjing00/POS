@@ -45,10 +45,12 @@ public class PaymentPage extends AppCompatActivity {
     private PaymentOrderLineAdapter orderLineAdapter;
     //Current order
     private Order currentOrder;
+    //Current customer
+    private Customer currentCustomer;
 
     private Realm realm;
-    private SharedPreferences currentOrderSharePreference;
-    private SharedPreferences.Editor currentOrderSharePreferenceEdit;
+    private SharedPreferences currentOrderSharePreference, currentCustomerSharePreference;
+    private SharedPreferences.Editor currentOrderSharePreferenceEdit, currentCustomerSharePreferenceEdit;
 
     String statuslogin;
     Context contextpage;
@@ -63,6 +65,22 @@ public class PaymentPage extends AppCompatActivity {
         binding.setLifecycleOwner(this);
 
         realm = Realm.getDefaultInstance();
+
+        currentCustomerSharePreference = getSharedPreferences("CurrentCustomer",MODE_MULTI_PROCESS);
+        currentCustomerSharePreferenceEdit = currentCustomerSharePreference.edit();
+        int current_customer_id = currentCustomerSharePreference.getInt("customerID", -1);
+        String customer_name = currentCustomerSharePreference.getString("customerName", null);
+        String customerPhoneNo = currentCustomerSharePreference.getString("customerPhoneNo", null);
+        String customerEmail = currentCustomerSharePreference.getString("customerEmail", null);
+        String customerIdentityNo = currentCustomerSharePreference.getString("customerIdentityNo", null);
+        String customerBirthdate = currentCustomerSharePreference.getString("customerBirthdate", null);
+        if(current_customer_id != -1){
+            currentCustomer = new Customer(current_customer_id, customer_name, customerEmail, customerPhoneNo, customerIdentityNo, customerBirthdate);
+        }else{
+            currentCustomer = null;
+        }
+
+
         currentOrderSharePreference = getSharedPreferences("CurrentOrder",MODE_MULTI_PROCESS);
         currentOrderSharePreferenceEdit = currentOrderSharePreference.edit();
         currentOrder = new Order();
@@ -73,6 +91,14 @@ public class PaymentPage extends AppCompatActivity {
         }
 
         //Body Setting
+        //Customer Setting
+        if(current_customer_id != -1) {
+            binding.paymentBarCustomerName.setText(customer_name);
+            binding.paymentBarCustomerId.setText("#" + current_customer_id);
+            binding.paymentBarCustomerRl.setVisibility(View.VISIBLE);
+        }else{
+            binding.paymentBarCustomerRl.setVisibility(View.GONE);
+        }
         //Recycler View
         binding.paymentOrderDetailProductRv.setLayoutManager(new LinearLayoutManager(contextpage, LinearLayoutManager.VERTICAL, false));
         binding.paymentOrderDetailProductRv.setHasFixedSize(true);
@@ -93,17 +119,15 @@ public class PaymentPage extends AppCompatActivity {
         binding.paymentDiscount.setText(String.format("- %.2f", order_discount));
         binding.paymentGrandTotal.setText(String.format("%.2f", currentOrder.getAmount_total()));
         viewModel.setAmount_total(currentOrder.getAmount_total());
-
         //Tabs
-        binding.paymentMethodViewPager.setAdapter(paymentMethodPagerAdapter);
+        {binding.paymentMethodViewPager.setAdapter(paymentMethodPagerAdapter);
         new TabLayoutMediator(binding.paymentMethodTl, binding.paymentMethodViewPager,
-            (
                 (
-                    (tab, position) -> tab.setText(titles[position])
+                        (
+                                (tab, position) -> tab.setText(titles[position])
+                        )
                 )
-            )
-        ).attach();
-
+        ).attach();}
 
         //OnClickListener
         //Body
@@ -140,10 +164,33 @@ public class PaymentPage extends AppCompatActivity {
                 binding.paymentTipCancelBtn.setVisibility(View.GONE);
             }
         });
+        binding.paymentBarRemoveCustomerBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                currentCustomerSharePreferenceEdit.putInt("customerID", -1);
+                currentCustomerSharePreferenceEdit.putString("customerName", null);
+                currentCustomerSharePreferenceEdit.putString("customerEmail", null);
+                currentCustomerSharePreferenceEdit.putString("customerPhoneNo", null);
+                currentCustomerSharePreferenceEdit.putString("customerIdentityNo", null);
+                currentCustomerSharePreferenceEdit.putString("customerBirthdate", null);
+                currentCustomerSharePreferenceEdit.commit();
+                binding.paymentBarCustomerRl.setVisibility(View.GONE);
+                currentCustomer = null;
+                Toast.makeText(contextpage, "Current Customer Removed", Toast.LENGTH_SHORT).show();
+            }
+        });
         binding.paymentOrderDetailConfirmBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if(is_balanceZero()) {
+                    int current_customer_id = currentCustomerSharePreference.getInt("customerID", -1);
+                    currentCustomerSharePreferenceEdit.putInt("customerID", -1);
+                    currentCustomerSharePreferenceEdit.putString("customerName", null);
+                    currentCustomerSharePreferenceEdit.putString("customerEmail", null);
+                    currentCustomerSharePreferenceEdit.putString("customerPhoneNo", null);
+                    currentCustomerSharePreferenceEdit.putString("customerIdentityNo", null);
+                    currentCustomerSharePreferenceEdit.putString("customerBirthdate", null);
+                    currentCustomerSharePreferenceEdit.commit();
                     int current_order_id = currentOrderSharePreference.getInt("orderId", -1);
                     currentOrderSharePreferenceEdit.putInt("orderingState", 0);
                     currentOrderSharePreferenceEdit.putInt("orderId", -1);
@@ -162,6 +209,7 @@ public class PaymentPage extends AppCompatActivity {
                     }
                     updated_current_order.setState("paid");
                     updated_current_order.setAmount_paid(Double.valueOf(viewModel.getPayment_order_detail_credit().getValue()));
+                    updated_current_order.setCustomer(currentCustomer);
                     if(current_order.getTable() != null){
                         tableOccupiedToVacant(updated_current_order.getTable());
                     }

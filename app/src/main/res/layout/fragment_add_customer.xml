@@ -110,7 +110,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/textView5"
             app:layout_constraintEnd_toStartOf="@id/add_customer_birthdate_et"
-            android:hint="Enter the identity card number"
+            android:hint="000000-00-0000"
             android:background="@drawable/custom_input"
             android:maxLines="1"
             android:paddingStart="15dp"
@@ -146,7 +146,11 @@
             android:paddingBottom="10dp"
             android:hint="Enter the birthdate"
             android:inputType="date"
-            android:textSize="15dp"/>
+            android:textSize="15dp"
+            android:clickable="false"
+            android:cursorVisible="false"
+            android:focusable="false"
+            android:focusableInTouchMode="false"/>
 
 
 

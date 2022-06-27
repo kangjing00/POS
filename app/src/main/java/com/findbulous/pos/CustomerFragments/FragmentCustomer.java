@@ -98,6 +98,8 @@ public class FragmentCustomer extends Fragment implements CustomerAdapter.OnItem
                 customerSharedPreferenceEdit.putString("customerName", null);
                 customerSharedPreferenceEdit.putString("customerEmail", null);
                 customerSharedPreferenceEdit.putString("customerPhoneNo", null);
+                customerSharedPreferenceEdit.putString("customerIdentityNo", null);
+                customerSharedPreferenceEdit.putString("customerBirthdate", null);
                 customerSharedPreferenceEdit.commit();
                 ((CustomerPage)getActivity()).refreshCartCurrentCustomer();
                 if(customers.isEmpty())
@@ -201,7 +203,7 @@ public class FragmentCustomer extends Fragment implements CustomerAdapter.OnItem
                                 JSONObject ja = jcustomers.getJSONObject(a);
                                 Customer cust = new Customer(Integer.valueOf(ja.getString("customer_id")),
                                         ja.getString("full_name"), ja.getString("email"),
-                                        ja.getString("tel_no"));
+                                        ja.getString("tel_no"), ja.getString("ic_no"), ja.getString("date_birth"));
                                 customers.add(cust);
                                 System.out.println(customers.get(a).getCustomer_name());
                                 counter++;
@@ -296,6 +298,8 @@ public class FragmentCustomer extends Fragment implements CustomerAdapter.OnItem
                 customerSharedPreferenceEdit.putString("customerName", customer.getCustomer_name());
                 customerSharedPreferenceEdit.putString("customerEmail", customer.getCustomer_email());
                 customerSharedPreferenceEdit.putString("customerPhoneNo", customer.getCustomer_phoneNo());
+                customerSharedPreferenceEdit.putString("customerIdentityNo", customer.getCustomer_identityNo());
+                customerSharedPreferenceEdit.putString("customerBirthdate", customer.getCustomer_birthdate());
                 customerSharedPreferenceEdit.commit();
 
                 ((CustomerPage)getActivity()).refreshCartCurrentCustomer();

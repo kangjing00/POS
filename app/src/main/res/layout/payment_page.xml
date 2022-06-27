@@ -400,6 +400,7 @@
                 android:layout_alignParentTop="true"
                 android:layout_alignParentRight="true"
                 android:layout_centerVertical="true"
+                android:visibility="gone"
                 android:layout_toRightOf="@+id/textView2">
 
                 <de.hdodenhof.circleimageview.CircleImageView
