@@ -7,7 +7,7 @@ public class Order_Line extends RealmObject {
     @PrimaryKey
     private int order_line_id;
     private String order_line_name;
-    private int qty, discount;
+    private int qty, discount; //discount: in percentage
     private double price_subtotal, price_total;
 
     private Order order;

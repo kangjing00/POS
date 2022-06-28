@@ -96,8 +96,10 @@ public class PaymentPage extends AppCompatActivity {
             binding.paymentBarCustomerName.setText(customer_name);
             binding.paymentBarCustomerId.setText("#" + current_customer_id);
             binding.paymentBarCustomerRl.setVisibility(View.VISIBLE);
+            binding.paymentOrderDetailCustomerName.setText(customer_name);
         }else{
             binding.paymentBarCustomerRl.setVisibility(View.GONE);
+            binding.paymentOrderDetailCustomerName.setText("[Customer Name]");
         }
         //Recycler View
         binding.paymentOrderDetailProductRv.setLayoutManager(new LinearLayoutManager(contextpage, LinearLayoutManager.VERTICAL, false));
@@ -118,7 +120,15 @@ public class PaymentPage extends AppCompatActivity {
         binding.paymentTax.setText(String.format("%.2f", currentOrder.getAmount_tax()));
         binding.paymentDiscount.setText(String.format("- %.2f", order_discount));
         binding.paymentGrandTotal.setText(String.format("%.2f", currentOrder.getAmount_total()));
+        binding.paymentBarPayableAmount.setText(String.format("RM %.2f", currentOrder.getAmount_total()));
         viewModel.setAmount_total(currentOrder.getAmount_total());
+
+        binding.paymentOrderDetailOrderId.setText("#" + currentOrder.getOrder_id());
+        if(currentOrder.getTable() == null) { //Takeaway
+            binding.paymentOrderDetailType.setText("Takeaway");
+        }else{ //Dine-in
+            binding.paymentOrderDetailType.setText("Dine-in - " + currentOrder.getTable().getTable_name());
+        }
         //Tabs
         {binding.paymentMethodViewPager.setAdapter(paymentMethodPagerAdapter);
         new TabLayoutMediator(binding.paymentMethodTl, binding.paymentMethodViewPager,
@@ -160,6 +170,7 @@ public class PaymentPage extends AppCompatActivity {
                 binding.getPaymentPageViewModel().setPayment_tip("0.00");
                 double amount_total = binding.getPaymentPageViewModel().getAmount_total();
                 binding.paymentGrandTotal.setText(String.format("%.2f", amount_total));
+                binding.paymentBarPayableAmount.setText(String.format("RM %.2f", amount_total));
                 currentOrder.setAmount_total(amount_total);
                 binding.paymentTipCancelBtn.setVisibility(View.GONE);
             }
@@ -176,6 +187,7 @@ public class PaymentPage extends AppCompatActivity {
                 currentCustomerSharePreferenceEdit.commit();
                 binding.paymentBarCustomerRl.setVisibility(View.GONE);
                 currentCustomer = null;
+                binding.paymentOrderDetailCustomerName.setText("[Customer Name]");
                 Toast.makeText(contextpage, "Current Customer Removed", Toast.LENGTH_SHORT).show();
             }
         });
@@ -194,6 +206,7 @@ public class PaymentPage extends AppCompatActivity {
                     int current_order_id = currentOrderSharePreference.getInt("orderId", -1);
                     currentOrderSharePreferenceEdit.putInt("orderingState", 0);
                     currentOrderSharePreferenceEdit.putInt("orderId", -1);
+                    currentOrderSharePreferenceEdit.putString("cartNote", null);
                     currentOrderSharePreferenceEdit.commit();
 
                     Order current_order = realm.where(Order.class).equalTo("order_id", current_order_id).findFirst();
@@ -269,6 +282,7 @@ public class PaymentPage extends AppCompatActivity {
     private void tableOccupiedToVacant(Table table){
         table.setOccupied(false);
         table.setVacant(true);
+        table.setOnHold(false);
         realm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
@@ -355,6 +369,7 @@ public class PaymentPage extends AppCompatActivity {
                 binding.getPaymentPageViewModel().setPayment_tip(tip_amount);
                 double amount_total = binding.getPaymentPageViewModel().getAmount_total();
                 binding.paymentGrandTotal.setText(String.format("%.2f", amount_total));
+                binding.paymentBarPayableAmount.setText(String.format("RM %.2f", amount_total));
                 currentOrder.setAmount_total(amount_total);
                 popup.dismiss();
                 Toast.makeText(contextpage, "Tip Added", Toast.LENGTH_SHORT).show();

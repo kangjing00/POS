@@ -4,11 +4,13 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-
+        <variable
+            name="order"
+            type="com.findbulous.pos.Order" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="wrap_content"
+        android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:background="@drawable/box_corner_nopadding_white"
         android:elevation="3dp"
@@ -19,7 +21,7 @@
             android:id="@+id/customer_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Vincent Lobo • "
+            android:text='@{order.customer.customer_name + " • "}'
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"/>
 
@@ -27,7 +29,7 @@
             android:id="@+id/table_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="T-34"
+            android:text=""
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toEndOf="@+id/customer_name"/>
 
@@ -35,7 +37,7 @@
             android:id="@+id/date_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="7 Apr 2022, 10:00:00"
+            android:text="@{order.date_order}"
             android:textColor="@color/darkGrey"
             android:textSize="12dp"
             app:layout_constraintStart_toStartOf="parent"
@@ -43,7 +45,7 @@
 
         <RelativeLayout
             android:id="@+id/note_rl"
-            android:layout_width="300dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/box_corner_nopadding_white"
             android:backgroundTint="@color/linen"
@@ -62,9 +64,10 @@
 
             <TextView
                 android:id="@+id/note"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="NA"
+                android:scrollbars="vertical"
+                android:text="@{order.note}"
                 android:layout_below="@id/textView1"/>
         </RelativeLayout>
 
@@ -87,7 +90,6 @@
             android:text="Resume"
             android:textAllCaps="false"
             app:icon="@drawable/ic_proceed_cart"
-            app:iconPadding="12dp"
             android:paddingTop="15dp"
             android:paddingBottom="15dp"
             android:layout_marginRight="5dp"
@@ -105,12 +107,12 @@
             android:textAllCaps="false"
             app:icon="@drawable/ic_delete"
             app:iconTint="@color/darkOrange"
-            app:iconPadding="12dp"
             android:paddingTop="15dp"
             android:paddingBottom="15dp"
             android:layout_marginLeft="5dp"
             app:strokeWidth="2dp"
             app:strokeColor="@color/darkOrange"
+            app:rippleColor="@color/linen"
             android:backgroundTint="@color/white"
             app:layout_constraintStart_toEndOf="@id/resume_btn"
             app:layout_constraintEnd_toEndOf="parent"
