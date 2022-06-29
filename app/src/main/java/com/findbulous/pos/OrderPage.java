@@ -257,6 +257,13 @@ public class OrderPage extends AppCompatActivity {
         popup.setElevation(8);
         popup.setBackgroundDrawable(null);
         popup.showAtLocation(binding.getRoot(), Gravity.CENTER, 0, 0);
+        //blur background
+        View container = (View) popup.getContentView().getParent();
+        WindowManager wm = (WindowManager) OrderPage.this.getSystemService(Context.WINDOW_SERVICE);
+        WindowManager.LayoutParams p = (WindowManager.LayoutParams) container.getLayoutParams();
+        p.flags |= WindowManager.LayoutParams.FLAG_DIM_BEHIND;
+        p.dimAmount = 0.3f;
+        wm.updateViewLayout(container, p);
 
         cash_in_rb = (RadioButton)layout.findViewById(R.id.cash_in_rb);
         cash_out_rb = (RadioButton)layout.findViewById(R.id.cash_out_rb);

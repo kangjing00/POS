@@ -43,6 +43,8 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
     private Table vacantTableSelected;
     private View lastClickedTableView;
     private ArrayList<Table> tableList;
+    //Table onHold and occupied popup
+    private MaterialButton table_swap_transfer_btn, table_addon_btn, table_proceed_btn;
     //Cash in out popup
     private RadioButton cash_in_rb, cash_out_rb;
     private EditText cash_in_out_amount, cash_in_out_reason;
@@ -51,9 +53,9 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
     private TextView product_sync_btn, transactions_sync_btn;
     //Realm
     private Realm realm;
-    private SharedPreferences currentOrderSharedPreference;
+    private SharedPreferences currentOrderSharedPreference, currentCustomerSharedPreference;
     // Creating an Editor object to edit(write to the file)
-    private SharedPreferences.Editor currentOrderSharedPreferenceEdit;
+    private SharedPreferences.Editor currentOrderSharedPreferenceEdit, currentCustomerSharedPreferenceEdit;
 
     private String statuslogin;
     private Context contextpage;
@@ -79,6 +81,9 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
         //CurrentOrder Settings
         currentOrderSharedPreference = getSharedPreferences("CurrentOrder",MODE_MULTI_PROCESS);
         currentOrderSharedPreferenceEdit = currentOrderSharedPreference.edit();
+        //CurrentCustomer Settings
+        currentCustomerSharedPreference = getSharedPreferences("CurrentCustomer",MODE_MULTI_PROCESS);
+        currentCustomerSharedPreferenceEdit = currentCustomerSharedPreference.edit();
 
         //insertDummyTableData();
         onlyVacantTable = false;
@@ -97,10 +102,6 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
 //                realm.insertOrUpdate(tableList);
 //            }
 //        });
-        tableList.get(0).setOccupied(true);
-        tableList.get(0).setVacant(false);
-        tableList.get(18).setOnHold(true);
-        tableList.get(18).setVacant(false);
 
         displayTables(7,18, tableList);
 
@@ -373,6 +374,13 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
         popup.setElevation(8);
         popup.setBackgroundDrawable(null);
         popup.showAtLocation(binding.getRoot(), Gravity.CENTER, 0, 0);
+        //blur background
+        View container = (View) popup.getContentView().getParent();
+        WindowManager wm = (WindowManager) TablePage.this.getSystemService(Context.WINDOW_SERVICE);
+        WindowManager.LayoutParams p = (WindowManager.LayoutParams) container.getLayoutParams();
+        p.flags |= WindowManager.LayoutParams.FLAG_DIM_BEHIND;
+        p.dimAmount = 0.3f;
+        wm.updateViewLayout(container, p);
 
         cash_in_rb = (RadioButton)layout.findViewById(R.id.cash_in_rb);
         cash_out_rb = (RadioButton)layout.findViewById(R.id.cash_out_rb);
@@ -414,13 +422,101 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
 
         TextView tvTableName = layout.findViewById(R.id.table_addon_proceed_popup_table_name);
         TextView tvOrderID = layout.findViewById(R.id.table_addon_proceed_popup_order_id);
+        TextView orderTv = layout.findViewById(R.id.table_addon_proceed_popup_tv2);
 
         tvTableName.setText(clickedTable.getTable_name());
-//        tvOrderID.setText(clickedTable);
+        Order order = realm.where(Order.class).equalTo("table.table_id", clickedTable.getTable_id()).findFirst();
+        Customer customer = realm.where(Customer.class).equalTo("customer_id", order.getCustomer().getCustomer_id()).findFirst();
+        int current_order_id = currentOrderSharedPreference.getInt("orderId", -1);
 
-//        //Popup Buttons
-//        add_popup_negative_btn = (Button)layout.findViewById(R.id.add_discount_popup_negative_btn);
-//        add_popup_positive_btn = (Button)layout.findViewById(R.id.add_discount_popup_positive_btn);
+        if(order != null){
+            tvOrderID.setText("#" + order.getOrder_id());
+            tvOrderID.setVisibility(View.VISIBLE);
+            orderTv.setVisibility(View.VISIBLE);
+        }else{
+            orderTv.setVisibility(View.GONE);
+            tvOrderID.setVisibility(View.GONE);
+        }
+
+        //Popup Buttons
+        table_swap_transfer_btn = (MaterialButton)layout.findViewById(R.id.table_swap_transfer_btn);
+        table_addon_btn = (MaterialButton)layout.findViewById(R.id.table_addon_btn);
+        table_proceed_btn = (MaterialButton)layout.findViewById(R.id.table_proceed_btn);
+
+//        table_swap_transfer_btn.setOnClickListener();
+        table_addon_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(current_order_id == -1) { //no current order
+                    if(order != null) { //the table has an order
+                        currentCustomerSharedPreferenceEdit.putInt("customerID", customer.getCustomer_id());
+                        currentCustomerSharedPreferenceEdit.putString("customerName", customer.getCustomer_name());
+                        currentCustomerSharedPreferenceEdit.putString("customerEmail", customer.getCustomer_email());
+                        currentCustomerSharedPreferenceEdit.putString("customerPhoneNo", customer.getCustomer_phoneNo());
+                        currentCustomerSharedPreferenceEdit.putString("customerIdentityNo", customer.getCustomer_identityNo());
+                        currentCustomerSharedPreferenceEdit.putString("customerBirthdate", customer.getCustomer_birthdate());
+                        currentCustomerSharedPreferenceEdit.commit();
+
+                        currentOrderSharedPreferenceEdit.putInt("orderingState", 1);
+                        currentOrderSharedPreferenceEdit.putInt("orderId", order.getOrder_id());
+                        currentOrderSharedPreferenceEdit.putString("cartNote", order.getNote());
+                        currentOrderSharedPreferenceEdit.putInt("orderTypePosition", 1);
+                        currentOrderSharedPreferenceEdit.commit();
+
+                        Intent intent = new Intent(contextpage, HomePage.class);
+                        startActivity(intent);
+                        finish();
+                    }else{ //the table has no order
+//                        addNewOrder(clickedTable);
+//                        currentOrderSharedPreferenceEdit.putInt("orderingState", 1);    //ordering
+//                        currentOrderSharedPreferenceEdit.putInt("orderTypePosition", 1); //dine-in
+//                        currentOrderSharedPreferenceEdit.commit();
+//                        //update table status
+//                        updateTableOccupied(clickedTable);
+//                        Intent intent = new Intent(contextpage, HomePage.class);
+//                        startActivity(intent);
+//                        finish();
+                    }
+                }else{
+                    Toast.makeText(contextpage, "Can not resume, an order is in process", Toast.LENGTH_SHORT).show();
+                }
+                popup.dismiss();
+            }
+        });
+        table_proceed_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(current_order_id == -1) { //no current order
+                    currentCustomerSharedPreferenceEdit.putInt("customerID", customer.getCustomer_id());
+                    currentCustomerSharedPreferenceEdit.putString("customerName", customer.getCustomer_name());
+                    currentCustomerSharedPreferenceEdit.putString("customerEmail", customer.getCustomer_email());
+                    currentCustomerSharedPreferenceEdit.putString("customerPhoneNo", customer.getCustomer_phoneNo());
+                    currentCustomerSharedPreferenceEdit.putString("customerIdentityNo", customer.getCustomer_identityNo());
+                    currentCustomerSharedPreferenceEdit.putString("customerBirthdate", customer.getCustomer_birthdate());
+                    currentCustomerSharedPreferenceEdit.commit();
+
+                    currentOrderSharedPreferenceEdit.putInt("orderingState", 1);
+                    currentOrderSharedPreferenceEdit.putInt("orderId", order.getOrder_id());
+                    currentOrderSharedPreferenceEdit.putString("cartNote", order.getNote());
+                    currentOrderSharedPreferenceEdit.putInt("orderTypePosition", 1);
+                    currentOrderSharedPreferenceEdit.commit();
+
+                    if(order.getOrder_lines().size() == 0){ //empty cart
+                        Toast.makeText(TablePage.this, "Please proceed payment with at least 1 product", Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(contextpage, HomePage.class);
+                        startActivity(intent);
+                    }else{ //ready to payment
+                        Intent intent = new Intent(contextpage, PaymentPage.class);
+                        startActivity(intent);
+                    }
+                    finish();
+                }else{
+                    Toast.makeText(contextpage, "Can not resume, an order is in process", Toast.LENGTH_SHORT).show();
+                }
+                popup.dismiss();
+            }
+        });
+
     }
 
     private void showRefreshPopup(View view) {
@@ -562,13 +658,13 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
             if(!onlyVacantTable){//not only vacant table can be selected
                 showAddonAndProceed(v, clickedTable);
             }else{  //only vacant table can be selected
-                Toast.makeText(contextpage, "Only vacant table can be selected", Toast.LENGTH_SHORT).show();
+                Toast.makeText(contextpage, "Only vacant table can be selected while ordering", Toast.LENGTH_SHORT).show();
             }
         }else{ //occupied
             if(!onlyVacantTable){//not only vacant table can be selected
                 showAddonAndProceed(v, clickedTable);
             }else{
-                Toast.makeText(contextpage, "Only vacant table can be selected", Toast.LENGTH_SHORT).show();
+                Toast.makeText(contextpage, "Only vacant table can be selected while ordering", Toast.LENGTH_SHORT).show();
             }
         }
 

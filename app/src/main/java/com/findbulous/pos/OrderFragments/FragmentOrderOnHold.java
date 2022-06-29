@@ -73,6 +73,13 @@ public class FragmentOrderOnHold extends Fragment implements OrderOnHoldAdapter.
         Order orderRemove = realm.where(Order.class).equalTo("order_id", order_id).findFirst();
         RealmResults<Order_Line> orderLineRemove = realm.where(Order_Line.class).equalTo("order.order_id", order_id).findAll();
 
+        if(order_id == currentOrderSharePreference.getInt("orderId", -1)){
+            currentOrderSharePreferenceEdit.putInt("orderingState", 0);
+            currentOrderSharePreferenceEdit.putString("cartNote", null);
+            currentOrderSharePreferenceEdit.putInt("orderId", -1);
+            currentOrderSharePreferenceEdit.commit();
+        }
+
         Table tableUpdate = null;
         if(orderRemove.getTable() != null){
             tableUpdate = realm.copyFromRealm(orderRemove.getTable());
@@ -128,6 +135,8 @@ public class FragmentOrderOnHold extends Fragment implements OrderOnHoldAdapter.
             Intent intent = new Intent(getContext(), HomePage.class);
             startActivity(intent);
             getActivity().finish();
+        }else if(current_order_id == order.getOrder_id()){
+            Toast.makeText(getContext(), "This order is already in process", Toast.LENGTH_SHORT).show();
         }else{
             Toast.makeText(getContext(), "Can not resume, an order is in process", Toast.LENGTH_SHORT).show();
         }

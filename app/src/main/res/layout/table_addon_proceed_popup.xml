@@ -34,7 +34,7 @@
             android:text="T42"
             android:textSize="20dp"
             app:layout_constraintBottom_toTopOf="@+id/table_addon_proceed_popup_order_id"
-            app:layout_constraintEnd_toStartOf="@+id/table_addon_swap_transfer_btn"
+            app:layout_constraintEnd_toStartOf="@+id/table_swap_transfer_btn"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_chainStyle="packed" />
 
@@ -58,11 +58,11 @@
             android:text="#999999"
             android:textColor="@color/darkGrey"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/table_addon_swap_transfer_btn"
+            app:layout_constraintEnd_toStartOf="@+id/table_swap_transfer_btn"
             app:layout_constraintTop_toBottomOf="@+id/table_addon_proceed_popup_table_name" />
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/table_addon_swap_transfer_btn"
+            android:id="@+id/table_swap_transfer_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:backgroundTint="@color/white"
@@ -80,11 +80,11 @@
             app:rippleColor="@color/lightOrange"
             app:strokeWidth="2dp"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/table_addon_proceed_popup_addon_btn"
+            app:layout_constraintEnd_toStartOf="@+id/table_addon_btn"
             app:layout_constraintTop_toTopOf="parent"/>
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/table_addon_proceed_popup_addon_btn"
+            android:id="@+id/table_addon_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginRight="10dp"
@@ -100,14 +100,14 @@
             app:iconGravity="textStart"
             app:iconTint="@color/darkOrange"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/table_addon_proceed_popup_proceed_btn"
+            app:layout_constraintEnd_toStartOf="@+id/table_proceed_btn"
             app:layout_constraintTop_toTopOf="parent"
             app:rippleColor="@color/lightOrange"
             app:strokeColor="@color/darkOrange"
             app:strokeWidth="2dp" />
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/table_addon_proceed_popup_proceed_btn"
+            android:id="@+id/table_proceed_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:backgroundTint="@color/green"

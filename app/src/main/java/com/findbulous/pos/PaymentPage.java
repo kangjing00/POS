@@ -5,6 +5,7 @@ import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -145,6 +146,8 @@ public class PaymentPage extends AppCompatActivity {
         binding.paymentBackBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Intent intent = new Intent(contextpage, HomePage.class);
+                startActivity(intent);
                 finish();
                 Toast.makeText(contextpage, "Back Button Clicked", Toast.LENGTH_SHORT).show();
             }
@@ -305,6 +308,13 @@ public class PaymentPage extends AppCompatActivity {
         popup.setElevation(8);
         popup.setBackgroundDrawable(null);
         popup.showAtLocation(binding.getRoot(), Gravity.CENTER, 0, 0);
+        //blur background
+        View container = (View) popup.getContentView().getParent();
+        WindowManager wm = (WindowManager) PaymentPage.this.getSystemService(Context.WINDOW_SERVICE);
+        WindowManager.LayoutParams p = (WindowManager.LayoutParams) container.getLayoutParams();
+        p.flags |= WindowManager.LayoutParams.FLAG_DIM_BEHIND;
+        p.dimAmount = 0.3f;
+        wm.updateViewLayout(container, p);
 
         cash_in_rb = (RadioButton)layout.findViewById(R.id.cash_in_rb);
         cash_out_rb = (RadioButton)layout.findViewById(R.id.cash_out_rb);
