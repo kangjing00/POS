@@ -459,7 +459,6 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
 
                         currentOrderSharedPreferenceEdit.putInt("orderingState", 1);
                         currentOrderSharedPreferenceEdit.putInt("orderId", order.getOrder_id());
-                        currentOrderSharedPreferenceEdit.putString("cartNote", order.getNote());
                         currentOrderSharedPreferenceEdit.putInt("orderTypePosition", 1);
                         currentOrderSharedPreferenceEdit.commit();
 
@@ -497,7 +496,6 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
 
                     currentOrderSharedPreferenceEdit.putInt("orderingState", 1);
                     currentOrderSharedPreferenceEdit.putInt("orderId", order.getOrder_id());
-                    currentOrderSharedPreferenceEdit.putString("cartNote", order.getNote());
                     currentOrderSharedPreferenceEdit.putInt("orderTypePosition", 1);
                     currentOrderSharedPreferenceEdit.commit();
 

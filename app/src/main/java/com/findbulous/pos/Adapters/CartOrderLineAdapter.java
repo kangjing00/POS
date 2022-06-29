@@ -9,7 +9,7 @@ import com.findbulous.pos.R;
 import com.findbulous.pos.databinding.ViewCartOrdersBinding;
 import java.util.ArrayList;
 
-public class HomeOrderLineAdapter extends RecyclerView.Adapter<HomeOrderLineAdapter.OrderLineProductViewHolder> {
+public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdapter.OrderLineProductViewHolder> {
 
     private ArrayList<Order_Line> order_lines;
     private OnItemClickListener listener;
@@ -29,7 +29,7 @@ public class HomeOrderLineAdapter extends RecyclerView.Adapter<HomeOrderLineAdap
         }
     }
 
-    public HomeOrderLineAdapter(ArrayList<Order_Line> order_lines, OnItemClickListener listener){
+    public CartOrderLineAdapter(ArrayList<Order_Line> order_lines, OnItemClickListener listener){
         this.order_lines = order_lines;
         this.listener = listener;
     }
@@ -72,7 +72,7 @@ public class HomeOrderLineAdapter extends RecyclerView.Adapter<HomeOrderLineAdap
                             && (!holder.binding.productOrderQuantityEt.getText().toString().equalsIgnoreCase("0"))) {
                         qty = Integer.parseInt(holder.binding.productOrderQuantityEt.getText().toString());
                     }
-                    listener.quantityUpdateOrderLine(p, qty);
+                    listener.quantityUpdateOrderLine(holder.getAdapterPosition(), qty);
                 }
             }
         });

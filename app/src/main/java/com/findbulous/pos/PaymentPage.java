@@ -209,7 +209,6 @@ public class PaymentPage extends AppCompatActivity {
                     int current_order_id = currentOrderSharePreference.getInt("orderId", -1);
                     currentOrderSharePreferenceEdit.putInt("orderingState", 0);
                     currentOrderSharePreferenceEdit.putInt("orderId", -1);
-                    currentOrderSharePreferenceEdit.putString("cartNote", null);
                     currentOrderSharePreferenceEdit.commit();
 
                     Order current_order = realm.where(Order.class).equalTo("order_id", current_order_id).findFirst();
@@ -237,6 +236,8 @@ public class PaymentPage extends AppCompatActivity {
                     });
 
                     Toast.makeText(contextpage, "Payment Success", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(contextpage, HomePage.class);
+                    startActivity(intent);
                     finish();
                 }else{
                     Toast.makeText(contextpage, "Transaction is not completed", Toast.LENGTH_SHORT).show();

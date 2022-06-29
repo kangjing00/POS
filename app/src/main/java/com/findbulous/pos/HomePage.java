@@ -7,7 +7,6 @@ import androidx.databinding.DataBindingUtil;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -17,7 +16,6 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -27,7 +25,7 @@ import android.widget.PopupWindow;
 import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
-import com.findbulous.pos.Adapters.HomeOrderLineAdapter;
+import com.findbulous.pos.Adapters.CartOrderLineAdapter;
 import com.findbulous.pos.Adapters.ProductAdapter;
 import com.findbulous.pos.Network.CheckConnection;
 import com.findbulous.pos.Network.NetworkUtils;
@@ -44,7 +42,7 @@ import java.util.Timer;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
-public class HomePage extends AppCompatActivity implements ProductAdapter.OnItemClickListener, HomeOrderLineAdapter.OnItemClickListener{
+public class HomePage extends AppCompatActivity implements ProductAdapter.OnItemClickListener, CartOrderLineAdapter.OnItemClickListener{
 
     private HomePageBinding binding;
     //Product Modifier Choice Popup
@@ -69,16 +67,16 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
     private ProductAdapter productAdapter;
     private ArrayList<Product> list;
     private Realm realm;
-    private HomeOrderLineAdapter orderLineAdapter;
+    private CartOrderLineAdapter orderLineAdapter;
     private ArrayList<Order_Line> order_lines;
     //Current order
     private Order currentOrder;
     //OnHold customer
     private Customer onHoldCustomer;
+    //Update table while order onhold
+    private Table updateTableOnHold;
     //Internet Connection
     private Timer timer;
-
-    private Table updateTableOnHold;
 
     private String statuslogin;
     private Context contextpage;
@@ -88,9 +86,7 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         contextpage = HomePage.this;
-
         binding = DataBindingUtil.setContentView(this, R.layout.home_page);
-
         realm = Realm.getDefaultInstance();
 
         //Appbar Settings
@@ -126,16 +122,10 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
         binding.cartInclude.cartOrdersRv.setLayoutManager(new LinearLayoutManager(contextpage, LinearLayoutManager.VERTICAL, false));
         binding.cartInclude.cartOrdersRv.setHasFixedSize(true);
         order_lines = new ArrayList<>();
-        orderLineAdapter = new HomeOrderLineAdapter(order_lines, this);
+        orderLineAdapter = new CartOrderLineAdapter(order_lines, this);
         getOrderLineFromRealm();
         binding.cartInclude.cartOrdersRv.setAdapter(orderLineAdapter);
 
-        //Cart Note
-        if(!cartSharedPreference.getString("cartNote", "").equalsIgnoreCase("")){
-            binding.cartInclude.cartOrderNoteBtn.setTextColor(contextpage.getResources().getColor(R.color.green));
-        }else{
-            binding.cartInclude.cartOrderNoteBtn.setTextColor(contextpage.getResources().getColor(R.color.darkOrange));
-        }
         //Cart Discount
         if(!cartSharedPreference.getString("cartDiscount", "0.00").equalsIgnoreCase("0.00")){
             binding.cartInclude.cartOrderSummaryDiscountRl.setVisibility(View.VISIBLE);
@@ -404,7 +394,7 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 int orderTypePosition = binding.cartInclude.cartBtnPosType.getSelectedItemPosition(); //0 = takeaway, 1 = dine-in
-                //if change from dine-in to takeaway \/ tkaeaway to dine-in
+                //if change from dine-in to takeaway \/ takeaway to dine-in
                 if((orderTypePosition == 0) && (currentOrder.getOrder_id() != -1)
                     && (currentOrder.getTable() != null)){//takeaway && order now && order has table
                     //update table
@@ -459,54 +449,36 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
         }
     }
 
-    private void tableOccupiedToVacant(Table table){
-        table.setOccupied(false);
-        table.setVacant(true);
-        realm.executeTransaction(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                realm.insertOrUpdate(table);
-            }
-        });
-    }
-
-    private void refreshCartCurrentCustomer(){
-        int currentCustomerId = customerSharedPreference.getInt("customerID", -1);
-        if(currentCustomerId != -1) {
-            binding.cartInclude.cartCurrentCustomerName.setText(customerSharedPreference.getString("customerName", null));
-            binding.cartInclude.cartCurrentCustomerId.setText("#" + customerSharedPreference.getInt("customerID", -1));
-            binding.cartInclude.cartAddCustomer.setVisibility(View.GONE);
-            binding.cartInclude.cartCurrentCustomerRl.setVisibility(View.VISIBLE);
-        }else{
-            binding.cartInclude.cartAddCustomer.setVisibility(View.VISIBLE);
-            binding.cartInclude.cartCurrentCustomerRl.setVisibility(View.GONE);
-        }
-    }
-
-    private void refreshNote(){
-        if(!cartSharedPreference.getString("cartNote", "").equalsIgnoreCase("")){
-            binding.cartInclude.cartOrderNoteBtn.setTextColor(contextpage.getResources().getColor(R.color.green));
-        }else{
-            binding.cartInclude.cartOrderNoteBtn.setTextColor(contextpage.getResources().getColor(R.color.darkOrange));
-        }
-    }
-
     private void getProductFromRealm(){
         RealmResults<Product> results = realm.where(Product.class).findAll();
         list.addAll(realm.copyFromRealm(results));
         productAdapter.notifyDataSetChanged();
     }
-
     private void getOrderLineFromRealm(){
         int orderId = cartSharedPreference.getInt("orderId", -1);
         if(orderId > -1) {
             RealmResults<Order_Line> results = realm.where(Order_Line.class).equalTo("order.order_id", orderId).findAll();
             order_lines.addAll(realm.copyFromRealm(results));
-            orderLineAdapter.notifyDataSetChanged();
         }else{
             order_lines.clear();
-            orderLineAdapter.notifyDataSetChanged();
         }
+        orderLineAdapter.notifyDataSetChanged();
+    }
+    private Customer getCurrentCustomer(){
+        Customer customer = null;
+        int current_customer_id = customerSharedPreference.getInt("customerID", -1);
+        String customer_name = customerSharedPreference.getString("customerName", null);
+        String customerPhoneNo = customerSharedPreference.getString("customerPhoneNo", null);
+        String customerEmail = customerSharedPreference.getString("customerEmail", null);
+        String customerIdentityNo = customerSharedPreference.getString("customerIdentityNo", null);
+        String customerBirthdate = customerSharedPreference.getString("customerBirthdate", null);
+        if(current_customer_id != -1){
+            customer = new Customer(current_customer_id, customer_name, customerEmail, customerPhoneNo, customerIdentityNo, customerBirthdate);
+        }else{
+            customer = null;
+        }
+
+        return customer;
     }
 
     private void showCashInOut() {
@@ -553,6 +525,41 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
             }
         });
     }
+    private void showRefreshPopup(View view) {
+        PopupWindow popup = new PopupWindow(contextpage);
+        View layout = getLayoutInflater().inflate(R.layout.toolbar_sync_popup, null);
+        popup.setContentView(layout);
+        // Set content width and height
+        popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
+        popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
+        // Closes the popup window when touch outside of it - when looses focus
+        popup.setOutsideTouchable(true);
+        popup.setFocusable(true);
+        // Show anchored to button
+        popup.setElevation(8);
+        popup.setBackgroundDrawable(null);
+        popup.showAsDropDown(binding.toolbarLayoutIncl.toolbarRefresh, -120, 0);
+
+        //Popup Buttons
+        product_sync_btn = (TextView) layout.findViewById(R.id.sync_product_btn);
+        transactions_sync_btn = (TextView)layout.findViewById(R.id.sync_transaction_btn);
+
+        product_sync_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(contextpage, "refresh / sync products", Toast.LENGTH_SHORT).show();
+                popup.dismiss();
+            }
+        });
+
+        transactions_sync_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(contextpage, "refresh / sync transactions", Toast.LENGTH_SHORT).show();
+                popup.dismiss();
+            }
+        });
+    }
 
     private void showCartOrderAddNotePopup(int btnID) {
         PopupWindow popup = new PopupWindow(contextpage);
@@ -580,7 +587,17 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
         add_note_popup_positive_btn = (MaterialButton)layout.findViewById(R.id.add_note_popup_positive_btn);
         add_note_popup_et = (EditText)layout.findViewById(R.id.add_note_popup_et);
 
-        add_note_popup_et.setText(cartSharedPreference.getString("cartNote", ""));
+        if(currentOrder.getOrder_id() != -1) {
+            if(currentOrder.getNote() != null){
+                if(!currentOrder.getNote().isEmpty()) {
+                    add_note_popup_et.setText(currentOrder.getNote());
+                }
+            } else {
+                add_note_popup_et.setText("");
+            }
+        }else{
+            add_note_popup_et.setText("");
+        }
         if(btnID == binding.cartInclude.cartOrderNoteBtn.getId()){
             add_note_popup_positive_btn.setText("Add & Update");
         }else if(btnID == binding.cartInclude.cartOrderSummaryHoldBtn.getId()){
@@ -597,9 +614,8 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
         add_note_popup_positive_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                cartSharedPreferenceEdit.putString("cartNote", add_note_popup_et.getText().toString());
-                cartSharedPreferenceEdit.commit();
-                if(!cartSharedPreference.getString("cartNote", "").equalsIgnoreCase("")){
+                String note = add_note_popup_et.getText().toString();
+                if(!note.isEmpty()){
                     if(btnID != binding.cartInclude.cartOrderSummaryHoldBtn.getId()) {
                         binding.cartInclude.cartOrderNoteBtn.setTextColor(contextpage.getResources().getColor(R.color.green));
                     }
@@ -610,6 +626,13 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
                 if(btnID == binding.cartInclude.cartOrderSummaryHoldBtn.getId()){//Proceed
                     if((currentOrder.getTable() == null) && (cartSharedPreference.getInt("orderTypePosition", -1) == 1)) {
                         // the order has no table + it is dine-in
+                        currentOrder.setNote(note);
+                        realm.executeTransaction(new Realm.Transaction() {
+                            @Override
+                            public void execute(Realm realm) {
+                                realm.insertOrUpdate(currentOrder);
+                            }
+                        });
                         Intent intent = new Intent(contextpage, TablePage.class);
                         startActivity(intent);
                         finish();
@@ -618,7 +641,7 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
                         onHoldCustomer = getCurrentCustomer();
                         currentOrder.setCustomer(onHoldCustomer);
                         currentOrder.setState("onHold");
-                        currentOrder.setNote(cartSharedPreference.getString("cartNote", null));
+                        currentOrder.setNote(note);
 
                         if (currentOrder.getTable() != null) {
                             Table result = realm.where(Table.class).equalTo("table_id", currentOrder.getTable().getTable_id()).findFirst();
@@ -646,7 +669,6 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
                         customerSharedPreferenceEdit.commit();
                         cartSharedPreferenceEdit.putInt("orderingState", 0);
                         cartSharedPreferenceEdit.putInt("orderId", -1);
-                        cartSharedPreferenceEdit.putString("cartNote", null);
                         cartSharedPreferenceEdit.commit();
 
                         updateOrderTotalAmount();
@@ -659,7 +681,7 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
                         Toast.makeText(contextpage, "Proceed", Toast.LENGTH_SHORT).show();
                     }
                 }else{//Add Note or Update
-                    currentOrder.setNote(cartSharedPreference.getString("cartNote", null));
+                    currentOrder.setNote(note);
                     //update note
                     realm.executeTransaction(new Realm.Transaction() {
                         @Override
@@ -673,24 +695,6 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
             }
         });
     }
-
-    private Customer getCurrentCustomer(){
-        Customer customer = null;
-        int current_customer_id = customerSharedPreference.getInt("customerID", -1);
-        String customer_name = customerSharedPreference.getString("customerName", null);
-        String customerPhoneNo = customerSharedPreference.getString("customerPhoneNo", null);
-        String customerEmail = customerSharedPreference.getString("customerEmail", null);
-        String customerIdentityNo = customerSharedPreference.getString("customerIdentityNo", null);
-        String customerBirthdate = customerSharedPreference.getString("customerBirthdate", null);
-        if(current_customer_id != -1){
-            customer = new Customer(current_customer_id, customer_name, customerEmail, customerPhoneNo, customerIdentityNo, customerBirthdate);
-        }else{
-            customer = null;
-        }
-
-        return customer;
-    }
-
     private void showCartOrderAddDiscountPopup(View view) {
         PopupWindow popup = new PopupWindow(contextpage);
         View layout = getLayoutInflater().inflate(R.layout.cart_order_add_discount_popup, null);
@@ -747,42 +751,6 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
             @Override
             public void onDismiss() {
                 binding.cartInclude.tvDiscount.setTextColor(contextpage.getResources().getColor(R.color.black));
-            }
-        });
-    }
-
-    private void showRefreshPopup(View view) {
-        PopupWindow popup = new PopupWindow(contextpage);
-        View layout = getLayoutInflater().inflate(R.layout.toolbar_sync_popup, null);
-        popup.setContentView(layout);
-        // Set content width and height
-        popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
-        popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
-        // Closes the popup window when touch outside of it - when looses focus
-        popup.setOutsideTouchable(true);
-        popup.setFocusable(true);
-        // Show anchored to button
-        popup.setElevation(8);
-        popup.setBackgroundDrawable(null);
-        popup.showAsDropDown(binding.toolbarLayoutIncl.toolbarRefresh, -120, 0);
-
-        //Popup Buttons
-        product_sync_btn = (TextView) layout.findViewById(R.id.sync_product_btn);
-        transactions_sync_btn = (TextView)layout.findViewById(R.id.sync_transaction_btn);
-
-        product_sync_btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Toast.makeText(contextpage, "refresh / sync products", Toast.LENGTH_SHORT).show();
-                popup.dismiss();
-            }
-        });
-
-        transactions_sync_btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Toast.makeText(contextpage, "refresh / sync transactions", Toast.LENGTH_SHORT).show();
-                popup.dismiss();
             }
         });
     }
@@ -847,7 +815,6 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
             }
         });
     }
-
     //Add & Update product to order
     private void addProductToOrder(Product product){
         int orderState = cartSharedPreference.getInt("orderingState", 0);
@@ -882,7 +849,7 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
         orderLineAdapter.notifyDataSetChanged();
         updateOrderTotalAmount();
     }
-    //NOT YET DONE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    //NOT YET DONE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!MODIFIER related
     private void addOrUpdateProductToOrder(Product product){
 
     }
@@ -949,7 +916,6 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
                             //delete order
                             cartSharedPreferenceEdit.putInt("orderingState", 0);
                             cartSharedPreferenceEdit.putInt("orderId", -1);
-                            cartSharedPreferenceEdit.putString("cartNote", null);
                             cartSharedPreferenceEdit.commit();
                             currentOrder = new Order();
                             refreshNote();
@@ -1066,6 +1032,42 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
         binding.cartInclude.cartOrderSummaryTax.setText(String.format("RM %.2f", tax));
         binding.cartInclude.cartOrderSummaryPayableAmount.setText(String.format("RM %.2f", amount_total));
     }
+    private void tableOccupiedToVacant(Table table){
+        table.setOccupied(false);
+        table.setVacant(true);
+        table.setOnHold(false);
+        realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.insertOrUpdate(table);
+            }
+        });
+    }
+    private void refreshNote(){
+        if(currentOrder.getOrder_id() != -1){
+            if(currentOrder.getNote() != null){
+                if(!currentOrder.getNote().isEmpty()) {
+                    binding.cartInclude.cartOrderNoteBtn.setTextColor(contextpage.getResources().getColor(R.color.green));
+                };
+            }else{
+                binding.cartInclude.cartOrderNoteBtn.setTextColor(contextpage.getResources().getColor(R.color.darkOrange));
+            }
+        }else{
+            binding.cartInclude.cartOrderNoteBtn.setTextColor(contextpage.getResources().getColor(R.color.darkOrange));
+        }
+    }
+    private void refreshCartCurrentCustomer(){
+        int currentCustomerId = customerSharedPreference.getInt("customerID", -1);
+        if(currentCustomerId != -1) {
+            binding.cartInclude.cartCurrentCustomerName.setText(customerSharedPreference.getString("customerName", null));
+            binding.cartInclude.cartCurrentCustomerId.setText("#" + customerSharedPreference.getInt("customerID", -1));
+            binding.cartInclude.cartAddCustomer.setVisibility(View.GONE);
+            binding.cartInclude.cartCurrentCustomerRl.setVisibility(View.VISIBLE);
+        }else{
+            binding.cartInclude.cartAddCustomer.setVisibility(View.VISIBLE);
+            binding.cartInclude.cartCurrentCustomerRl.setVisibility(View.GONE);
+        }
+    }
 
     //Menu
     @Override
@@ -1094,6 +1096,7 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
         refreshCartCurrentCustomer();
         refreshNote();
     }
+
     @Override
     public void onPause() {
         super.onPause();

@@ -75,7 +75,6 @@ public class FragmentOrderOnHold extends Fragment implements OrderOnHoldAdapter.
 
         if(order_id == currentOrderSharePreference.getInt("orderId", -1)){
             currentOrderSharePreferenceEdit.putInt("orderingState", 0);
-            currentOrderSharePreferenceEdit.putString("cartNote", null);
             currentOrderSharePreferenceEdit.putInt("orderId", -1);
             currentOrderSharePreferenceEdit.commit();
         }
@@ -124,7 +123,6 @@ public class FragmentOrderOnHold extends Fragment implements OrderOnHoldAdapter.
 
             currentOrderSharePreferenceEdit.putInt("orderingState", 1);
             currentOrderSharePreferenceEdit.putInt("orderId", order_id);
-            currentOrderSharePreferenceEdit.putString("cartNote", order.getNote());
             if(order.getTable() != null) {  //Dine-in
                 currentOrderSharePreferenceEdit.putInt("orderTypePosition", 1);
             }else{  //Takeaway
