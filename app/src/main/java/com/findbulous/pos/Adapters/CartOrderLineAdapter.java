@@ -111,7 +111,7 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
                     } else {
                         holder.binding.productOrderProductTotalPrice.setVisibility(View.INVISIBLE);
                     }
-                    listener.discountUpdateOrderLine(p, discount);
+                    listener.discountUpdateOrderLine(holder.getAdapterPosition(), discount);
                 }
             }
         });

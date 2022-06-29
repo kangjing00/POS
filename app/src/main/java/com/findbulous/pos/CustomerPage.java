@@ -361,10 +361,10 @@ public class CustomerPage extends AppCompatActivity implements CartOrderLineAdap
                 }
             }
         });
-        binding.cartInclude.cartBtnAdd.setOnClickListener(new View.OnClickListener(){
+        binding.cartInclude.cartBtnNumberCustomer.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                Toast.makeText(contextpage, "Add Button Clicked", Toast.LENGTH_SHORT).show();
+                showNumberOfCustomer();
             }
         });
         binding.cartInclude.cartBtnScan.setOnClickListener(new View.OnClickListener(){
@@ -566,6 +566,32 @@ public class CustomerPage extends AppCompatActivity implements CartOrderLineAdap
                 popup.dismiss();
             }
         });
+    }
+
+    private void showNumberOfCustomer(){
+        PopupWindow popup = new PopupWindow(contextpage);
+        View layout = getLayoutInflater().inflate(R.layout.number_of_customer_popup, null);
+        popup.setContentView(layout);
+        // Set content width and height
+        popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
+        popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
+        // Closes the popup window when touch outside of it - when looses focus
+        popup.setOutsideTouchable(true);
+        popup.setFocusable(true);
+        // Show anchored to button
+        popup.setElevation(8);
+        popup.setBackgroundDrawable(null);
+
+        popup.showAtLocation(binding.getRoot(), Gravity.CENTER, 0, 0);
+        //blur background
+        View container = (View) popup.getContentView().getParent();
+        WindowManager wm = (WindowManager) CustomerPage.this.getSystemService(Context.WINDOW_SERVICE);
+        WindowManager.LayoutParams p = (WindowManager.LayoutParams) container.getLayoutParams();
+        p.flags |= WindowManager.LayoutParams.FLAG_DIM_BEHIND;
+        p.dimAmount = 0.3f;
+        wm.updateViewLayout(container, p);
+
+
     }
 
     private void showCartOrderAddNotePopup(int btnID) {

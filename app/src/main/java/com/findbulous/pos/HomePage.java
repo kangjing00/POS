@@ -342,7 +342,7 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
                 }
             }
         });
-        binding.cartInclude.cartBtnAdd.setOnClickListener(new View.OnClickListener(){
+        binding.cartInclude.cartBtnNumberCustomer.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
                 Toast.makeText(contextpage, "Add Button Clicked", Toast.LENGTH_SHORT).show();
@@ -560,6 +560,8 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
             }
         });
     }
+
+
 
     private void showCartOrderAddNotePopup(int btnID) {
         PopupWindow popup = new PopupWindow(contextpage);

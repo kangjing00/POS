@@ -404,6 +404,41 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
             }
         });
     }
+    private void showRefreshPopup(View view) {
+        PopupWindow popup = new PopupWindow(contextpage);
+        View layout = getLayoutInflater().inflate(R.layout.toolbar_sync_popup, null);
+        popup.setContentView(layout);
+        // Set content width and height
+        popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
+        popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
+        // Closes the popup window when touch outside of it - when looses focus
+        popup.setOutsideTouchable(true);
+        popup.setFocusable(true);
+        // Show anchored to button
+        popup.setElevation(8);
+        popup.setBackgroundDrawable(null);
+        popup.showAsDropDown(binding.toolbarLayoutIncl.toolbarRefresh, -120, 0);
+
+        //Popup Buttons
+        product_sync_btn = (TextView) layout.findViewById(R.id.sync_product_btn);
+        transactions_sync_btn = (TextView)layout.findViewById(R.id.sync_transaction_btn);
+
+        product_sync_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(contextpage, "refresh / sync products", Toast.LENGTH_SHORT).show();
+                popup.dismiss();
+            }
+        });
+
+        transactions_sync_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(contextpage, "refresh / sync transactions", Toast.LENGTH_SHORT).show();
+                popup.dismiss();
+            }
+        });
+    }
 
     private void showAddonAndProceed(View view, Table clickedTable) {
         PopupWindow popup = new PopupWindow(contextpage);
@@ -426,7 +461,7 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
 
         tvTableName.setText(clickedTable.getTable_name());
         Order order = realm.where(Order.class).equalTo("table.table_id", clickedTable.getTable_id()).findFirst();
-        Customer customer = realm.where(Customer.class).equalTo("customer_id", order.getCustomer().getCustomer_id()).findFirst();
+        Customer customer = (order == null)? null : realm.where(Customer.class).equalTo("customer_id", order.getCustomer().getCustomer_id()).findFirst();
         int current_order_id = currentOrderSharedPreference.getInt("orderId", -1);
 
         if(order != null){
@@ -517,42 +552,6 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
 
     }
 
-    private void showRefreshPopup(View view) {
-        PopupWindow popup = new PopupWindow(contextpage);
-        View layout = getLayoutInflater().inflate(R.layout.toolbar_sync_popup, null);
-        popup.setContentView(layout);
-        // Set content width and height
-        popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
-        popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
-        // Closes the popup window when touch outside of it - when looses focus
-        popup.setOutsideTouchable(true);
-        popup.setFocusable(true);
-        // Show anchored to button
-        popup.setElevation(8);
-        popup.setBackgroundDrawable(null);
-        popup.showAsDropDown(binding.toolbarLayoutIncl.toolbarRefresh, -120, 0);
-
-        //Popup Buttons
-        product_sync_btn = (TextView) layout.findViewById(R.id.sync_product_btn);
-        transactions_sync_btn = (TextView)layout.findViewById(R.id.sync_transaction_btn);
-
-        product_sync_btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Toast.makeText(contextpage, "refresh / sync products", Toast.LENGTH_SHORT).show();
-                popup.dismiss();
-            }
-        });
-
-        transactions_sync_btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Toast.makeText(contextpage, "refresh / sync transactions", Toast.LENGTH_SHORT).show();
-                popup.dismiss();
-            }
-        });
-    }
-
     //Display tables
     private void displayTables(int noRow, int noColumn, ArrayList<Table> tableList){
         //int tableNumber = 1;
@@ -606,82 +605,6 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
             binding.tableManagementLayout.addView(tr);
         }
     }
-
-    //Tables clicking setting
-    @Override
-    public void onClick(View v) {
-        int clicked_id = v.getId();
-        Table clickedTable = null;
-
-        for(int i = 0; i < tableList.size(); i++){
-            if(tableList.get(i).getTable_id() == v.getId()){
-                clickedTable = tableList.get(i);
-                break;
-            }
-        }
-
-        TextView tv = (TextView) v.findViewById(v.getId());
-        Drawable tvDrawable;
-        tvDrawable = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
-
-        if(clickedTable.isVacant()){
-            if(!tableSelecting) {
-                //case: table is not selecting, operation: select a table
-                tableSelecting = true;
-                DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.darkOrange));
-                v.setBackground(tvDrawable);
-                lastClickedTableView = v;
-                vacantTableSelected = clickedTable;
-            }else if(lastClickedTableView == v){
-                //case: table is selecting and click on the selecting table, operation: make it unselect on same table
-                tableSelecting = false;
-                Drawable tvDrawable1;
-                tvDrawable1 = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
-                DrawableCompat.setTint(tvDrawable1, getResources().getColor(R.color.green));
-                lastClickedTableView.setBackground(tvDrawable1);
-                vacantTableSelected = null;
-            }else{
-                //case: selecting one table, and click to select another table, operation: unselect on last table & select table
-                tableSelecting = true;
-                DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.darkOrange));
-                v.setBackground(tvDrawable);
-                Drawable tvDrawable1;
-                tvDrawable1 = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
-                DrawableCompat.setTint(tvDrawable1, getResources().getColor(R.color.green));
-                lastClickedTableView.setBackground(tvDrawable1);
-                lastClickedTableView = v;
-                vacantTableSelected = clickedTable;
-            }
-        }else if(clickedTable.isOnHold()){
-            if(!onlyVacantTable){//not only vacant table can be selected
-                showAddonAndProceed(v, clickedTable);
-            }else{  //only vacant table can be selected
-                Toast.makeText(contextpage, "Only vacant table can be selected while ordering", Toast.LENGTH_SHORT).show();
-            }
-        }else{ //occupied
-            if(!onlyVacantTable){//not only vacant table can be selected
-                showAddonAndProceed(v, clickedTable);
-            }else{
-                Toast.makeText(contextpage, "Only vacant table can be selected while ordering", Toast.LENGTH_SHORT).show();
-            }
-        }
-
-        Toast.makeText(TablePage.this, "table clicked" + v.getId() + "'" + tv.getText().charAt(2) + "'", Toast.LENGTH_SHORT).show();
-    }
-    @Override
-    public boolean onLongClick(View v) {
-        TextView tv = (TextView) v.findViewById(v.getId());
-        String tableName = getTableName(tv.getText().toString());
-
-        Drawable tvDrawable;
-        tvDrawable = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
-        //the color is a direct color int and not a color resource
-        DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.red));
-        v.setBackground(tvDrawable);
-        Toast.makeText(TablePage.this, "" + tableName + " occupy successfully", Toast.LENGTH_SHORT).show();
-        return true;
-    }
-
     //Insert dummy data with alternatively available
     private void insertDummyTableData(){
         boolean active = true;
@@ -749,5 +672,108 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
             }
         }
         return orderID;
+    }
+
+    //Tables clicking setting
+    @Override
+    public void onClick(View v) {
+        int clicked_id = v.getId();
+        Table clickedTable = null;
+
+        for(int i = 0; i < tableList.size(); i++){
+            if(tableList.get(i).getTable_id() == v.getId()){
+                clickedTable = tableList.get(i);
+                break;
+            }
+        }
+
+        TextView tv = (TextView) v.findViewById(v.getId());
+        Drawable tvDrawable;
+        tvDrawable = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
+
+        if(clickedTable.isVacant()){
+            if(!tableSelecting) {
+                //case: table is not selecting, operation: select a table
+                tableSelecting = true;
+                DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.darkOrange));
+                v.setBackground(tvDrawable);
+                lastClickedTableView = v;
+                vacantTableSelected = clickedTable;
+            }else if(lastClickedTableView == v){
+                //case: table is selecting and click on the selecting table, operation: make it unselect on same table
+                tableSelecting = false;
+                Drawable tvDrawable1;
+                tvDrawable1 = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
+                DrawableCompat.setTint(tvDrawable1, getResources().getColor(R.color.green));
+                lastClickedTableView.setBackground(tvDrawable1);
+                vacantTableSelected = null;
+            }else{
+                //case: selecting one table, and click to select another table, operation: unselect on last table & select table
+                tableSelecting = true;
+                DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.darkOrange));
+                v.setBackground(tvDrawable);
+                Drawable tvDrawable1;
+                tvDrawable1 = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
+                DrawableCompat.setTint(tvDrawable1, getResources().getColor(R.color.green));
+                lastClickedTableView.setBackground(tvDrawable1);
+                lastClickedTableView = v;
+                vacantTableSelected = clickedTable;
+            }
+        }else if(clickedTable.isOnHold()){
+            if(!onlyVacantTable){//not only vacant table can be selected
+                showAddonAndProceed(v, clickedTable);
+            }else{  //only vacant table can be selected
+                Toast.makeText(contextpage, "Only vacant table can be selected while ordering", Toast.LENGTH_SHORT).show();
+            }
+        }else{ //occupied
+            if(!onlyVacantTable){//not only vacant table can be selected
+                showAddonAndProceed(v, clickedTable);
+            }else{
+                Toast.makeText(contextpage, "Only vacant table can be selected while ordering", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        Toast.makeText(TablePage.this, "table clicked" + v.getId() + "'" + tv.getText().charAt(2) + "'", Toast.LENGTH_SHORT).show();
+    }
+    @Override
+    public boolean onLongClick(View v) {
+        Table clickedTable = null;
+        for(int i = 0; i < tableList.size(); i++){
+            if(tableList.get(i).getTable_id() == v.getId()){
+                clickedTable = tableList.get(i);
+                break;
+            }
+        }
+        Order tableOrder = realm.where(Order.class).equalTo("table.table_id", clickedTable.getTable_id()).findFirst();
+
+        TextView tv = (TextView) v.findViewById(v.getId());
+        String tableName = getTableName(tv.getText().toString());
+
+        if(tableOrder == null) {       //Table has no order(occupied) or vacant
+            if(clickedTable.isVacant()){  //vacant table
+                Drawable tvDrawable;
+                tvDrawable = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
+                //the color is a direct color int and not a color resource
+                DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.red));
+                v.setBackground(tvDrawable);
+
+                clickedTable.setVacant(false);
+                clickedTable.setOccupied(true);
+                Toast.makeText(TablePage.this, "" + tableName + " occupied successfully", Toast.LENGTH_SHORT).show();
+            }else { //occupy table
+                Drawable tvDrawable;
+                tvDrawable = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
+                //the color is a direct color int and not a color resource
+                DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.green));
+                v.setBackground(tvDrawable);
+
+                clickedTable.setVacant(true);
+                clickedTable.setOccupied(false);
+                Toast.makeText(TablePage.this, "" + tableName + " occupy removed successfully", Toast.LENGTH_SHORT).show();
+            }
+        }else{      //Table has an order
+            Toast.makeText(TablePage.this, "This table has an order", Toast.LENGTH_SHORT).show();
+        }
+        return true;
     }
 }

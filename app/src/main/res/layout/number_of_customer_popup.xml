@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="wrap_content"
+        android:background="@drawable/box_corner_nopadding_white"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Number of Customer"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <EditText
+            android:id="@+id/number_customer_et"
+            android:layout_width="380dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:background="@drawable/custom_input"
+            android:gravity="end"
+            android:inputType="numberDecimal"
+            android:maxLines="1"
+            android:padding="10dp"
+            android:textSize="20dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/textView" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/keypad_1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:backgroundTint="@color/lightGrey"
+            android:text="1"
+            android:textColor="@color/raisinBlack"
+            android:textSize="15dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="10dp"
+            app:layout_constraintEnd_toStartOf="@+id/keypad_2"
+            app:layout_constraintBottom_toTopOf="@id/keypad_4"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/number_customer_et"
+            app:rippleColor="@color/darkGrey" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/keypad_2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:backgroundTint="@color/lightGrey"
+            android:text="2"
+            android:textColor="@color/raisinBlack"
+            android:textSize="15dp"
+            android:layout_marginRight="10dp"
+            app:layout_constraintEnd_toStartOf="@+id/keypad_3"
+            app:layout_constraintBottom_toTopOf="@id/keypad_5"
+            app:layout_constraintStart_toEndOf="@+id/keypad_1"
+            app:layout_constraintTop_toBottomOf="@+id/number_customer_et"
+            app:rippleColor="@color/darkGrey" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/keypad_3"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:backgroundTint="@color/lightGrey"
+            android:text="3"
+            android:textColor="@color/raisinBlack"
+            android:textSize="15dp"
+            android:layout_marginRight="10dp"
+            app:layout_constraintEnd_toStartOf="@+id/keypad_plus_1"
+            app:layout_constraintBottom_toTopOf="@id/keypad_6"
+            app:layout_constraintStart_toEndOf="@+id/keypad_2"
+            app:layout_constraintTop_toBottomOf="@+id/number_customer_et"
+            app:rippleColor="@color/darkGrey" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/keypad_plus_1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:backgroundTint="@color/lightGrey"
+            android:text="+1"
+            android:textColor="@color/raisinBlack"
+            android:textSize="15dp"
+            android:layout_marginEnd="20dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/keypad_plus_2"
+            app:layout_constraintStart_toEndOf="@+id/keypad_3"
+            app:layout_constraintTop_toBottomOf="@+id/number_customer_et"
+            app:rippleColor="@color/darkGrey" />
+
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/keypad_4"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/lightGrey"
+            android:text="4"
+            android:textColor="@color/raisinBlack"
+            android:textSize="15dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="10dp"
+            app:layout_constraintEnd_toStartOf="@+id/keypad_5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/keypad_1"
+            app:rippleColor="@color/darkGrey" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/keypad_5"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/lightGrey"
+            android:text="5"
+            android:textColor="@color/raisinBlack"
+            android:textSize="15dp"
+            android:layout_marginRight="10dp"
+            app:layout_constraintEnd_toStartOf="@+id/keypad_6"
+            app:layout_constraintStart_toEndOf="@+id/keypad_4"
+            app:layout_constraintTop_toBottomOf="@+id/keypad_2"
+            app:rippleColor="@color/darkGrey" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/keypad_6"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/lightGrey"
+            android:text="6"
+            android:textColor="@color/raisinBlack"
+            android:textSize="15dp"
+            android:layout_marginRight="10dp"
+            app:layout_constraintEnd_toStartOf="@+id/keypad_plus_2"
+            app:layout_constraintStart_toEndOf="@+id/keypad_5"
+            app:layout_constraintTop_toBottomOf="@+id/keypad_3"
+            app:rippleColor="@color/darkGrey" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/keypad_plus_2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/lightGrey"
+            android:text="+2"
+            android:textColor="@color/raisinBlack"
+            android:textSize="15dp"
+            android:layout_marginEnd="20dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/keypad_6"
+            app:layout_constraintTop_toBottomOf="@+id/keypad_plus_1"
+            app:rippleColor="@color/darkGrey" />
+
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/keypad_7"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/lightGrey"
+            android:text="7"
+            android:textColor="@color/raisinBlack"
+            android:textSize="15dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="10dp"
+            app:layout_constraintEnd_toStartOf="@+id/keypad_8"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/keypad_4"
+            app:rippleColor="@color/darkGrey" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/keypad_8"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/lightGrey"
+            android:text="8"
+            android:textColor="@color/raisinBlack"
+            android:textSize="15dp"
+            android:layout_marginRight="10dp"
+            app:layout_constraintEnd_toStartOf="@+id/keypad_9"
+            app:layout_constraintStart_toEndOf="@+id/keypad_7"
+            app:layout_constraintTop_toBottomOf="@+id/keypad_5"
+            app:rippleColor="@color/darkGrey" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/keypad_9"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/lightGrey"
+            android:text="9"
+            android:textColor="@color/raisinBlack"
+            android:textSize="15dp"
+            android:layout_marginRight="10dp"
+            app:layout_constraintEnd_toStartOf="@+id/keypad_plus_3"
+            app:layout_constraintStart_toEndOf="@+id/keypad_8"
+            app:layout_constraintTop_toBottomOf="@+id/keypad_6"
+            app:rippleColor="@color/darkGrey" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/keypad_plus_3"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/lightGrey"
+            android:text="+3"
+            android:textColor="@color/raisinBlack"
+            android:textSize="15dp"
+            android:layout_marginEnd="20dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/keypad_9"
+            app:layout_constraintTop_toBottomOf="@+id/keypad_plus_2"
+            app:rippleColor="@color/darkGrey" />
+
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/keypad_clear"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/lightGrey"
+            android:text="C"
+            android:textColor="@color/raisinBlack"
+            android:textSize="15dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="10dp"
+            app:layout_constraintEnd_toStartOf="@+id/keypad_0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/keypad_7"
+            app:rippleColor="@color/darkGrey" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/keypad_0"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/lightGrey"
+            android:text="0"
+            android:textColor="@color/raisinBlack"
+            android:textSize="15dp"
+            android:layout_marginRight="10dp"
+            app:layout_constraintEnd_toStartOf="@+id/keypad_backspace"
+            app:layout_constraintStart_toEndOf="@+id/keypad_clear"
+            app:layout_constraintTop_toBottomOf="@+id/keypad_8"
+            app:rippleColor="@color/darkGrey" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/keypad_backspace"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/lightGrey"
+            android:textColor="@color/raisinBlack"
+            app:icon="@drawable/ic_backspace"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconSize="15dp"
+            app:iconTint="@color/raisinBlack"
+            android:layout_marginRight="10dp"
+            app:layout_constraintEnd_toStartOf="@+id/keypad_plus_4"
+            app:layout_constraintStart_toEndOf="@+id/keypad_0"
+            app:layout_constraintTop_toBottomOf="@+id/keypad_9"
+            app:rippleColor="@color/darkGrey" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/keypad_plus_4"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/lightGrey"
+            android:text="+4"
+            android:textColor="@color/raisinBlack"
+            android:textSize="15dp"
+            android:layout_marginEnd="20dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/keypad_backspace"
+            app:layout_constraintTop_toBottomOf="@+id/keypad_plus_3"
+            app:rippleColor="@color/darkGrey" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/cancel_btn"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="20dp"
+            android:backgroundTint="@color/white"
+            android:text="Cancel"
+            android:textAllCaps="false"
+            android:textColor="@color/darkOrange"
+            android:padding="12dp"
+            app:strokeWidth="2dp"
+            app:strokeColor="@color/darkOrange"
+            app:rippleColor="@color/darkOrange"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/confirm_btn"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/keypad_clear" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/confirm_btn"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginBottom="20dp"
+            android:layout_marginRight="20dp"
+            android:padding="12dp"
+            android:backgroundTint="@color/green"
+            android:text="Confirm"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/cancel_btn"
+            app:layout_constraintTop_toBottomOf="@+id/keypad_plus_4" />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

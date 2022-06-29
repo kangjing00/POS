@@ -12,9 +12,10 @@
 
         <ImageButton
             android:id="@+id/exit_btn"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:src="@drawable/ic_exit"
+            android:layout_width="15dp"
+            android:layout_height="15dp"
+            android:layout_margin="10dp"
+            android:src="@drawable/ic_close"
             android:backgroundTint="@color/white"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
@@ -27,6 +28,7 @@
             android:src="@drawable/face1"
             android:layout_marginLeft="50dp"
             android:layout_marginRight="50dp"
+            android:layout_marginTop="5dp"
             app:shapeAppearance="@style/ImageWithRadius"
             app:layout_constraintTop_toBottomOf="@id/exit_btn"
             app:layout_constraintStart_toStartOf="parent"
