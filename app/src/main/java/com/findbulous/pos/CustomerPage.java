@@ -8,11 +8,13 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +26,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -76,6 +79,8 @@ public class CustomerPage extends AppCompatActivity implements CartOrderLineAdap
     private TextView product_name_modifier;
     private LinearLayout product_modifier_ll;
     private MaterialButton product_modifier_popup_negative_btn, product_modifier_popup_positive_btn;
+    //Number of Customer Popup
+    private EditText number_customer_et;
 
     private String statuslogin;
     private Context contextpage;
@@ -104,12 +109,11 @@ public class CustomerPage extends AppCompatActivity implements CartOrderLineAdap
         //Cart Current Customer
         refreshCartCurrentCustomer();
 
-
         //Body Settings
         currentOrder = new Order();
         updateTableOnHold = new Table();
         onHoldCustomer = null;
-
+        //Cart / Order Line Recycler view
         binding.cartInclude.cartOrdersRv.setLayoutManager(new LinearLayoutManager(contextpage, LinearLayoutManager.VERTICAL, false));
         binding.cartInclude.cartOrdersRv.setHasFixedSize(true);
         order_lines = new ArrayList<>();
@@ -117,10 +121,15 @@ public class CustomerPage extends AppCompatActivity implements CartOrderLineAdap
         getOrderLineFromRealm();
         binding.cartInclude.cartOrdersRv.setAdapter(orderLineAdapter);
 
+        int currentOrderId = cartSharedPreference.getInt("orderId", -1);
+        Order order = realm.where(Order.class).equalTo("order_id", currentOrderId).findFirst();
+        if(order != null){
+            currentOrder = realm.copyFromRealm(order);
+        }
         //Cart Discount
-        if(!cartSharedPreference.getString("cartDiscount", "0.00").equalsIgnoreCase("0.00")){
+        if(currentOrder.isHas_order_discount()){
             binding.cartInclude.cartOrderSummaryDiscountRl.setVisibility(View.VISIBLE);
-            binding.cartInclude.cartOrderSummaryDiscount.setText("- RM " + cartSharedPreference.getString("cartDiscount", "0.00"));
+            binding.cartInclude.cartOrderSummaryDiscount.setText("- RM " + String.format("%.2f", currentOrder.getAmount_order_discount()));
             binding.cartInclude.cartOrderDiscountBtn.setTextColor(contextpage.getResources().getColor(R.color.green));
         }
 
@@ -129,7 +138,7 @@ public class CustomerPage extends AppCompatActivity implements CartOrderLineAdap
         ft = fm.beginTransaction();
         ft.disallowAddToBackStack();
         customerFragment = true;
-        ft.replace(binding.customerPageFl.getId(), new FragmentCustomer()).commit();
+        ft.replace(binding.customerPageFl.getId(), new FragmentCustomer(), "Customers").commit();
 
         //OnClickListener
         //Body
@@ -139,12 +148,12 @@ public class CustomerPage extends AppCompatActivity implements CartOrderLineAdap
             public void onClick(View view) {
                 ft = fm.beginTransaction();
                 if(customerFragment) {
-                    ft.replace(binding.customerPageFl.getId(), new FragmentAddCustomer()).commit();
+                    ft.replace(binding.customerPageFl.getId(), new FragmentAddCustomer(), "AddUpdate").commit();
                     binding.customerPageActionBtn.setText("Customer");
                     binding.customerPageActionBtn.setIcon(getDrawable(R.drawable.ic_customer));
                     binding.customerPageTitle.setText("Add New Customer");
                 }else{
-                    ft.replace(binding.customerPageFl.getId(), new FragmentCustomer()).commit();
+                    ft.replace(binding.customerPageFl.getId(), new FragmentCustomer(), "Customers").commit();
                     binding.customerPageActionBtn.setText("Add New Customer");
                     binding.customerPageActionBtn.setIcon(getDrawable(R.drawable.ic_add));
                     binding.customerPageTitle.setText("Customers");
@@ -288,7 +297,10 @@ public class CustomerPage extends AppCompatActivity implements CartOrderLineAdap
         binding.cartInclude.cartOrderDiscountBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                showCartOrderAddDiscountPopup(view);
+                if((currentOrder.getOrder_id() != -1) && (order_lines.size() != 0))
+                    showCartOrderAddDiscountPopup(view);
+                else
+                    Toast.makeText(contextpage, "Please add discount with at least 1 product", Toast.LENGTH_SHORT).show();
             }
         });
         binding.cartInclude.cartOrderCouponCodeBtn.setOnClickListener(new View.OnClickListener(){
@@ -451,8 +463,12 @@ public class CustomerPage extends AppCompatActivity implements CartOrderLineAdap
         binding.cartInclude.cartOrderSummaryDiscountCancelBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                cartSharedPreferenceEdit.putString("cartDiscount", "0.00");
-                cartSharedPreferenceEdit.commit();
+                if(currentOrder.isHas_order_discount()) {
+                    currentOrder.setAmount_order_discount(0.0);
+                    currentOrder.setHas_order_discount(false);
+                    currentOrder.setIs_percentage(true);
+                    updateOrderTotalAmount();
+                }
                 binding.cartInclude.cartOrderSummaryDiscount.setText("- RM 0.00");
                 binding.cartInclude.cartOrderSummaryDiscountRl.setVisibility(View.GONE);
                 binding.cartInclude.cartOrderDiscountBtn.setTextColor(contextpage.getResources().getColor(R.color.darkOrange));
@@ -568,6 +584,7 @@ public class CustomerPage extends AppCompatActivity implements CartOrderLineAdap
         });
     }
 
+    //Number of Customer Popup
     private void showNumberOfCustomer(){
         PopupWindow popup = new PopupWindow(contextpage);
         View layout = getLayoutInflater().inflate(R.layout.number_of_customer_popup, null);
@@ -581,8 +598,8 @@ public class CustomerPage extends AppCompatActivity implements CartOrderLineAdap
         // Show anchored to button
         popup.setElevation(8);
         popup.setBackgroundDrawable(null);
-
         popup.showAtLocation(binding.getRoot(), Gravity.CENTER, 0, 0);
+
         //blur background
         View container = (View) popup.getContentView().getParent();
         WindowManager wm = (WindowManager) CustomerPage.this.getSystemService(Context.WINDOW_SERVICE);
@@ -591,9 +608,184 @@ public class CustomerPage extends AppCompatActivity implements CartOrderLineAdap
         p.dimAmount = 0.3f;
         wm.updateViewLayout(container, p);
 
+        number_customer_et = layout.findViewById(R.id.number_customer_et);
+        MaterialButton keypad_clear = layout.findViewById(R.id.keypad_clear);
+        MaterialButton keypad_backspace = layout.findViewById(R.id.keypad_backspace);
+        MaterialButton keypad_plus_1 = layout.findViewById(R.id.keypad_plus_1);
+        MaterialButton keypad_plus_2 = layout.findViewById(R.id.keypad_plus_2);
+        MaterialButton keypad_plus_3 = layout.findViewById(R.id.keypad_plus_3);
+        MaterialButton keypad_plus_4 = layout.findViewById(R.id.keypad_plus_4);
+        MaterialButton keypad_1 = layout.findViewById(R.id.keypad_1);
+        MaterialButton keypad_2 = layout.findViewById(R.id.keypad_2);
+        MaterialButton keypad_3 = layout.findViewById(R.id.keypad_3);
+        MaterialButton keypad_4 = layout.findViewById(R.id.keypad_4);
+        MaterialButton keypad_5 = layout.findViewById(R.id.keypad_5);
+        MaterialButton keypad_6 = layout.findViewById(R.id.keypad_6);
+        MaterialButton keypad_7 = layout.findViewById(R.id.keypad_7);
+        MaterialButton keypad_8 = layout.findViewById(R.id.keypad_8);
+        MaterialButton keypad_9 = layout.findViewById(R.id.keypad_9);
+        MaterialButton keypad_0 = layout.findViewById(R.id.keypad_0);
+        MaterialButton cancel_btn = layout.findViewById(R.id.cancel_btn);
+        MaterialButton confirm_btn = layout.findViewById(R.id.confirm_btn);
 
+        number_customer_et.setShowSoftInputOnFocus(false);
+        if(currentOrder.getOrder_id() != -1){
+            if(currentOrder.getCustomer_count() != 0) {
+                number_customer_et.setText(String.valueOf(currentOrder.getCustomer_count()));
+            }else{
+                number_customer_et.setText("1");
+            }
+        }else{
+            number_customer_et.setText("1");
+        }
+
+
+        {
+        keypad_backspace.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                int etLength = number_customer_et.getText().toString().length();
+                if (etLength > 1) {
+                    number_customer_et.setText(number_customer_et.getText().toString().substring(0, etLength - 1));
+                }else{
+                    number_customer_et.setText("0");
+                }
+            }
+        });
+        keypad_clear.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                number_customer_et.setText("0");
+            }
+        });
+        keypad_plus_1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                keypadPlusNumber(1);
+            }
+        });
+        keypad_plus_2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                keypadPlusNumber(2);
+            }
+        });
+        keypad_plus_3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                keypadPlusNumber(3);
+            }
+        });
+        keypad_plus_4.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                keypadPlusNumber(4);
+            }
+        });
+        keypad_1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                keypadAddNumber('1');
+            }
+        });
+        keypad_2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                keypadAddNumber('2');
+            }
+        });
+        keypad_3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                keypadAddNumber('3');
+            }
+        });
+        keypad_4.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                keypadAddNumber('4');
+            }
+        });
+        keypad_5.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                keypadAddNumber('5');
+            }
+        });
+        keypad_6.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                keypadAddNumber('6');
+            }
+        });
+        keypad_7.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                keypadAddNumber('7');
+            }
+        });
+        keypad_8.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                keypadAddNumber('8');
+            }
+        });
+        keypad_9.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                keypadAddNumber('9');
+            }
+        });
+        keypad_0.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                keypadAddNumber('0');
+            }
+        });
+        cancel_btn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    popup.dismiss();
+                }
+            });
+        confirm_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(currentOrder.getOrder_id() != -1) {
+                    if (number_customer_et.getText().toString().equalsIgnoreCase("0")) {
+                        binding.cartInclude.cartBtnNumberCustomer.setText("1 Guest(s)");
+                        currentOrder.setCustomer_count(Integer.valueOf(1));
+                    } else {
+                        binding.cartInclude.cartBtnNumberCustomer.setText(number_customer_et.getText().toString() + " Guest(s)");
+                        currentOrder.setCustomer_count(Integer.valueOf(number_customer_et.getText().toString()));
+                    }
+                    realm.executeTransaction(new Realm.Transaction() {
+                        @Override
+                        public void execute(Realm realm) {
+                            realm.insertOrUpdate(currentOrder);
+                        }
+                    });
+                    refreshCustomerNumber();
+                }
+                popup.dismiss();
+            }
+        });
+        }
     }
-
+    private void keypadAddNumber(char keypadNo){
+        if(number_customer_et.getText().toString().equalsIgnoreCase("0")){
+            number_customer_et.setText(String.valueOf(keypadNo));
+        }else {
+            String addedNumberCustomer = number_customer_et.getText().toString() + keypadNo;
+            number_customer_et.setText(addedNumberCustomer);
+        }
+    }
+    private void keypadPlusNumber(int value){
+        int number = Integer.valueOf(number_customer_et.getText().toString());
+        number += value;
+        number_customer_et.setText(String.valueOf(number));
+    }
+    //Cart Note and Discount
     private void showCartOrderAddNotePopup(int btnID) {
         PopupWindow popup = new PopupWindow(contextpage);
         View layout = getLayoutInflater().inflate(R.layout.cart_order_add_note_popup, null);
@@ -711,6 +903,13 @@ public class CustomerPage extends AppCompatActivity implements CartOrderLineAdap
                         order_lines.clear();
                         orderLineAdapter.notifyDataSetChanged();
                         refreshNote();
+                        refreshCustomerNumber();
+                        FragmentCustomer fragmentCustomer = (FragmentCustomer)getSupportFragmentManager().findFragmentByTag("Customers");
+                        if(fragmentCustomer != null){
+                            fragmentCustomer.updateCurrentCustomer();
+                        }else{
+                            System.out.println("currently is not FragmentCustomer");
+                        }
                         Toast.makeText(contextpage, "Proceed", Toast.LENGTH_SHORT).show();
                     }
                 }else{//Add Note or Update
@@ -757,25 +956,70 @@ public class CustomerPage extends AppCompatActivity implements CartOrderLineAdap
         add_discount_popup_negative_btn = (Button)layout.findViewById(R.id.add_discount_popup_negative_btn);
         add_discount_popup_positive_btn = (Button)layout.findViewById(R.id.add_discount_popup_positive_btn);
         add_discount_popup_et = (EditText)layout.findViewById(R.id.add_discount_popup_et);
+        RadioButton add_discount_popup_radio_btn_amount = layout.findViewById(R.id.add_discount_popup_radio_btn_amount);
+        RadioButton add_discount_popup_radio_btn_percentage = layout.findViewById(R.id.add_discount_popup_radio_btn_percentage);
 
-        add_discount_popup_et.setText(cartSharedPreference.getString("cartDiscount", "0.00"));
+        if((currentOrder.getOrder_id() != -1) && (currentOrder.isHas_order_discount())) {
+            if(currentOrder.isIs_percentage()){ //percentage
+                add_discount_popup_et.setText(String.valueOf(currentOrder.getDiscount_percent()));
+                add_discount_popup_radio_btn_percentage.setChecked(true);
+                add_discount_popup_radio_btn_amount.setChecked(false);
+                add_discount_popup_et.setInputType(InputType.TYPE_CLASS_NUMBER);
+            }else{  //amount
+                add_discount_popup_et.setText(String.valueOf(currentOrder.getAmount_order_discount()));
+                add_discount_popup_radio_btn_percentage.setChecked(false);
+                add_discount_popup_radio_btn_amount.setChecked(true);
+                add_discount_popup_et.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+            }
+        }else{
+            add_discount_popup_radio_btn_percentage.setChecked(true);
+            add_discount_popup_radio_btn_amount.setChecked(false);
+            add_discount_popup_et.setText("0");
+        }
 
         add_discount_popup_negative_btn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
                 popup.dismiss();
-                Toast.makeText(contextpage, "Cancel", Toast.LENGTH_SHORT).show();
             }
         });
 
         add_discount_popup_positive_btn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                cartSharedPreferenceEdit.putString("cartDiscount", add_discount_popup_et.getText().toString());
-                cartSharedPreferenceEdit.commit();
-                binding.cartInclude.cartOrderSummaryDiscount.setText("- RM " + add_discount_popup_et.getText().toString());
+                String userInput = add_discount_popup_et.getText().toString();
+                if((userInput.charAt(0) == '.') && (userInput.length() == 1)){
+                    userInput = "0.0";
+                }
+                double discountInDouble = (!userInput.isEmpty())? Double.valueOf(userInput): 0.0;
+                if(discountInDouble > 0.0) {
+                    String discount = String.format("%.2f", discountInDouble);
+
+                    if (add_discount_popup_radio_btn_amount.isChecked()) {
+                        currentOrder.setIs_percentage(false);
+                    } else {
+                        currentOrder.setIs_percentage(true);
+                    }
+
+                    if(currentOrder.isIs_percentage()){
+                        int order_discount_percent = (int)(Double.parseDouble(discount));
+                        double subtotal = 0;
+                        for(int i=0; i < order_lines.size(); i++){
+                            subtotal += order_lines.get(i).getPrice_subtotal();
+                        }
+                        double amount_order_discount = subtotal * ((double)order_discount_percent / 100);
+                        discount = String.format("%.2f", amount_order_discount);
+                        currentOrder.setDiscount_percent(order_discount_percent);
+                    }else{
+                        currentOrder.setDiscount_percent(0);
+                    }
+                    binding.cartInclude.cartOrderSummaryDiscount.setText("- RM " + discount);
+
+                    currentOrder.setHas_order_discount(true);
+                    currentOrder.setAmount_order_discount(Double.valueOf(discount));
+                    updateOrderTotalAmount();
+                }
                 popup.dismiss();
-                Toast.makeText(contextpage, "Positive button from popup", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -783,6 +1027,25 @@ public class CustomerPage extends AppCompatActivity implements CartOrderLineAdap
             @Override
             public void onDismiss() {
                 binding.cartInclude.tvDiscount.setTextColor(contextpage.getResources().getColor(R.color.black));
+            }
+        });
+
+        add_discount_popup_radio_btn_amount.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                add_discount_popup_et.setText(String.format("%.2f", Double.valueOf(add_discount_popup_et.getText().toString())));
+                add_discount_popup_et.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+                add_discount_popup_radio_btn_amount.setChecked(true);
+                add_discount_popup_radio_btn_percentage.setChecked(false);
+            }
+        });
+        add_discount_popup_radio_btn_percentage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                add_discount_popup_et.setText(String.format("%d", Math.round(Double.valueOf(add_discount_popup_et.getText().toString()))));
+                add_discount_popup_et.setInputType(InputType.TYPE_CLASS_NUMBER);
+                add_discount_popup_radio_btn_percentage.setChecked(true);
+                add_discount_popup_radio_btn_amount.setChecked(false);
             }
         });
     }
@@ -895,6 +1158,7 @@ public class CustomerPage extends AppCompatActivity implements CartOrderLineAdap
                             cartSharedPreferenceEdit.commit();
                             currentOrder = new Order();
                             refreshNote();
+                            refreshCustomerNumber();
                         }
                         realm.executeTransaction(new Realm.Transaction() {
                             @Override
@@ -1005,17 +1269,24 @@ public class CustomerPage extends AppCompatActivity implements CartOrderLineAdap
             binding.cartInclude.cartOrderNoteBtn.setTextColor(contextpage.getResources().getColor(R.color.darkOrange));
         }
     }
-    private void updateOrderTotalAmount(){
+    private void updateOrderTotalAmount() {
         int orderState = cartSharedPreference.getInt("orderingState", 0);
         double tax = 0.0, order_subtotal = 0.0, amount_total = 0.0;
-        if(orderState == 1) {
-            for(int i = 0; i < order_lines.size(); i++){
+        if (orderState == 1) {
+            for (int i = 0; i < order_lines.size(); i++) {
                 order_subtotal += order_lines.get(i).getPrice_subtotal();
             }
             //Default / testing tax = 10%
             tax = (order_subtotal * 10) / 100;
             tax = Double.valueOf(String.format("%.2f", tax));
             amount_total = order_subtotal + tax;
+            if (currentOrder.isHas_order_discount()) {
+                if (currentOrder.isIs_percentage()) {
+                    double amount_order_discount = order_subtotal * ((double)currentOrder.getDiscount_percent() / 100);
+                    currentOrder.setAmount_order_discount(Double.valueOf(String.format("%.2f", amount_order_discount)));
+                }
+                amount_total -= currentOrder.getAmount_order_discount();
+            }
             amount_total = Double.valueOf(String.format("%.2f", amount_total));
             currentOrder.setAmount_total(amount_total);
             currentOrder.setAmount_tax(tax);
@@ -1028,6 +1299,13 @@ public class CustomerPage extends AppCompatActivity implements CartOrderLineAdap
             });
         }
 
+        if((currentOrder.isHas_order_discount()) && (orderState == 1)){
+            binding.cartInclude.cartOrderSummaryDiscount.setText(String.format("- RM %.2f", currentOrder.getAmount_order_discount()));
+        }else{
+            binding.cartInclude.cartOrderSummaryDiscount.setText("- RM 0.00");
+            binding.cartInclude.cartOrderSummaryDiscountRl.setVisibility(View.GONE);
+            binding.cartInclude.cartOrderDiscountBtn.setTextColor(contextpage.getResources().getColor(R.color.darkOrange));
+        }
         binding.cartInclude.cartOrderSummarySubtotal.setText(String.format("RM %.2f", order_subtotal));
         binding.cartInclude.cartOrderSummaryTax.setText(String.format("RM %.2f", tax));
         binding.cartInclude.cartOrderSummaryPayableAmount.setText(String.format("RM %.2f", amount_total));
@@ -1042,6 +1320,13 @@ public class CustomerPage extends AppCompatActivity implements CartOrderLineAdap
         }else{
             binding.cartInclude.cartAddCustomer.setVisibility(View.VISIBLE);
             binding.cartInclude.cartCurrentCustomerRl.setVisibility(View.GONE);
+        }
+    }
+    private void refreshCustomerNumber(){
+        if(currentOrder.getOrder_id() == -1){
+            binding.cartInclude.cartBtnNumberCustomer.setText("Guest(s)");
+        }else{
+            binding.cartInclude.cartBtnNumberCustomer.setText(currentOrder.getCustomer_count() + " Guest(s)");
         }
     }
 
@@ -1060,5 +1345,6 @@ public class CustomerPage extends AppCompatActivity implements CartOrderLineAdap
         updateOrderTotalAmount();
         refreshCartCurrentCustomer();
         refreshNote();
+        refreshCustomerNumber();
     }
 }

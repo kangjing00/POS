@@ -314,4 +314,12 @@ public class FragmentCustomer extends Fragment implements CustomerAdapter.OnItem
             }
         });
     }
+
+    public void updateCurrentCustomer(){
+        if(customerSharedPreference.getInt("customerID", -1) == -1){
+            if(customers.isEmpty())
+                binding.emptyCustomerImg.setVisibility(View.VISIBLE);
+            binding.customerCurrentCustomerRl.setVisibility(View.GONE);
+        }
+    }
 }

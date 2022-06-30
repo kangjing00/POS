@@ -10,8 +10,9 @@ public class Order  extends RealmObject {
     @PrimaryKey
     private int order_id;
     private String date_order, note, state; //State: "paid", "draft", "onHold"
-    private double amount_total, amount_paid, amount_tax, tip_amount; //amount_order_discount
-    private boolean is_tipped; //has_order_discount, is_percentage
+    private double amount_total, amount_paid, amount_tax, tip_amount, amount_order_discount;
+    private boolean is_tipped, has_order_discount, is_percentage;
+    private int customer_count, discount_percent;
     @LinkingObjects("order")
     private final RealmResults<Order_Line> order_lines = null;
 
@@ -21,7 +22,8 @@ public class Order  extends RealmObject {
     //Constructors
     //Dine-in
     public Order(int order_id, String date_order, String state, double amount_total, double amount_paid, double amount_tax,
-                 double tip_amount, boolean is_tipped, Table table, Customer customer, String note){
+                 double tip_amount, boolean is_tipped, Table table, Customer customer, String note, double amount_order_discount,
+                 boolean has_order_discount, boolean is_percentage, int customer_count, int discount_percent){
         this.order_id = order_id;
         this.date_order = date_order;
         this.state = state;
@@ -33,6 +35,11 @@ public class Order  extends RealmObject {
         this.table = table;
         this.customer = customer;
         this.note = note;
+        this.amount_order_discount = amount_order_discount;
+        this.has_order_discount = has_order_discount;
+        this.is_percentage = is_percentage;
+        this.customer_count = customer_count;
+        this.discount_percent = discount_percent;
     }
 
     public Order(){
@@ -47,6 +54,11 @@ public class Order  extends RealmObject {
         table = null;
         customer = null;
         note = null;
+        amount_order_discount = 0.0;
+        has_order_discount = false;
+        is_percentage = true;
+        customer_count = 0;
+        discount_percent = 0;
     }
 
     public int getOrder_id() {
@@ -139,7 +151,43 @@ public class Order  extends RealmObject {
         this.note = note;
     }
 
-//    public void setOrder_lines(){
-//        this.order_lines = order_lines;
-//    }
+    public double getAmount_order_discount() {
+        return amount_order_discount;
+    }
+
+    public void setAmount_order_discount(double amount_order_discount) {
+        this.amount_order_discount = amount_order_discount;
+    }
+
+    public boolean isHas_order_discount() {
+        return has_order_discount;
+    }
+
+    public void setHas_order_discount(boolean has_order_discount) {
+        this.has_order_discount = has_order_discount;
+    }
+
+    public boolean isIs_percentage() {
+        return is_percentage;
+    }
+
+    public void setIs_percentage(boolean is_percentage) {
+        this.is_percentage = is_percentage;
+    }
+
+    public int getCustomer_count() {
+        return customer_count;
+    }
+
+    public void setCustomer_count(int customer_count) {
+        this.customer_count = customer_count;
+    }
+
+    public int getDiscount_percent() {
+        return discount_percent;
+    }
+
+    public void setDiscount_percent(int discount_percent) {
+        this.discount_percent = discount_percent;
+    }
 }

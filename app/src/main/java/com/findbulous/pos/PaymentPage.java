@@ -112,14 +112,12 @@ public class PaymentPage extends AppCompatActivity {
         paymentMethodPagerAdapter = new PaymentMethodPagerAdapter(this);
 
         double order_subtotal = 0.0;
-        double order_discount = 0.0;
         for(int i = 0; i < order_lines.size(); i++){
-            order_subtotal += order_lines.get(i).getPrice_total();
-            order_discount += order_lines.get(i).getPrice_total() - order_lines.get(i).getPrice_subtotal();
+            order_subtotal += order_lines.get(i).getPrice_subtotal();
         }
         binding.paymentSubtotal.setText(String.format("%.2f", order_subtotal));
         binding.paymentTax.setText(String.format("%.2f", currentOrder.getAmount_tax()));
-        binding.paymentDiscount.setText(String.format("- %.2f", order_discount));
+        binding.paymentDiscount.setText(String.format("- %.2f", currentOrder.getAmount_order_discount()));
         binding.paymentGrandTotal.setText(String.format("%.2f", currentOrder.getAmount_total()));
         binding.paymentBarPayableAmount.setText(String.format("RM %.2f", currentOrder.getAmount_total()));
         viewModel.setAmount_total(currentOrder.getAmount_total());

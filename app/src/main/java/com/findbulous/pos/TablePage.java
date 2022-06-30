@@ -327,6 +327,7 @@ public class TablePage extends AppCompatActivity implements View.OnClickListener
         order.setDate_order(df.format(today));
         order.setState("draft");
         order.setTable(vacantTableSelected);
+        order.setCustomer_count(1);
 
         realm.executeTransaction(new Realm.Transaction() {
             @Override
