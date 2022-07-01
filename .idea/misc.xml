@@ -97,6 +97,7 @@
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/order_history_detail_layout.xml" value="0.36666666666666664" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/order_page.xml" value="0.18" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/payment_page.xml" value="0.22" />
+        <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/product_details_popup.xml" value="0.22" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/product_modifier_popup.xml" value="0.25" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/register_page.xml" value="0.2" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/setting_page.xml" value="0.18" />
@@ -112,7 +113,7 @@
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/view_order_on_hold_list.xml" value="0.25" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/view_order_on_hold_product_list.xml" value="0.16" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/view_payment_product.xml" value="0.22916666666666666" />
-        <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/view_product_menu.xml" value="0.22509057971014493" />
+        <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/view_product_menu.xml" value="0.2839506172839506" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/view_sale_history_list.xml" value="0.25" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/view_table_list.xml" value="0.22509057971014493" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/view_today_sale_list.xml" value="0.21281741233373638" />

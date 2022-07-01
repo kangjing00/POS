@@ -1035,6 +1035,43 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
         });
     }
 
+    private void showProductDetails(Product product){
+        PopupWindow popup = new PopupWindow(contextpage);
+        View layout = getLayoutInflater().inflate(R.layout.product_details_popup, null);
+        popup.setContentView(layout);
+        // Set content width and height
+        popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
+        popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
+        // Closes the popup window when touch outside of it - when looses focus
+        popup.setOutsideTouchable(true);
+        popup.setFocusable(true);
+        // Show anchored to button
+        popup.setElevation(8);
+        popup.setBackgroundDrawable(null);
+        popup.showAtLocation(binding.getRoot(), Gravity.CENTER, 0, 0);
+        //blur background
+        View container = (View) popup.getContentView().getParent();
+        WindowManager wm = (WindowManager) HomePage.this.getSystemService(Context.WINDOW_SERVICE);
+        WindowManager.LayoutParams p = (WindowManager.LayoutParams) container.getLayoutParams();
+        p.flags |= WindowManager.LayoutParams.FLAG_DIM_BEHIND;
+        p.dimAmount = 0.3f;
+        wm.updateViewLayout(container, p);
+
+        TextView product_name = layout.findViewById(R.id.product_details_name);
+        TextView product_price = layout.findViewById(R.id.product_details_price);
+        TextView done_btn = layout.findViewById(R.id.product_details_done_btn);
+
+        product_name.setText(product.getProduct_name());
+        product_price.setText(String.format("RM %.2f", product.getProduct_price()));
+
+
+        done_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                popup.dismiss();
+            }
+        });
+    }
     private void showProductModifier(Product product, boolean fromMenu){
         PopupWindow popup = new PopupWindow(contextpage);
         View layout = getLayoutInflater().inflate(R.layout.product_modifier_popup, null);
@@ -1378,6 +1415,10 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
     public void onMenuProductClick(int position) {
         showProductModifier(list.get(position), true);
         Toast.makeText(this, "" + list.get(position).getProduct_name(), Toast.LENGTH_SHORT).show();
+    }
+    @Override
+    public void onMenuProductLongClick(int position){
+        showProductDetails(list.get(position));
     }
 
     @Override
