@@ -49,6 +49,8 @@ public class FragmentAddCustomer extends Fragment {
             binding.addCustomerNameEt.setText(customer.getCustomer_name());
             binding.addCustomerPhoneEt.setText(customer.getCustomer_phoneNo());
             binding.addCustomerEmailEt.setText(customer.getCustomer_email());
+            binding.addCustomerBirthdateEt.setText(customer.getCustomer_birthdate());
+            binding.addCustomerIcEt.setText(customer.getCustomer_identityNo());
         }
 
 

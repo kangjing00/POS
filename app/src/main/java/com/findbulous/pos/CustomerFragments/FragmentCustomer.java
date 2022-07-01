@@ -110,8 +110,7 @@ public class FragmentCustomer extends Fragment implements CustomerAdapter.OnItem
         binding.customerCurrentEditBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                int id = 0;
-//                ((CustomerPage)getActivity()).editCurrentCustomer(id);
+                ((CustomerPage)getActivity()).editCustomer(customerSharedPreference.getInt("customerID", -1));
             }
         });
         binding.customerSearchBtn.setOnClickListener(new View.OnClickListener() {
@@ -287,7 +286,8 @@ public class FragmentCustomer extends Fragment implements CustomerAdapter.OnItem
         view_detail_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(getContext(), "View Customer Detail Btn", Toast.LENGTH_SHORT).show();
+                ((CustomerPage)getActivity()).viewCustomerDetail(customer.getCustomer_id());
+                popup.dismiss();
             }
         });
 

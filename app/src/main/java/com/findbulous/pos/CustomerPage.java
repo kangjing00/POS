@@ -33,6 +33,7 @@ import android.widget.Toast;
 import com.findbulous.pos.Adapters.CartOrderLineAdapter;
 import com.findbulous.pos.CustomerFragments.FragmentAddCustomer;
 import com.findbulous.pos.CustomerFragments.FragmentCustomer;
+import com.findbulous.pos.CustomerFragments.FragmentCustomerDetail;
 import com.findbulous.pos.Network.NetworkUtils;
 import com.findbulous.pos.databinding.CustomerPageBinding;
 import com.google.android.material.button.MaterialButton;
@@ -47,7 +48,7 @@ public class CustomerPage extends AppCompatActivity implements CartOrderLineAdap
     private CustomerPageBinding binding;
     private FragmentManager fm;
     private FragmentTransaction ft;
-    private Boolean customerFragment;
+    private boolean customerFragment;
 
     //Cart //Popup
     private Button add_discount_popup_negative_btn, add_discount_popup_positive_btn;
@@ -147,7 +148,8 @@ public class CustomerPage extends AppCompatActivity implements CartOrderLineAdap
             @Override
             public void onClick(View view) {
                 ft = fm.beginTransaction();
-                if(customerFragment) {
+                customerFragment = !customerFragment;
+                if(!customerFragment) {
                     ft.replace(binding.customerPageFl.getId(), new FragmentAddCustomer(), "AddUpdate").commit();
                     binding.customerPageActionBtn.setText("Customer");
                     binding.customerPageActionBtn.setIcon(getDrawable(R.drawable.ic_customer));
@@ -158,7 +160,6 @@ public class CustomerPage extends AppCompatActivity implements CartOrderLineAdap
                     binding.customerPageActionBtn.setIcon(getDrawable(R.drawable.ic_add));
                     binding.customerPageTitle.setText("Customers");
                 }
-                customerFragment = !customerFragment;
             }
         });
         }
@@ -1050,19 +1051,19 @@ public class CustomerPage extends AppCompatActivity implements CartOrderLineAdap
         });
     }
 
-    public void editCurrentCustomer(int customer_id){
+    public void editCustomer(int customer_id){
         Bundle bundle = new Bundle();
         bundle.putInt("customer_id", customer_id);
         FragmentAddCustomer fragmentAddCustomer = new FragmentAddCustomer();
         fragmentAddCustomer.setArguments(bundle);
 
         ft = fm.beginTransaction();
-        ft.replace(binding.customerPageFl.getId(), fragmentAddCustomer).commit();
+        ft.replace(binding.customerPageFl.getId(), fragmentAddCustomer, "AddUpdate").commit();
         binding.customerPageActionBtn.setText("Customer");
         binding.customerPageActionBtn.setIcon(getDrawable(R.drawable.ic_customer));
         binding.customerPageTitle.setText("Update Customer Detail");
 
-        customerFragment = !customerFragment;
+        customerFragment = false;
     }
 
     private void showProductModifier(Product product){
@@ -1328,6 +1329,20 @@ public class CustomerPage extends AppCompatActivity implements CartOrderLineAdap
         }else{
             binding.cartInclude.cartBtnNumberCustomer.setText(currentOrder.getCustomer_count() + " Guest(s)");
         }
+    }
+
+    public void viewCustomerDetail(int customer_id){
+        Bundle bundle = new Bundle();
+        bundle.putInt("customer_id", customer_id);
+        FragmentCustomerDetail fragmentCustomerDetail = new FragmentCustomerDetail();
+        fragmentCustomerDetail.setArguments(bundle);
+
+        ft = fm.beginTransaction();
+        ft.replace(binding.customerPageFl.getId(), fragmentCustomerDetail, "CustomerDetails").commit();
+        binding.customerPageActionBtn.setText("Customer");
+        binding.customerPageActionBtn.setIcon(getDrawable(R.drawable.ic_customer));
+        binding.customerPageTitle.setText("Customer Details");
+        customerFragment = false;
     }
 
     @Override
