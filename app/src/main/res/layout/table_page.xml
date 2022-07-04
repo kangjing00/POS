@@ -50,61 +50,15 @@
             app:layout_constraintStart_toEndOf="@+id/navbar_layout_include_sv"
             app:layout_constraintTop_toBottomOf="@+id/appBar">
 
-            <RadioGroup
-                android:id="@+id/table_category_radioGroup"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/floor_rv"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
+                android:layout_height="match_parent"
                 android:paddingStart="10dp"
                 android:paddingTop="5dp"
                 android:paddingEnd="10dp"
-                android:paddingBottom="5dp">
-
-                <RadioButton
-                    android:id="@+id/table_category_all_btn"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="5dp"
-                    android:background="@drawable/navbtn_selector"
-                    android:button="@android:color/transparent"
-                    android:padding="8dp"
-                    android:text="Ground Floor"
-                    android:textColor="@drawable/categorybtn_text_color" />
-
-                <RadioButton
-                    android:id="@+id/table_category_vacant_btn"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="5dp"
-                    android:background="@drawable/navbtn_selector"
-                    android:button="@android:color/transparent"
-                    android:padding="8dp"
-                    android:text="First Floor"
-                    android:textColor="@drawable/categorybtn_text_color" />
-
-                <RadioButton
-                    android:id="@+id/table_category_occupied_btn"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="5dp"
-                    android:background="@drawable/navbtn_selector"
-                    android:button="@android:color/transparent"
-                    android:padding="8dp"
-                    android:text="Second Floor"
-                    android:textColor="@drawable/categorybtn_text_color" />
-
-                <RadioButton
-                    android:id="@+id/table_category_disabled_btn"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="5dp"
-                    android:background="@drawable/navbtn_selector"
-                    android:button="@android:color/transparent"
-                    android:padding="8dp"
-                    android:text="Thrid Floor"
-                    android:textColor="@drawable/categorybtn_text_color" />
-
-            </RadioGroup>
+                android:paddingBottom="5dp"
+                tools:listitem="@layout/view_floor_list"/>
         </HorizontalScrollView>
 
 <!--        <RelativeLayout-->
@@ -145,6 +99,8 @@
 <!--                android:textSize="15dp" />-->
 <!--        </RelativeLayout>-->
 
+
+
         <ScrollView
             android:id="@+id/table_vertical_sv"
             android:layout_width="0dp"
@@ -162,26 +118,14 @@
                 android:scrollbars="none"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
-                <TableLayout
-                    android:id="@+id/table_management_layout"
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/table_rv"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent">
-                </TableLayout>
+                    android:layout_height="match_parent"
+                    tools:listitem="@layout/view_table_list"/>
             </HorizontalScrollView>
         </ScrollView>
-
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/table_list_rv"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_margin="10dp"
-            android:visibility="gone"
-            app:layout_constraintBottom_toTopOf="@+id/table_information_bar_rl"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/navbar_layout_include_sv"
-            app:layout_constraintTop_toBottomOf="@+id/horizontalScrollView"
-            tools:listitem="@layout/view_table_list" />
 
         <RelativeLayout
             android:id="@+id/table_information_bar_rl"
