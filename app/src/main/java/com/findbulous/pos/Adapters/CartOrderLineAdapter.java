@@ -43,7 +43,7 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
 
     @Override
     public void onBindViewHolder(OrderLineProductViewHolder holder, int position) {
-        int p = position;
+        int p = holder.getAdapterPosition();
         Order_Line order_line = order_lines.get(position);
         holder.binding.setOrderLine(order_line);
 
@@ -72,7 +72,7 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
                             && (!holder.binding.productOrderQuantityEt.getText().toString().equalsIgnoreCase("0"))) {
                         qty = Integer.parseInt(holder.binding.productOrderQuantityEt.getText().toString());
                     }
-                    listener.quantityUpdateOrderLine(holder.getAdapterPosition(), qty);
+                    listener.quantityUpdateOrderLine(p, qty);
                 }
             }
         });
@@ -111,7 +111,7 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
                     } else {
                         holder.binding.productOrderProductTotalPrice.setVisibility(View.INVISIBLE);
                     }
-                    listener.discountUpdateOrderLine(holder.getAdapterPosition(), discount);
+                    listener.discountUpdateOrderLine(p, discount);
                 }
             }
         });

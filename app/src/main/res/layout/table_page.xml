@@ -239,7 +239,7 @@
                 android:layout_alignParentTop="true"
                 android:layout_marginTop="10dp"
                 android:layout_marginRight="15dp"
-                android:layout_toLeftOf="@+id/table_information_btn"
+                android:layout_toLeftOf="@+id/table_information_btn_rl"
                 android:text="Table 0000"
                 android:textSize="20dp" />
 
@@ -262,25 +262,48 @@
                 android:layout_below="@+id/table_information_table_name"
                 android:layout_marginTop="5dp"
                 android:layout_marginRight="15dp"
-                android:layout_toLeftOf="@+id/table_information_btn"
+                android:layout_toLeftOf="@+id/table_information_btn_rl"
                 android:text="#00000"
                 android:textColor="@color/darkGrey"
                 android:textSize="15dp" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/table_information_btn"
+            <RelativeLayout
+                android:id="@+id/table_information_btn_rl"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:backgroundTint="@color/darkOrange"
-                android:paddingStart="25dp"
-                android:paddingTop="15dp"
-                android:paddingEnd="25dp"
-                android:paddingBottom="15dp"
-                android:text="Select &amp; Place Order"
-                android:textAllCaps="false"
-                app:icon="@drawable/ic_order" />
+                android:layout_centerVertical="true">
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/table_information_cancel_swap_btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="@color/white"
+                    android:paddingStart="25dp"
+                    android:paddingTop="15dp"
+                    android:paddingEnd="25dp"
+                    android:paddingBottom="15dp"
+                    android:text="Cancel Swapping / Transferring"
+                    android:textColor="@color/darkOrange"
+                    app:strokeColor="@color/darkOrange"
+                    app:strokeWidth="2dp"
+                    android:textAllCaps="false"
+                    app:icon="@drawable/ic_swap"
+                    app:iconTint="@color/darkOrange"
+                    android:visibility="gone"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/table_information_btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="@color/darkOrange"
+                    android:paddingStart="25dp"
+                    android:paddingTop="15dp"
+                    android:paddingEnd="25dp"
+                    android:paddingBottom="15dp"
+                    android:text="Select &amp; Place Order"
+                    android:textAllCaps="false"
+                    app:icon="@drawable/ic_order" />
+            </RelativeLayout>
         </RelativeLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
