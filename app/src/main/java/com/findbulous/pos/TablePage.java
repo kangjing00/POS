@@ -115,6 +115,14 @@ public class TablePage extends AppCompatActivity implements
         floorAdapter = new FloorAdapter(floor_list, this);
         getFloorFromRealm();
         binding.floorRv.setAdapter(floorAdapter);
+        //Table Recycler view
+        binding.tableRv.setLayoutManager(new GridLayoutManager(contextpage, floor_list.get(0).getNoColumn()));
+        binding.tableRv.setHasFixedSize(true);
+        table_list = new ArrayList<>();
+        tableAdapter = new TableAdapter(table_list, this);
+        getTableFromRealm(floor_list.get(0));
+        binding.tableRv.setAdapter(tableAdapter);
+        tableAdapter.notifyDataSetChanged();
 
         if(currentOrderSharedPreference.getInt("orderingState", -1) == 1){ //ordering
             int orderId = currentOrderSharedPreference.getInt("orderId", -1);
@@ -594,14 +602,14 @@ public class TablePage extends AppCompatActivity implements
     }
 
     //Insert dummy data
-    private void insertDummyTableData(int noRow, int noColumn, Floor floor){
+    private void insertDummyTableData(String idWord,int noRow, int noColumn, Floor floor){
         boolean active = true;
         Random random = new Random();
         int randomNo = 0;
 
         for(int i = 1; i <= (noRow * noColumn); i++){
             randomNo = random.nextInt(9) + 2;
-            saveTableToDb("T" + i, randomNo,true, false, false, active, floor);
+            saveTableToDb(idWord + i, randomNo,true, false, false, active, floor);
             if(i < 60) {
                 active = !active;
             }else{
@@ -613,15 +621,15 @@ public class TablePage extends AppCompatActivity implements
         boolean active = true;
 
         Floor floor1 = saveFloorToDb("Ground Floor", true, 7, 18);
-        insertDummyTableData(7, 18, floor1);
+        insertDummyTableData("G", 7, 18, floor1);
         Floor floor2 = saveFloorToDb("First Floor", true, 5, 5);
-        insertDummyTableData(5, 5, floor2);
+        insertDummyTableData("F", 5, 5, floor2);
         Floor floor3 = saveFloorToDb("Second Floor", true, 10, 10);
-        insertDummyTableData(10, 10, floor3);
+        insertDummyTableData("S", 10, 10, floor3);
         Floor floor4 = saveFloorToDb("Third Floor", true, 5, 18);
-        insertDummyTableData(5, 18, floor4);
+        insertDummyTableData("T", 5, 18, floor4);
         Floor floor5 = saveFloorToDb("Fourth Floor", false, 0, 0);
-        insertDummyTableData(0, 0, floor5);
+        insertDummyTableData("F", 0, 0, floor5);
     }
     //Save table data to Realm local database
     private void saveTableToDb(String tableName, int seats, boolean vacant, boolean onHold, boolean occupied, boolean active, Floor floor){
@@ -841,7 +849,6 @@ public class TablePage extends AppCompatActivity implements
             }
         }
     }
-
     @Override
     public void onTableLongClick(int position) {
         longClickOccupiedTable = table_list.get(position);

@@ -20,6 +20,7 @@ public class FloorAdapter extends RecyclerView.Adapter<FloorAdapter.FloorViewHol
     private ArrayList<Floor> floors;
     private FloorClickInterface listener;
     private RadioButton lastClickedRB;
+    private int firstFloorCheck = 0;
 
     public class FloorViewHolder extends RecyclerView.ViewHolder{
         private final ViewFloorListBinding binding;
@@ -50,6 +51,10 @@ public class FloorAdapter extends RecyclerView.Adapter<FloorAdapter.FloorViewHol
 
         if(!floor.isActive()){
             holder.binding.floorBtn.setVisibility(View.GONE);
+        }
+        if(position == firstFloorCheck){
+            holder.binding.floorBtn.setChecked(true);
+            lastClickedRB = holder.binding.floorBtn;
         }
 
         holder.binding.floorBtn.setOnClickListener(new View.OnClickListener() {
