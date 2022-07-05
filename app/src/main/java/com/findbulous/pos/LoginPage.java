@@ -45,6 +45,9 @@ public class LoginPage extends AppCompatActivity {
     private Realm realm;
 
     private ArrayList<Product> products;
+    private ArrayList<Floor> floors;
+    private ArrayList<State> states;
+    private ArrayList<Table> tables;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,15 +65,18 @@ public class LoginPage extends AppCompatActivity {
         realm = Realm.getDefaultInstance();
 
         products = new ArrayList<>();
+        floors = new ArrayList<>();
+        states = new ArrayList<>();
+        tables = new ArrayList<>();
 
         binding.loginBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //insertDummyProductData();
                 Intent intent = new Intent(contextpage, ChoosePOSPermissionPage.class);
                 startActivity(intent);
                 finish();
                 new loadProduct().execute();
+                new loadFloorAndTable().execute();
             }
         });
         binding.registerBtn.setOnClickListener(new View.OnClickListener() {
@@ -102,12 +108,6 @@ public class LoginPage extends AppCompatActivity {
                 return true;
             }
         });
-    }
-
-    private boolean emailCheck(EditText email){
-        if(Patterns.EMAIL_ADDRESS.matcher(email.getText().toString()).matches())
-            return true;
-        return false;
     }
 
     public class loadProduct extends AsyncTask<String, String, String>{
@@ -161,9 +161,9 @@ public class LoginPage extends AppCompatActivity {
                             for (int a = 0; a < jcproducts.length(); a++) {
                                 JSONObject ja = jcproducts.getJSONObject(a);
                                 Product product = new Product(Integer.valueOf(ja.getString("product_id")),
-                                        ja.getString("name"), ja.getDouble("list_price"));
+                                        ja.getString("name"), ja.getDouble("list_price"), ja.getString("display_list_price"));
                                 products.add(product);
-                                System.out.println(products.get(a).getProduct_name());
+                                System.out.println(products.get(a).getName());
                                 counter++;
                             }
                         }
@@ -195,7 +195,103 @@ public class LoginPage extends AppCompatActivity {
             }
         }
     }
+    public class loadFloorAndTable extends AsyncTask<String, String, String> {
+        @Override
+        protected String doInBackground(String... strings) {
+            String url = "https://www.c3rewards.com/api/merchant/?module=restaurants";
+            String agent = "c092dc89b7aac085a210824fb57625db";
+            String jsonUrl = url + "&agent=" + agent;
+            System.out.println(jsonUrl);
 
+
+            URL obj;
+            try {
+                obj = new URL(jsonUrl);
+                HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+                // optional default is GET
+                con.setRequestMethod("GET");
+                //add request header
+                int responseCode = con.getResponseCode();
+                System.out.println("\nSending 'GET' request to URL : " + jsonUrl);
+                System.out.println("Response Code : " + responseCode);
+
+                BufferedReader in = new BufferedReader(
+                        new InputStreamReader(con.getInputStream()));
+                String inputLine;
+
+                StringBuilder response = new StringBuilder();
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                System.out.println(response);
+                String data = response.toString();
+                try {
+                    JSONObject json = new JSONObject(data);
+                    String status = json.getString("status");
+
+                    if (status.equals("OK")) {
+                        JSONObject jresult = json.getJSONObject("result");
+                        JSONArray jfloors = jresult.getJSONArray("floors");
+                        JSONArray jstates = jresult.getJSONArray("states");
+
+                        for(int i = 0; i < jstates.length(); i++){
+                            JSONObject js = jstates.getJSONObject(i);
+                            State state = new State((i+1), js.getString("code"), js.getString("name"));
+                            states.add(state);
+                        }
+
+                        for (int a = 0; a < jfloors.length(); a++) {
+                            JSONObject jf = jfloors.getJSONObject(a);
+                            Floor floor = new Floor(jf.getInt("floor_id"), jf.getString("name"),
+                                    jf.getInt("sequence"), jf.getString("active"));
+                            floors.add(floor);
+
+                            JSONArray jtables = jf.getJSONArray("tables");
+                            for(int x = 0; x < jtables.length(); x++){
+                                JSONObject jt = jtables.getJSONObject(x);
+                                Table table = new Table(jt.getInt("table_id"), jt.getString("name"),
+                                        jt.getDouble("position_h"), jt.getDouble("position_v"),
+                                        jt.getDouble("width"), jt.getDouble("height"), jt.getInt("seats"),
+                                        jt.getString("active"), jt.getString("state"), floor);
+                                tables.add(table);
+                            }
+                        }
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            } catch (IOException e) {
+                Log.e("error", "cannot fetch data");
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            if(!NetworkUtils.isNetworkAvailable(contextpage)){
+                Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
+            }else{
+                realm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        realm.insertOrUpdate(floors);
+                        realm.insertOrUpdate(tables);
+                        realm.insertOrUpdate(states);
+                    }
+                });
+            }
+        }
+    }
+
+    private boolean emailCheck(EditText email){
+        if(Patterns.EMAIL_ADDRESS.matcher(email.getText().toString()).matches())
+            return true;
+        return false;
+    }
 
     public void setPreferences(Context context, String key, String value) {
         SharedPreferences.Editor editor = context.getSharedPreferences("LoginSuccess", Context.MODE_PRIVATE).edit();
@@ -212,7 +308,6 @@ public class LoginPage extends AppCompatActivity {
 
 
 
-
     private void deleteRealm(){
         realm.executeTransaction(new Realm.Transaction() {
             @Override
@@ -220,48 +315,5 @@ public class LoginPage extends AppCompatActivity {
                 realm.deleteAll();
             }
         });
-    }
-
-    private void insertDummyProductData(){
-        for(int i = 1; i < 100; i++){
-            saveToDb("Nasi Lemak " + i, 10.50);
-        }
-    }
-
-    private Product saveToDb(String product_name, double product_price) {
-        Product product = new Product();
-        //val dataModel2 = DataModel2()
-        //var id2:Number? = realm.where<DataModel2>(DataModel2::class.java).max("id")
-        Number id = realm.where(Product.class).max("product_id");
-
-//        val nextID2: Int = if(id2 == null){
-//            1
-//        }else{
-//            id2.toInt() + 2
-//        }
-
-        int nextID = -1;
-        System.out.println(id);
-        if(id == null){
-            nextID = 1;
-        }else{
-            nextID = id.intValue() + 1;
-        }
-
-        product.setProduct_id(nextID);
-        product.setProduct_name(product_name);
-        product.setProduct_price(product_price);
-
-        realm.executeTransaction(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                //it.insert(dataModel)
-                //it.copyToRealmOrUpdate(dataModel)
-                realm.insertOrUpdate(product);
-                //it.copyToRealm(dataModel2)
-            }
-        });
-
-        return product;
     }
 }

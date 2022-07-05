@@ -126,7 +126,7 @@ public class PaymentPage extends AppCompatActivity {
         if(currentOrder.getTable() == null) { //Takeaway
             binding.paymentOrderDetailType.setText("Takeaway");
         }else{ //Dine-in
-            binding.paymentOrderDetailType.setText("Dine-in - " + currentOrder.getTable().getTable_name());
+            binding.paymentOrderDetailType.setText("Dine-in - " + currentOrder.getTable().getName());
         }
         //Tabs
         {binding.paymentMethodViewPager.setAdapter(paymentMethodPagerAdapter);
@@ -282,9 +282,7 @@ public class PaymentPage extends AppCompatActivity {
     }
 
     private void tableOccupiedToVacant(Table table){
-        table.setOccupied(false);
-        table.setVacant(true);
-        table.setOnHold(false);
+        table.setState("V");
         realm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {

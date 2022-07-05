@@ -107,6 +107,7 @@ public class TablePage extends AppCompatActivity implements
         tableSwapTo = null;
         lastClickedTableView = null;
         floor_list = new ArrayList<Floor>();
+        table_list = new ArrayList<Table>();
 
         //Floor Recycler view
         binding.floorRv.setLayoutManager(new LinearLayoutManager(contextpage, LinearLayoutManager.HORIZONTAL, false));
@@ -115,20 +116,22 @@ public class TablePage extends AppCompatActivity implements
         floorAdapter = new FloorAdapter(floor_list, this);
         getFloorFromRealm();
         binding.floorRv.setAdapter(floorAdapter);
-        //Table Recycler view
-        binding.tableRv.setLayoutManager(new GridLayoutManager(contextpage, floor_list.get(0).getNoColumn()));
-        binding.tableRv.setHasFixedSize(true);
-        table_list = new ArrayList<>();
-        tableAdapter = new TableAdapter(table_list, this);
         getTableFromRealm(floor_list.get(0));
-        binding.tableRv.setAdapter(tableAdapter);
-        tableAdapter.notifyDataSetChanged();
+        displayTables(floor_list.get(0));
+        //Table Recycler view
+//        binding.tableRv.setLayoutManager(new GridLayoutManager(contextpage, floor_list.get(0).getNoColumn()));
+//        binding.tableRv.setHasFixedSize(true);
+//        table_list = new ArrayList<>();
+//        tableAdapter = new TableAdapter(table_list, this);
+//        getTableFromRealm(floor_list.get(0));
+//        binding.tableRv.setAdapter(tableAdapter);
+//        tableAdapter.notifyDataSetChanged();
 
         if(currentOrderSharedPreference.getInt("orderingState", -1) == 1){ //ordering
             int orderId = currentOrderSharedPreference.getInt("orderId", -1);
             Order result = realm.where(Order.class).equalTo("order_id", orderId).findFirst();
             if(result.getTable() != null) {
-                binding.tableInformationTableName.setText("Table " + result.getTable().getTable_name());
+                binding.tableInformationTableName.setText("Table " + result.getTable().getName());
                 binding.tableInformationOrderId.setText("#" + result.getOrder_id());
             }
             onlyVacantTable = true;
@@ -151,8 +154,8 @@ public class TablePage extends AppCompatActivity implements
                             Order currentOrder = realm.copyFromRealm(result);
 
                             if (currentOrder.getTable() != null) {
-                                AlertDialog alert = builder.setMessage("Change table " + currentOrder.getTable().getTable_name() +
-                                        " to " + vacantTableSelected.getTable_name() + "?")
+                                AlertDialog alert = builder.setMessage("Change table " + currentOrder.getTable().getName() +
+                                        " to " + vacantTableSelected.getName() + "?")
                                         .setCancelable(false).setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                                             @Override
                                             public void onClick(DialogInterface dialogInterface, int i) {
@@ -366,8 +369,7 @@ public class TablePage extends AppCompatActivity implements
     }
     //Update table occupied
     private void updateTableOccupied(Table table){
-        table.setVacant(false);
-        table.setOccupied(true);
+        table.setState("O");
         realm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
@@ -377,8 +379,7 @@ public class TablePage extends AppCompatActivity implements
     }
     //Update table occupied to vacant
     private void tableOccupiedToVacant(Table table){
-        table.setOccupied(false);
-        table.setVacant(true);
+        table.setState("V");
         realm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
@@ -490,7 +491,7 @@ public class TablePage extends AppCompatActivity implements
         table_addon_btn = (MaterialButton)layout.findViewById(R.id.table_addon_btn);
         table_proceed_btn = (MaterialButton)layout.findViewById(R.id.table_proceed_btn);
 
-        tvTableName.setText(clickedTable.getTable_name());
+        tvTableName.setText(clickedTable.getName());
         Order order = realm.where(Order.class).equalTo("table.table_id", clickedTable.getTable_id()).findFirst();
         Customer customer = (order == null)? null : realm.where(Customer.class).equalTo("customer_id", order.getCustomer().getCustomer_id()).findFirst();
         int current_order_id = currentOrderSharedPreference.getInt("orderId", -1);
@@ -602,90 +603,90 @@ public class TablePage extends AppCompatActivity implements
     }
 
     //Insert dummy data
-    private void insertDummyTableData(String idWord,int noRow, int noColumn, Floor floor){
-        boolean active = true;
-        Random random = new Random();
-        int randomNo = 0;
-
-        for(int i = 1; i <= (noRow * noColumn); i++){
-            randomNo = random.nextInt(9) + 2;
-            saveTableToDb(idWord + i, randomNo,true, false, false, active, floor);
-            if(i < 60) {
-                active = !active;
-            }else{
-                active = true;
-            }
-        }
-    }
-    private void insertDummyFloorData(){
-        boolean active = true;
-
-        Floor floor1 = saveFloorToDb("Ground Floor", true, 7, 18);
-        insertDummyTableData("G", 7, 18, floor1);
-        Floor floor2 = saveFloorToDb("First Floor", true, 5, 5);
-        insertDummyTableData("F", 5, 5, floor2);
-        Floor floor3 = saveFloorToDb("Second Floor", true, 10, 10);
-        insertDummyTableData("S", 10, 10, floor3);
-        Floor floor4 = saveFloorToDb("Third Floor", true, 5, 18);
-        insertDummyTableData("T", 5, 18, floor4);
-        Floor floor5 = saveFloorToDb("Fourth Floor", false, 0, 0);
-        insertDummyTableData("F", 0, 0, floor5);
-    }
+//    private void insertDummyTableData(String idWord,int noRow, int noColumn, Floor floor){
+//        boolean active = true;
+//        Random random = new Random();
+//        int randomNo = 0;
+//
+//        for(int i = 1; i <= (noRow * noColumn); i++){
+//            randomNo = random.nextInt(9) + 2;
+//            saveTableToDb(idWord + i, randomNo,true, false, false, active, floor);
+//            if(i < 60) {
+//                active = !active;
+//            }else{
+//                active = true;
+//            }
+//        }
+//    }
+//    private void insertDummyFloorData(){
+//        boolean active = true;
+//
+//        Floor floor1 = saveFloorToDb("Ground Floor", true, 7, 18);
+//        insertDummyTableData("G", 7, 18, floor1);
+//        Floor floor2 = saveFloorToDb("First Floor", true, 5, 5);
+//        insertDummyTableData("F", 5, 5, floor2);
+//        Floor floor3 = saveFloorToDb("Second Floor", true, 10, 10);
+//        insertDummyTableData("S", 10, 10, floor3);
+//        Floor floor4 = saveFloorToDb("Third Floor", true, 5, 18);
+//        insertDummyTableData("T", 5, 18, floor4);
+//        Floor floor5 = saveFloorToDb("Fourth Floor", false, 0, 0);
+//        insertDummyTableData("F", 0, 0, floor5);
+//    }
     //Save table data to Realm local database
-    private void saveTableToDb(String tableName, int seats, boolean vacant, boolean onHold, boolean occupied, boolean active, Floor floor){
-        Table table = new Table();
-        Number id = realm.where(Table.class).max("table_id");
-
-        int nextID = -1;
-        System.out.println(id);
-        if(id == null){
-            nextID = 1;
-        }else{
-            nextID = id.intValue() + 1;
-        }
-
-        table.setTable_id(nextID);
-        table.setTable_name(tableName);
-        table.setSeats(seats);
-        table.setVacant(vacant);
-        table.setOnHold(onHold);
-        table.setOccupied(occupied);
-        table.setActive(active);
-        table.setFloor(floor);
-
-        realm.executeTransaction(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                realm.insertOrUpdate(table);
-            }
-        });
-    }
-    private Floor saveFloorToDb(String floorName, boolean active, int noRow, int noColumn){
-        Floor floor = new Floor();
-        Number id = realm.where(Floor.class).max("floor_id");
-
-        int nextID = -1;
-        System.out.println(id);
-        if(id == null){
-            nextID = 1;
-        }else{
-            nextID = id.intValue() + 1;
-        }
-        floor.setFloor_id(nextID);
-        floor.setFloor_name(floorName);
-        floor.setActive(active);
-        floor.setNoRow(noRow);
-        floor.setNoColumn(noColumn);
-
-        realm.executeTransaction(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                realm.insertOrUpdate(floor);
-            }
-        });
-
-        return floor;
-    }
+//    private void saveTableToDb(String tableName, int seats, boolean vacant, boolean onHold, boolean occupied, boolean active, Floor floor){
+//        Table table = new Table();
+//        Number id = realm.where(Table.class).max("table_id");
+//
+//        int nextID = -1;
+//        System.out.println(id);
+//        if(id == null){
+//            nextID = 1;
+//        }else{
+//            nextID = id.intValue() + 1;
+//        }
+//
+//        table.setTable_id(nextID);
+//        table.setTable_name(tableName);
+//        table.setSeats(seats);
+//        table.setVacant(vacant);
+//        table.setOnHold(onHold);
+//        table.setOccupied(occupied);
+//        table.setActive(active);
+//        table.setFloor(floor);
+//
+//        realm.executeTransaction(new Realm.Transaction() {
+//            @Override
+//            public void execute(Realm realm) {
+//                realm.insertOrUpdate(table);
+//            }
+//        });
+//    }
+//    private Floor saveFloorToDb(String floorName, boolean active, int noRow, int noColumn){
+//        Floor floor = new Floor();
+//        Number id = realm.where(Floor.class).max("floor_id");
+//
+//        int nextID = -1;
+//        System.out.println(id);
+//        if(id == null){
+//            nextID = 1;
+//        }else{
+//            nextID = id.intValue() + 1;
+//        }
+//        floor.setFloor_id(nextID);
+//        floor.setFloor_name(floorName);
+//        floor.setActive(active);
+//        floor.setNoRow(noRow);
+//        floor.setNoColumn(noColumn);
+//
+//        realm.executeTransaction(new Realm.Transaction() {
+//            @Override
+//            public void execute(Realm realm) {
+//                realm.insertOrUpdate(floor);
+//            }
+//        });
+//
+//        return floor;
+//    }
     //Get data from Realm local database
     private void getTableFromRealm(Floor floor) {
         RealmResults<Table> results = realm.where(Table.class).equalTo("floor.floor_id", floor.getFloor_id()).findAll();
@@ -696,19 +697,57 @@ public class TablePage extends AppCompatActivity implements
         floor_list.addAll(realm.copyFromRealm(results));
     }
 
+
+    private void displayTables(Floor floor){
+        RealmResults<Table> tables = realm.where(Table.class).equalTo("floor.floor_id", floor.getFloor_id()).findAll();
+        table_list.addAll(realm.copyFromRealm(tables));
+       // binding.tableListRl.removeAllViews();
+        for(int i = 0; i < table_list.size(); i++){
+            Table table = table_list.get(i);
+            if(!table.getActive().equalsIgnoreCase("t")){
+                TextView tableTv = new TextView(contextpage);
+                tableTv.setText(table.getName() + "\n" + table.getSeats());
+                tableTv.setWidth((int) (80 * getResources().getDisplayMetrics().density));
+                tableTv.setHeight((int) (80 * getResources().getDisplayMetrics().density));
+                tableTv.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                tableTv.setGravity(Gravity.CENTER);
+                tableTv.setTextColor(Color.BLACK);
+                tableTv.setClickable(true);
+                tableTv.setX((float)table.getPosition_h());
+                tableTv.setY((float)table.getPosition_v());
+                Drawable tvDrawable;
+                tvDrawable = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
+                if(table.getState().equalsIgnoreCase("V")) {
+                    DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.green));
+                }else if(table.getState().equalsIgnoreCase("H")){
+                    DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.blue));
+                }else{
+                    DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.red));
+                }
+                tableTv.setBackground(tvDrawable);
+
+                tableTv.setId(table.getTable_id());
+                //            tableTv.setOnClickListener(TablePage.this);
+                //            tableTv.setOnLongClickListener(TablePage.this);
+                binding.tableListRl.addView(tableTv);
+            }
+        }
+    }
     //Floor clicked, filter the table_list
     @Override
     public void onFloorClick(int position) {
         Floor floor = floor_list.get(position);
-
-        //Table Recycler view
-        binding.tableRv.setLayoutManager(new GridLayoutManager(contextpage, floor.getNoColumn()));
-        binding.tableRv.setHasFixedSize(true);
-        table_list = new ArrayList<>();
-        tableAdapter = new TableAdapter(table_list, this);
+        floor_list.clear();
         getTableFromRealm(floor);
-        binding.tableRv.setAdapter(tableAdapter);
-        tableAdapter.notifyDataSetChanged();
+        displayTables(floor);
+        //Table Recycler view
+//        binding.tableRv.setLayoutManager(new GridLayoutManager(contextpage, floor.getNoColumn()));
+//        binding.tableRv.setHasFixedSize(true);
+//        table_list = new ArrayList<>();
+//        tableAdapter = new TableAdapter(table_list, this);
+//        getTableFromRealm(floor);
+//        binding.tableRv.setAdapter(tableAdapter);
+//        tableAdapter.notifyDataSetChanged();
     }
     //Table clicked
     @Override
@@ -720,7 +759,7 @@ public class TablePage extends AppCompatActivity implements
         tvDrawable = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
 
         if(!tableSwapping) {
-            if (clickedTable.isVacant()) {
+            if (clickedTable.getState().equalsIgnoreCase("V")) {
                 if (!tableSelecting) {
                     //case: table is not selecting, operation: select a table
                     tableSelecting = true;
@@ -748,7 +787,7 @@ public class TablePage extends AppCompatActivity implements
                     lastClickedTableView = v;
                     vacantTableSelected = clickedTable;
                 }
-            } else if (clickedTable.isOnHold()) {
+            } else if (clickedTable.getState().equalsIgnoreCase("H")) {
                 if (!onlyVacantTable) {//not only vacant table can be selected
                     showAddonAndProceed(v, clickedTable);
                 } else {  //only vacant table can be selected
@@ -770,49 +809,38 @@ public class TablePage extends AppCompatActivity implements
             orderSwapFrom = realm.copyFromRealm(orderOfTableSwapFrom);
             //popup
             AlertDialog.Builder builder = new AlertDialog.Builder(TablePage.this);
-            builder.setMessage("Swap / transfer table " + tableSwapFrom.getTable_name() +
-                    " to " + tableSwapTo.getTable_name() + "?")
+            builder.setMessage("Swap / transfer table " + tableSwapFrom.getName() +
+                    " to " + tableSwapTo.getName() + "?")
                     .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
                             if(orderOfTableSwapTo != null){  //table for swap or transfer is has an order
                                 orderSwapTo = realm.copyFromRealm(orderOfTableSwapTo);
-                                tableSwapTo.setVacant(false);
+
                                 if (orderSwapFrom.getState().equalsIgnoreCase("draft")) {
-                                    tableSwapTo.setOccupied(true);
-                                    tableSwapTo.setOnHold(false);
+                                    tableSwapTo.setState("O");
                                 } else if (orderSwapFrom.getState().equalsIgnoreCase("onHold")) {
-                                    tableSwapTo.setOccupied(false);
-                                    tableSwapTo.setOnHold(true);
+                                    tableSwapTo.setState("H");
                                 }
-                                tableSwapFrom.setVacant(false);
+
                                 if(orderSwapTo.getState().equalsIgnoreCase("draft")){
-                                    tableSwapFrom.setOccupied(true);
-                                    tableSwapFrom.setOnHold(false);
+                                    tableSwapFrom.setState("O");
                                 }else if(orderSwapTo.getState().equalsIgnoreCase("onHold")){
-                                    tableSwapFrom.setOccupied(false);
-                                    tableSwapFrom.setOnHold(true);
+                                    tableSwapFrom.setState("H");
                                 }
                                 orderSwapFrom.setTable(tableSwapTo);
                                 orderSwapTo.setTable(tableSwapFrom);
                             }else{  //table for swap or transfer has no order
-                                if(tableSwapTo.isOccupied()){
-                                    tableSwapFrom.setOccupied(true);
-                                    tableSwapFrom.setOnHold(false);
-                                    tableSwapFrom.setVacant(false);
+                                if(tableSwapTo.getState().equalsIgnoreCase("O")){
+                                    tableSwapFrom.setState("O");
                                 }else {
-                                    tableSwapFrom.setOccupied(false);
-                                    tableSwapFrom.setOnHold(false);
-                                    tableSwapFrom.setVacant(true);
+                                    tableSwapFrom.setState("V");
                                 }
 
-                                tableSwapTo.setVacant(false);
                                 if (orderSwapFrom.getState().equalsIgnoreCase("draft")) {
-                                    tableSwapTo.setOccupied(true);
-                                    tableSwapTo.setOnHold(false);
+                                    tableSwapTo.setState("O");
                                 } else if (orderSwapFrom.getState().equalsIgnoreCase("onHold")) {
-                                    tableSwapTo.setOccupied(false);
-                                    tableSwapTo.setOnHold(true);
+                                    tableSwapTo.setState("H");
                                 }
                                 orderSwapFrom.setTable(tableSwapTo);
                             }
@@ -854,16 +882,14 @@ public class TablePage extends AppCompatActivity implements
         longClickOccupiedTable = table_list.get(position);
 
         Order tableOrder = realm.where(Order.class).equalTo("table.table_id", longClickOccupiedTable.getTable_id()).findFirst();
-        String tableName = longClickOccupiedTable.getTable_name();
+        String tableName = longClickOccupiedTable.getName();
 
         if(tableOrder == null) {       //Table has no order(occupied) or vacant
-            if(longClickOccupiedTable.isVacant()){  //vacant table
-                longClickOccupiedTable.setVacant(false);
-                longClickOccupiedTable.setOccupied(true);
+            if(longClickOccupiedTable.getState().equalsIgnoreCase("V")){  //vacant table
+                longClickOccupiedTable.setState("O");
                 Toast.makeText(TablePage.this, "" + tableName + " occupied successfully", Toast.LENGTH_SHORT).show();
             }else { //occupy table
-                longClickOccupiedTable.setVacant(true);
-                longClickOccupiedTable.setOccupied(false);
+                longClickOccupiedTable.setState("V");
                 Toast.makeText(TablePage.this, "" + tableName + " occupy removed successfully", Toast.LENGTH_SHORT).show();
             }
 

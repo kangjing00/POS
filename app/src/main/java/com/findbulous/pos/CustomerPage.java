@@ -872,9 +872,7 @@ public class CustomerPage extends AppCompatActivity implements CartOrderLineAdap
                         if (currentOrder.getTable() != null) {
                             Table result = realm.where(Table.class).equalTo("table_id", currentOrder.getTable().getTable_id()).findFirst();
                             updateTableOnHold = realm.copyFromRealm(result);
-                            updateTableOnHold.setVacant(false);
-                            updateTableOnHold.setOnHold(true);
-                            updateTableOnHold.setOccupied(false);
+                            updateTableOnHold.setState("H");
                         }
                         //update
                         realm.executeTransaction(new Realm.Transaction() {
@@ -1093,7 +1091,7 @@ public class CustomerPage extends AppCompatActivity implements CartOrderLineAdap
         product_modifier_popup_negative_btn = layout.findViewById(R.id.product_modifier_popup_negative_btn);
         product_modifier_popup_positive_btn = layout.findViewById(R.id.product_modifier_popup_positive_btn);
 
-        product_name_modifier.setText(product.getProduct_name());
+        product_name_modifier.setText(product.getName());
 
         // Add view for extra modifier
         TextView size_tv = new TextView(contextpage);
@@ -1223,7 +1221,7 @@ public class CustomerPage extends AppCompatActivity implements CartOrderLineAdap
     }
     @Override
     public void quantityUpdateOrderLine(int position, int quantity) {
-        double price_total = quantity * order_lines.get(position).getProduct().getProduct_price();
+        double price_total = quantity * order_lines.get(position).getProduct().getList_price();
         int discount = order_lines.get(position).getDiscount();
         double subtotal = price_total - ((price_total * discount) / 100);
         order_lines.get(position).setPrice_subtotal(subtotal);
@@ -1247,9 +1245,7 @@ public class CustomerPage extends AppCompatActivity implements CartOrderLineAdap
     }
 
     private void tableOccupiedToVacant(Table table){
-        table.setOccupied(false);
-        table.setVacant(true);
-        table.setOnHold(false);
+        table.setState("V");
         realm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {

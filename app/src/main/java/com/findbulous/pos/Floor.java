@@ -9,26 +9,24 @@ public class Floor extends RealmObject {
 
     @PrimaryKey
     private int floor_id;
-    private String floor_name;
-    private boolean active;
-    private int noRow, noColumn;
+    private String name;
+    private int sequence;
+    private String active;
     @LinkingObjects("floor")
     private final RealmResults<Table> tables = null;
 
-    public Floor(int floor_id, String floor_name, boolean active, int noRow, int noColumn){
+    public Floor(int floor_id, String name, int sequence, String active){
         this.floor_id = floor_id;
-        this.floor_name = floor_name;
+        this.name = name;
+        this.sequence = sequence;
         this.active = active;
-        this.noRow = noRow;
-        this.noColumn = noColumn;
     }
 
     public Floor(){
         floor_id = -1;
-        floor_name = null;
-        active = false;
-        noRow = 0;
-        noColumn = 0;
+        name = null;
+        sequence = -1;
+        active = null;
     }
 
     public int getFloor_id() {
@@ -39,39 +37,31 @@ public class Floor extends RealmObject {
         this.floor_id = floor_id;
     }
 
-    public String getFloor_name() {
-        return floor_name;
-    }
-
-    public void setFloor_name(String floor_name) {
-        this.floor_name = floor_name;
-    }
-
-    public boolean isActive() {
-        return active;
-    }
-
-    public void setActive(boolean active) {
-        this.active = active;
-    }
-
     public RealmResults<Table> getTables() {
         return tables;
     }
 
-    public int getNoRow() {
-        return noRow;
+    public String getName() {
+        return name;
     }
 
-    public void setNoRow(int noRow) {
-        this.noRow = noRow;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public int getNoColumn() {
-        return noColumn;
+    public int getSequence() {
+        return sequence;
     }
 
-    public void setNoColumn(int noColumn) {
-        this.noColumn = noColumn;
+    public void setSequence(int sequence) {
+        this.sequence = sequence;
+    }
+
+    public String getActive() {
+        return active;
+    }
+
+    public void setActive(String active) {
+        this.active = active;
     }
 }

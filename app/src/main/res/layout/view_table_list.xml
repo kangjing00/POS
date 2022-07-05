@@ -18,7 +18,7 @@
             android:id="@+id/table_tv"
             android:layout_width="80dp"
             android:layout_height="80dp"
-            android:text='@{table.table_name + "\n" + table.seats}'
+            android:text='@{table.name + "\n" + table.seats}'
             android:gravity="center"
             android:textAlignment="center"
             android:clickable="true"

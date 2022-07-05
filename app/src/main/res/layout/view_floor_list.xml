@@ -20,7 +20,7 @@
             android:layout_margin="5dp"
             android:background="@drawable/navbtn_selector"
             android:padding="10dp"
-            android:text="@{floor.floor_name}"
+            android:text="@{floor.name}"
             android:gravity="center"
             android:button="@android:color/transparent"
             android:textColor="@drawable/categorybtn_text_color"

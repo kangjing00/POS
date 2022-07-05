@@ -354,7 +354,7 @@ public class OrderPage extends AppCompatActivity {
 
         binding.orderDetailOrderId.setText("#" + orderSelected.getOrder_id());
         if(orderSelected.getTable() != null){
-            binding.orderDetailType.setText("Dine-in - " + orderSelected.getTable().getTable_name());
+            binding.orderDetailType.setText("Dine-in - " + orderSelected.getTable().getName());
         }else {
             binding.orderDetailType.setText("Takeaway");
         }

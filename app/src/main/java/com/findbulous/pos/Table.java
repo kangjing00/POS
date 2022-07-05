@@ -6,31 +6,37 @@ import io.realm.annotations.PrimaryKey;
 public class Table extends RealmObject {
     @PrimaryKey
     private int table_id;
-    private String table_name;
+    private String name;
+    private double position_h, position_v, width, height;
     private int seats;
-    private boolean vacant, onHold, occupied, active;
+    private String active; // t = true, f = false
+    private String state; // V - vacant, H - on hold, O - occupied
 
     private Floor floor;
 
     //Constructor
-    public Table(int table_id, String table_name, int seats, boolean vacant, boolean onHold, boolean occupied, boolean active, Floor floor){
+    public Table(int table_id, String name, double position_h, double position_v, double width, double height, int seats, String active, String state, Floor floor){
         this.table_id = table_id;
-        this.table_name = table_name;
+        this.name = name;
+        this.position_h = position_h;
+        this.position_v = position_v;
+        this.width = width;
+        this.height = height;
         this.seats = seats;
-        this.vacant = vacant;
-        this.onHold = onHold;
-        this.occupied = occupied;
         this.active = active;
+        this.state = state;
         this.floor = floor;
     }
     public Table(){
         table_id = -1;
-        table_name = null;
+        name = null;
+        position_h = -1;
+        position_v = -1;
+        width = -1;
+        height = -1;
         seats = -1;
-        vacant = true;
-        onHold = false;
-        occupied = false;
-        active = true;
+        active = null;
+        state = null;
         floor = null;
     }
 
@@ -42,44 +48,44 @@ public class Table extends RealmObject {
         this.table_id = table_id;
     }
 
-    public String getTable_name() {
-        return table_name;
+    public String getName() {
+        return name;
     }
 
-    public void setTable_name(String table_name) {
-        this.table_name = table_name;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public boolean isVacant() {
-        return vacant;
+    public double getPosition_h() {
+        return position_h;
     }
 
-    public void setVacant(boolean vacant) {
-        this.vacant = vacant;
+    public void setPosition_h(double position_h) {
+        this.position_h = position_h;
     }
 
-    public boolean isOnHold() {
-        return onHold;
+    public double getPosition_v() {
+        return position_v;
     }
 
-    public void setOnHold(boolean onHold) {
-        this.onHold = onHold;
+    public void setPosition_v(double position_v) {
+        this.position_v = position_v;
     }
 
-    public boolean isOccupied() {
-        return occupied;
+    public double getWidth() {
+        return width;
     }
 
-    public void setOccupied(boolean occupied) {
-        this.occupied = occupied;
+    public void setWidth(double width) {
+        this.width = width;
     }
 
-    public boolean isActive() {
-        return active;
+    public double getHeight() {
+        return height;
     }
 
-    public void setActive(boolean active) {
-        this.active = active;
+    public void setHeight(double height) {
+        this.height = height;
     }
 
     public int getSeats() {
@@ -88,6 +94,22 @@ public class Table extends RealmObject {
 
     public void setSeats(int seats) {
         this.seats = seats;
+    }
+
+    public String getActive() {
+        return active;
+    }
+
+    public void setActive(String active) {
+        this.active = active;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
     }
 
     public Floor getFloor() {

@@ -862,9 +862,7 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
                         if (currentOrder.getTable() != null) {
                             Table result = realm.where(Table.class).equalTo("table_id", currentOrder.getTable().getTable_id()).findFirst();
                             updateTableOnHold = realm.copyFromRealm(result);
-                            updateTableOnHold.setVacant(false);
-                            updateTableOnHold.setOnHold(true);
-                            updateTableOnHold.setOccupied(false);
+                            updateTableOnHold.setState("H");
                         }
                         //update
                         realm.executeTransaction(new Realm.Transaction() {
@@ -1061,8 +1059,8 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
         TextView product_price = layout.findViewById(R.id.product_details_price);
         TextView done_btn = layout.findViewById(R.id.product_details_done_btn);
 
-        product_name.setText(product.getProduct_name());
-        product_price.setText(String.format("RM %.2f", product.getProduct_price()));
+        product_name.setText(product.getName());
+        product_price.setText(String.format("RM %.2f", product.getList_price()));
 
 
         done_btn.setOnClickListener(new View.OnClickListener() {
@@ -1099,7 +1097,7 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
         product_modifier_popup_negative_btn = layout.findViewById(R.id.product_modifier_popup_negative_btn);
         product_modifier_popup_positive_btn = layout.findViewById(R.id.product_modifier_popup_positive_btn);
 
-        product_name_modifier.setText(product.getProduct_name());
+        product_name_modifier.setText(product.getName());
 
         // Add view for extra modifier
         TextView size_tv = new TextView(contextpage);
@@ -1153,7 +1151,7 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
 //        double amount_total = currentOrder.getAmount_total() + product.getProduct_price();
 //        currentOrder.setAmount_total(amount_total);
         Order_Line newOrderLine = new Order_Line(nextID, String.valueOf(nextID), 1,
-                product.getProduct_price(), product.getProduct_price(), 0, currentOrder,product);
+                product.getList_price(), product.getList_price(), 0, currentOrder,product);
 
         realm.executeTransaction(new Realm.Transaction() {
             @Override
@@ -1302,7 +1300,7 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
     }
     @Override
     public void quantityUpdateOrderLine(int position, int quantity) {
-        double price_total = quantity * order_lines.get(position).getProduct().getProduct_price();
+        double price_total = quantity * order_lines.get(position).getProduct().getList_price();
         int discount = order_lines.get(position).getDiscount();
         double subtotal = price_total - ((price_total * discount) / 100);
         order_lines.get(position).setPrice_subtotal(subtotal);
@@ -1367,9 +1365,7 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
         binding.cartInclude.cartOrderSummaryPayableAmount.setText(String.format("RM %.2f", amount_total));
     }
     private void tableOccupiedToVacant(Table table){
-        table.setOccupied(false);
-        table.setVacant(true);
-        table.setOnHold(false);
+        table.setState("V");
         realm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
@@ -1414,7 +1410,7 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
     @Override
     public void onMenuProductClick(int position) {
         showProductModifier(list.get(position), true);
-        Toast.makeText(this, "" + list.get(position).getProduct_name(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "" + list.get(position).getName(), Toast.LENGTH_SHORT).show();
     }
     @Override
     public void onMenuProductLongClick(int position){

@@ -55,7 +55,7 @@
                 android:id="@+id/product_order_product_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@{orderLine.product.product_name}"
+                android:text="@{orderLine.product.name}"
                 android:layout_margin="10dp"
                 app:layout_constraintBottom_toTopOf="@+id/product_order_product_option"
                 app:layout_constraintStart_toEndOf="@id/product_order_quantity"

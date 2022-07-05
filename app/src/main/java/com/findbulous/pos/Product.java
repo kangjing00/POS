@@ -7,19 +7,22 @@ public class Product extends RealmObject {
 
     @PrimaryKey
     private int product_id;
-    private String product_name;
-    private double product_price;
+    private String name;
+    private double list_price;
+    private String display_list_price;
 
     //Constructor
-    public Product(int product_id, String product_name, double product_price) {
+    public Product(int product_id, String name, double list_price, String display_list_price) {
         this.product_id = product_id;
-        this.product_name = product_name;
-        this.product_price = product_price;
+        this.name = name;
+        this.list_price = list_price;
+        this.display_list_price = display_list_price;
     }
     public Product(){
         product_id = -1;
-        product_name = null;
-        product_price = -1;
+        name = null;
+        list_price = -1;
+        display_list_price = null;
     }
 
     public int getProduct_id() {
@@ -28,19 +31,27 @@ public class Product extends RealmObject {
 
     public void setProduct_id(int product_id){ this.product_id = product_id; }
 
-    public String getProduct_name() {
-        return product_name;
+    public String getDisplay_list_price() {
+        return display_list_price;
     }
 
-    public void setProduct_name(String product_name) {
-        this.product_name = product_name;
+    public void setDisplay_list_price(String display_list_price) {
+        this.display_list_price = display_list_price;
     }
 
-    public double getProduct_price() {
-        return product_price;
+    public String getName() {
+        return name;
     }
 
-    public void setProduct_price(double product_price) {
-        this.product_price = product_price;
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public double getList_price() {
+        return list_price;
+    }
+
+    public void setList_price(double list_price) {
+        this.list_price = list_price;
     }
 }

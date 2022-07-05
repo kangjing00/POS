@@ -21,7 +21,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:fontFamily="@font/roboto_regular"
-            android:text="@{product.product_name}"
+            android:text="@{product.name}"
             android:textAlignment="center"
             app:layout_constraintBottom_toTopOf="@+id/menu_product_price"
             app:layout_constraintEnd_toEndOf="parent"
@@ -32,7 +32,7 @@
             android:id="@+id/menu_product_price"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text='@{"RM " + String.valueOf(product.product_price)}'
+            android:text='@{String.format("RM %.2f", product.list_price)}'
             android:textAlignment="center"
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"

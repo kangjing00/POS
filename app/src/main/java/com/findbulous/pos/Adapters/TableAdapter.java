@@ -47,12 +47,12 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.TableViewHol
         Table table = tables.get(position);
         holder.binding.setTable(table);
 
-        if(!table.isActive()){
+        if(!table.getActive().equalsIgnoreCase("t")){
             holder.binding.tableTv.setVisibility(View.INVISIBLE);
         }else {
-            if (table.isVacant()) {
+            if (table.getState().equalsIgnoreCase("V")) {
                 DrawableCompat.setTint(tvDrawable, holder.itemView.getResources().getColor(R.color.green));
-            } else if (table.isOnHold()) {
+            } else if (table.getState().equalsIgnoreCase("H")) {
                 DrawableCompat.setTint(tvDrawable, holder.itemView.getResources().getColor(R.color.blue));
             } else {
                 DrawableCompat.setTint(tvDrawable, holder.itemView.getResources().getColor(R.color.red));
