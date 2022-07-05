@@ -37,29 +37,29 @@
             app:layout_constraintTop_toBottomOf="@+id/textView1" />
 
         <ImageView
-            android:id="@+id/user_id_icon"
+            android:id="@+id/email_icon"
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:layout_gravity="center_vertical"
             android:layout_marginTop="105dp"
             android:layout_marginRight="15dp"
-            android:src="@drawable/ic_customer"
-            app:layout_constraintEnd_toStartOf="@id/user_id_et"
+            android:src="@drawable/ic_email"
+            app:layout_constraintEnd_toStartOf="@id/email_et"
             app:layout_constraintHorizontal_chainStyle="packed"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/textView2" />
 
         <EditText
-            android:id="@+id/user_id_et"
+            android:id="@+id/email_et"
             android:layout_width="300dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:layout_marginTop="100dp"
             android:background="@drawable/custom_input"
-            android:hint="Enter user ID"
+            android:hint="Enter email"
             android:padding="15dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/user_id_icon"
+            app:layout_constraintStart_toEndOf="@id/email_icon"
             app:layout_constraintTop_toBottomOf="@id/textView2" />
 
 
@@ -74,7 +74,7 @@
             app:layout_constraintEnd_toStartOf="@id/password_et_rl"
             app:layout_constraintHorizontal_chainStyle="packed"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/user_id_icon"
+            app:layout_constraintTop_toBottomOf="@id/email_icon"
             app:tint="@color/black" />
 
         <RelativeLayout
@@ -85,7 +85,7 @@
             android:layout_marginTop="15dp"
             android:background="@drawable/custom_input"
             app:layout_constraintStart_toEndOf="@id/password_icon"
-            app:layout_constraintTop_toBottomOf="@id/user_id_et">
+            app:layout_constraintTop_toBottomOf="@id/email_et">
 
             <EditText
                 android:id="@+id/password_et"

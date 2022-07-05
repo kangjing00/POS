@@ -35,6 +35,8 @@ import io.realm.RealmResults;
 public class FragmentCustomerDetail extends Fragment {
 
     private FragmentCustomerDetailBinding binding;
+    private Customer customer;
+    private int customer_id;
     private Realm realm;
 
     @Override
@@ -44,27 +46,16 @@ public class FragmentCustomerDetail extends Fragment {
         View view = binding.getRoot();
 
         realm = Realm.getDefaultInstance();
-
+        customer_id = -1;
         if(getArguments() != null){
-            int customer_id = getArguments().getInt("customer_id");
-            Customer customer = realm.where(Customer.class).equalTo("customer_id", customer_id).findFirst();
-            binding.customerDetailName.setText(customer.getCustomer_name());
-            binding.customerDetailEmail.setText(customer.getCustomer_email());
-            binding.customerDetailPhoneNo.setText(customer.getCustomer_phoneNo());
-            RealmResults<Order> results = realm.where(Order.class).equalTo("customer.customer_id", customer_id)
-                    .and().equalTo("state", "paid").sort("date_order").findAll();
-            if(!results.isEmpty()){
-                Order order = results.last();
-                binding.customerDetailLastOrderId.setText("Last Order: #" + order.getOrder_id());
-            }else{
-                binding.customerDetailLastOrderId.setText("Last Order: No order");
-            }
+            customer_id = getArguments().getInt("customer_id");
+            new getCustomer().execute();
         }
 
         binding.customerDetailEditBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ((CustomerPage)getActivity()).editCustomer(getArguments().getInt("customer_id"));
+                ((CustomerPage)getActivity()).editCustomer(customer_id);
             }
         });
 
@@ -74,72 +65,55 @@ public class FragmentCustomerDetail extends Fragment {
     public class getCustomer extends AsyncTask<String, String, String> {
         @Override
         protected String doInBackground(String... strings) {
-            String url = "https://www.c3rewards.com/api/merchant/?module=customers&action=search";
+            String url = "https://www.c3rewards.com/api/merchant/?module=customers";
             String agent = "c092dc89b7aac085a210824fb57625db";
             String jsonUrl =url + "&agent=" + agent;
-            jsonUrl = jsonUrl + "&search=" + getArguments().getInt("customer_id");
+            jsonUrl = jsonUrl + "&customer_id=" + customer_id;
             System.out.println(jsonUrl);
 
-//            int page = 1, counter = 0;
-//            while(page > 0) {
-//                String jsonUrlPage = jsonUrl + "&page=" + page;
-//                URL obj;
-//                try {
-//                    obj = new URL(jsonUrlPage);
-//                    HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-//                    // optional default is GET
-//                    con.setRequestMethod("GET");
-//                    //add request header
-//                    int responseCode = con.getResponseCode();
-//                    System.out.println("\nSending 'GET' request to URL : " + jsonUrlPage);
-//                    System.out.println("Response Code : " + responseCode);
-//
-//                    BufferedReader in = new BufferedReader(
-//                            new InputStreamReader(con.getInputStream()));
-//                    String inputLine;
-//
-//                    StringBuilder response = new StringBuilder();
-//
-//                    while ((inputLine = in.readLine()) != null) {
-//                        response.append(inputLine);
-//                    }
-//                    in.close();
-//
-//                    System.out.println(response);
-//                    String data = response.toString();
-//                    try {
-//                        JSONObject json = new JSONObject(data);
-//                        String status = json.getString("status");
-//
-//                        if (status.equals("OK")) {
-//                            JSONObject jresult = json.getJSONObject("result");
-//                            JSONArray jcustomers = jresult.getJSONArray("customers");
-//
-//                            if(jcustomers.length() != 0){
-//                                page++;
-//                            }else{
-//                                page = -1;
-//                            }
-//
-//                            for (int a = 0; a < jcustomers.length(); a++) {
-//                                JSONObject ja = jcustomers.getJSONObject(a);
-//                                Customer cust = new Customer(Integer.valueOf(ja.getString("customer_id")),
-//                                        ja.getString("full_name"), ja.getString("email"),
-//                                        ja.getString("tel_no"), ja.getString("ic_no"), ja.getString("date_birth"));
-//                                customers.add(cust);
-//                                System.out.println(customers.get(a).getCustomer_name());
-//                                counter++;
-//                            }
-//                        }
-//                    } catch (JSONException e) {
-//                        e.printStackTrace();
-//                    }
-//                } catch (IOException e) {
-//                    Log.e("error", "cannot fetch data");
-//                    page = -1;
-//                }
-//            }
-//            System.out.println("Counter: " + counter);
+            URL obj;
+            try {
+                obj = new URL(jsonUrl);
+                HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+                // optional default is GET
+                con.setRequestMethod("GET");
+                //add request header
+                int responseCode = con.getResponseCode();
+                System.out.println("\nSending 'GET' request to URL : " + jsonUrl);
+                System.out.println("Response Code : " + responseCode);
+
+                BufferedReader in = new BufferedReader(
+                        new InputStreamReader(con.getInputStream()));
+                String inputLine;
+
+                StringBuilder response = new StringBuilder();
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                System.out.println(response);
+                String data = response.toString();
+                try {
+                    JSONObject json = new JSONObject(data);
+                    String status = json.getString("status");
+
+                    if (status.equals("OK")) {
+                        JSONObject jresult = json.getJSONObject("result");
+                        JSONObject jcustomer = jresult.getJSONObject("customer");
+
+                        customer = new Customer(Integer.valueOf(jcustomer.getString("customer_id")),
+                                jcustomer.getString("full_name"), jcustomer.getString("email"),
+                                jcustomer.getString("tel_no"), jcustomer.getString("ic_no"), jcustomer.getString("date_birth"));
+
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            } catch (IOException e) {
+                Log.e("error", "cannot fetch data");
+            }
 
             return null;
         }
@@ -148,13 +122,25 @@ public class FragmentCustomerDetail extends Fragment {
         protected void onPostExecute(String s) {
             if(!NetworkUtils.isNetworkAvailable(getContext())){
                 Toast.makeText(getContext(), "Internet Connection Lost", Toast.LENGTH_SHORT).show();
+            }else{
+                realm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        realm.insertOrUpdate(customer);
+                    }
+                });
+                binding.customerDetailName.setText(customer.getCustomer_name());
+                binding.customerDetailEmail.setText(customer.getCustomer_email());
+                binding.customerDetailPhoneNo.setText(customer.getCustomer_phoneNo());
+                RealmResults<Order> results = realm.where(Order.class).equalTo("customer.customer_id", customer.getCustomer_id())
+                        .and().equalTo("state", "paid").sort("date_order").findAll();
+                if(!results.isEmpty()){
+                    Order order = results.last();
+                    binding.customerDetailLastOrderId.setText("Last Order: #" + order.getOrder_id());
+                }else{
+                    binding.customerDetailLastOrderId.setText("Last Order: No order");
+                }
             }
-//            if(customers.isEmpty()){
-//                binding.emptyCustomerImg.setVisibility(View.VISIBLE);
-//            }else {
-//                binding.emptyCustomerImg.setVisibility(View.GONE);
-//            }
-//            customerAdapter.notifyDataSetChanged();
         }
     }
 }
