@@ -14,9 +14,12 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.PopupWindow;
@@ -28,21 +31,37 @@ import android.widget.Toast;
 import com.findbulous.pos.Adapters.CartOrderLineAdapter;
 import com.findbulous.pos.Adapters.FloorAdapter;
 import com.findbulous.pos.Adapters.TableAdapter;
+import com.findbulous.pos.Network.CheckConnection;
 import com.findbulous.pos.databinding.TablePageBinding;
 import com.google.android.material.button.MaterialButton;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.nio.charset.Charset;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Random;
 import java.util.TimeZone;
+import java.util.Timer;
+
+import javax.net.ssl.HttpsURLConnection;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
 
 public class TablePage extends AppCompatActivity implements
-                        FloorAdapter.FloorClickInterface, TableAdapter.TableClickInterface {
+                        FloorAdapter.FloorClickInterface, View.OnClickListener, View.OnLongClickListener {
 
     private TablePageBinding binding;
     //Body
@@ -52,8 +71,8 @@ public class TablePage extends AppCompatActivity implements
     private View lastClickedTableView;
     private ArrayList<Table> table_list;
     private ArrayList<Floor> floor_list;
+    private ArrayList<Table> update_table_state;
     private FloorAdapter floorAdapter;
-    private TableAdapter tableAdapter;
     //Table onHold and occupied popup
     private MaterialButton table_swap_transfer_btn, table_addon_btn, table_proceed_btn;
     //Cash in out popup
@@ -108,6 +127,7 @@ public class TablePage extends AppCompatActivity implements
         lastClickedTableView = null;
         floor_list = new ArrayList<Floor>();
         table_list = new ArrayList<Table>();
+        update_table_state = new ArrayList<Table>();
 
         //Floor Recycler view
         binding.floorRv.setLayoutManager(new LinearLayoutManager(contextpage, LinearLayoutManager.HORIZONTAL, false));
@@ -116,16 +136,8 @@ public class TablePage extends AppCompatActivity implements
         floorAdapter = new FloorAdapter(floor_list, this);
         getFloorFromRealm();
         binding.floorRv.setAdapter(floorAdapter);
-        getTableFromRealm(floor_list.get(0));
+
         displayTables(floor_list.get(0));
-        //Table Recycler view
-//        binding.tableRv.setLayoutManager(new GridLayoutManager(contextpage, floor_list.get(0).getNoColumn()));
-//        binding.tableRv.setHasFixedSize(true);
-//        table_list = new ArrayList<>();
-//        tableAdapter = new TableAdapter(table_list, this);
-//        getTableFromRealm(floor_list.get(0));
-//        binding.tableRv.setAdapter(tableAdapter);
-//        tableAdapter.notifyDataSetChanged();
 
         if(currentOrderSharedPreference.getInt("orderingState", -1) == 1){ //ordering
             int orderId = currentOrderSharedPreference.getInt("orderId", -1);
@@ -336,6 +348,118 @@ public class TablePage extends AppCompatActivity implements
         }
     }
 
+    //Update table state to online database
+    public class updateTable extends AsyncTask<String, String, String> {
+        boolean no_connection = false;
+        String connection_error = "";
+
+        @Override
+        protected void onPreExecute() {
+
+        }
+
+        @Override
+        protected String doInBackground(String... strings) {
+            long timeBefore = Calendar.getInstance().getTimeInMillis();
+
+            String urlParameters = "";
+            for(int i =0; i < update_table_state.size(); i ++){
+                urlParameters += "&states[" + update_table_state.get(i).getTable_id() + "]=" + update_table_state.get(i).getState();
+            }
+            byte[] postData = urlParameters.getBytes(Charset.forName("UTF-8"));
+            int postDataLength = postData.length;
+
+            String agent = "c092dc89b7aac085a210824fb57625db";
+            String url = "https://www.c3rewards.com/api/merchant/?module=restaurants&action=update_table_state";
+            url += "&agent=" + agent;
+
+            URL obj;
+            try{
+                obj = new URL(url);
+                HttpsURLConnection con = (HttpsURLConnection) obj.openConnection();
+                con.setRequestMethod("POST");
+                con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                con.setRequestProperty("charset", "utf-8");
+                con.setRequestProperty("Content-Length", Integer.toString(postDataLength));
+
+                // Send post request
+                con.setDoOutput(true);
+                DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+                wr.writeBytes(urlParameters);
+                wr.flush();
+                wr.close();
+
+                int responseCode = con.getResponseCode();
+                System.out.println("\nSending 'POST' request to URL : " + url);
+                System.out.println("Post parameters : " + urlParameters);
+                System.out.println("Response Code : " + responseCode);
+
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                System.out.println("RESPONSE UPDATE : " + response.toString());
+                // {"status":"OK","message":"Success","result":[...]}
+                try {
+                    JSONObject json = new JSONObject(response.toString());
+                    String status = json.getString("status");
+
+                    if (status.equals("OK"))
+                    {
+                        update_table_state.clear();
+//                        JSONObject jresult = json.getJSONObject("result");
+//                        JSONArray jfloors = jresult.getJSONArray("floors");
+//
+//                        for (int a = 0; a < jfloors.length(); a++) {
+//                            JSONObject jf = jfloors.getJSONObject(a);
+//                            Floor floor = new Floor(jf.getInt("floor_id"), jf.getString("name"),
+//                                    jf.getInt("sequence"), jf.getString("active"));
+//
+//                            JSONArray jtables = jf.getJSONArray("tables");
+//                            for(int x = 0; x < jtables.length(); x++){
+//                                JSONObject jt = jtables.getJSONObject(x);
+//                                Table table = new Table(jt.getInt("table_id"), jt.getString("name"),
+//                                        jt.getDouble("position_h"), jt.getDouble("position_v"),
+//                                        jt.getDouble("width"), jt.getDouble("height"), jt.getInt("seats"),
+//                                        jt.getString("active"), jt.getString("state"), floor);
+//                                System.out.println("Floor: " + floor.getFloor_id() + "    Table: " + table.getTable_id() + " State: " + table.getState());
+//                            }
+//                        }
+                        long timeAfter = Calendar.getInstance().getTimeInMillis();
+                        System.out.println("Update Time: " + (timeAfter - timeBefore) + "ms");
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            } catch (IOException e) {
+                Log.e("error", "cannot fetch data 1" + e);
+
+                no_connection = true;
+                connection_error = e.getMessage();
+
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+
+            if(no_connection){
+                System.out.println("Connection Error Message: " + connection_error);
+//                timer = new Timer();
+//                final int MILLISECONDS = 5000; //5 seconds
+//                timer.schedule(new CheckConnection(contextpage), 0, MILLISECONDS);
+            }
+        }
+    }
+
     //Create new order
     private void addNewOrder(Table vacantTableSelected){
         DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
@@ -387,86 +511,6 @@ public class TablePage extends AppCompatActivity implements
             }
         });
     }
-    //Toolbar
-    private void showCashInOut() {
-        PopupWindow popup = new PopupWindow(contextpage);
-        View layout = getLayoutInflater().inflate(R.layout.cash_in_out_popup, null);
-        popup.setContentView(layout);
-        // Set content width and height
-        popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
-        popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
-        // Closes the popup window when touch outside of it - when looses focus
-        popup.setOutsideTouchable(true);
-        popup.setFocusable(true);
-        // Show anchored to button
-        popup.setElevation(8);
-        popup.setBackgroundDrawable(null);
-        popup.showAtLocation(binding.getRoot(), Gravity.CENTER, 0, 0);
-        //blur background
-        View container = (View) popup.getContentView().getParent();
-        WindowManager wm = (WindowManager) TablePage.this.getSystemService(Context.WINDOW_SERVICE);
-        WindowManager.LayoutParams p = (WindowManager.LayoutParams) container.getLayoutParams();
-        p.flags |= WindowManager.LayoutParams.FLAG_DIM_BEHIND;
-        p.dimAmount = 0.3f;
-        wm.updateViewLayout(container, p);
-
-        cash_in_rb = (RadioButton)layout.findViewById(R.id.cash_in_rb);
-        cash_out_rb = (RadioButton)layout.findViewById(R.id.cash_out_rb);
-        cash_in_out_amount = (EditText)layout.findViewById(R.id.cash_in_out_amount_et);
-        cash_in_out_reason = (EditText)layout.findViewById(R.id.cash_in_out_reason_et);
-        cash_in_out_cancel = (MaterialButton)layout.findViewById(R.id.cash_in_out_cancel_btn);
-        cash_in_out_confirm = (MaterialButton)layout.findViewById(R.id.cash_in_out_confirm_btn);
-
-        cash_in_out_cancel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                popup.dismiss();
-                Toast.makeText(contextpage, "Cancel", Toast.LENGTH_SHORT).show();
-            }
-        });
-        cash_in_out_confirm.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                popup.dismiss();
-                Toast.makeText(contextpage, "Confirm", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-    private void showRefreshPopup(View view) {
-        PopupWindow popup = new PopupWindow(contextpage);
-        View layout = getLayoutInflater().inflate(R.layout.toolbar_sync_popup, null);
-        popup.setContentView(layout);
-        // Set content width and height
-        popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
-        popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
-        // Closes the popup window when touch outside of it - when looses focus
-        popup.setOutsideTouchable(true);
-        popup.setFocusable(true);
-        // Show anchored to button
-        popup.setElevation(8);
-        popup.setBackgroundDrawable(null);
-        popup.showAsDropDown(binding.toolbarLayoutIncl.toolbarRefresh, -120, 0);
-
-        //Popup Buttons
-        product_sync_btn = (TextView) layout.findViewById(R.id.sync_product_btn);
-        transactions_sync_btn = (TextView)layout.findViewById(R.id.sync_transaction_btn);
-
-        product_sync_btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Toast.makeText(contextpage, "refresh / sync products", Toast.LENGTH_SHORT).show();
-                popup.dismiss();
-            }
-        });
-
-        transactions_sync_btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Toast.makeText(contextpage, "refresh / sync transactions", Toast.LENGTH_SHORT).show();
-                popup.dismiss();
-            }
-        });
-    }
     //OnHold and Occupied table popup
     private void showAddonAndProceed(View view, Table clickedTable) {
         PopupWindow popup = new PopupWindow(contextpage);
@@ -492,7 +536,8 @@ public class TablePage extends AppCompatActivity implements
         table_proceed_btn = (MaterialButton)layout.findViewById(R.id.table_proceed_btn);
 
         tvTableName.setText(clickedTable.getName());
-        Order order = realm.where(Order.class).equalTo("table.table_id", clickedTable.getTable_id()).findFirst();
+        Order order = realm.where(Order.class).equalTo("table.table_id", clickedTable.getTable_id()).
+                and().notEqualTo("state", "paid").findFirst();
         Customer customer = (order == null)? null : realm.where(Customer.class).equalTo("customer_id", order.getCustomer().getCustomer_id()).findFirst();
         int current_order_id = currentOrderSharedPreference.getInt("orderId", -1);
 
@@ -688,33 +733,34 @@ public class TablePage extends AppCompatActivity implements
 //        return floor;
 //    }
     //Get data from Realm local database
-    private void getTableFromRealm(Floor floor) {
-        RealmResults<Table> results = realm.where(Table.class).equalTo("floor.floor_id", floor.getFloor_id()).findAll();
-        table_list.addAll(realm.copyFromRealm(results));
-    }
+
+    //Get Floor data from local realm
     private void getFloorFromRealm(){
         RealmResults<Floor> results = realm.where(Floor.class).findAll();
         floor_list.addAll(realm.copyFromRealm(results));
     }
-
-
+    //Display & Refresh Tables
     private void displayTables(Floor floor){
         RealmResults<Table> tables = realm.where(Table.class).equalTo("floor.floor_id", floor.getFloor_id()).findAll();
+        table_list.clear();
         table_list.addAll(realm.copyFromRealm(tables));
-       // binding.tableListRl.removeAllViews();
+        binding.tableListRl.removeAllViews();
+
+        int largest_h = 0, largest_v = 0, largestHeight = 0, largestWidth = 0;
+
         for(int i = 0; i < table_list.size(); i++){
             Table table = table_list.get(i);
-            if(!table.getActive().equalsIgnoreCase("t")){
-                TextView tableTv = new TextView(contextpage);
+            TextView tableTv = new TextView(contextpage);
+            if(table.getActive().equalsIgnoreCase("t")){
                 tableTv.setText(table.getName() + "\n" + table.getSeats());
-                tableTv.setWidth((int) (80 * getResources().getDisplayMetrics().density));
-                tableTv.setHeight((int) (80 * getResources().getDisplayMetrics().density));
+                tableTv.setWidth((int) ((table.getWidth())* getResources().getDisplayMetrics().density));
+                tableTv.setHeight((int) ((table.getHeight())* getResources().getDisplayMetrics().density));
                 tableTv.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
                 tableTv.setGravity(Gravity.CENTER);
                 tableTv.setTextColor(Color.BLACK);
                 tableTv.setClickable(true);
-                tableTv.setX((float)table.getPosition_h());
-                tableTv.setY((float)table.getPosition_v());
+                tableTv.setX((int)((table.getPosition_h())* getResources().getDisplayMetrics().density));
+                tableTv.setY((int)((table.getPosition_v())* getResources().getDisplayMetrics().density));
                 Drawable tvDrawable;
                 tvDrawable = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
                 if(table.getState().equalsIgnoreCase("V")) {
@@ -727,33 +773,41 @@ public class TablePage extends AppCompatActivity implements
                 tableTv.setBackground(tvDrawable);
 
                 tableTv.setId(table.getTable_id());
-                //            tableTv.setOnClickListener(TablePage.this);
-                //            tableTv.setOnLongClickListener(TablePage.this);
+                tableTv.setOnClickListener(TablePage.this);
+                tableTv.setOnLongClickListener(TablePage.this);
                 binding.tableListRl.addView(tableTv);
             }
+            if(table.getPosition_v() >= largest_v)
+                largest_v = (int)table.getPosition_v();
+            if(table.getPosition_h() >= largest_h)
+                largest_h = (int)table.getPosition_h();
+            if(table.getWidth() >= largestWidth)
+                largestWidth = (int)table.getWidth();
+            if(table.getHeight() >= largestHeight)
+                largestHeight = (int)table.getHeight();
         }
+        int minimumHeight = largestHeight + largest_v;
+        int minimumWidth = largestWidth + largest_h;
+        binding.tableListRl.setMinimumHeight((int)((minimumHeight + 100)* getResources().getDisplayMetrics().density));
+        binding.tableListRl.setMinimumWidth((int)((minimumWidth + 100)* getResources().getDisplayMetrics().density));
     }
     //Floor clicked, filter the table_list
     @Override
     public void onFloorClick(int position) {
         Floor floor = floor_list.get(position);
-        floor_list.clear();
-        getTableFromRealm(floor);
         displayTables(floor);
-        //Table Recycler view
-//        binding.tableRv.setLayoutManager(new GridLayoutManager(contextpage, floor.getNoColumn()));
-//        binding.tableRv.setHasFixedSize(true);
-//        table_list = new ArrayList<>();
-//        tableAdapter = new TableAdapter(table_list, this);
-//        getTableFromRealm(floor);
-//        binding.tableRv.setAdapter(tableAdapter);
-//        tableAdapter.notifyDataSetChanged();
     }
-    //Table clicked
+    //Table click
     @Override
-    public void onTableClick(int position, View v) {
-        Table clickedTable = table_list.get(position);
-
+    public void onClick(View v) {
+        Table clickedTable = null;
+        for(int i = 0; i < table_list.size(); i++){
+            if(table_list.get(i).getTable_id() == v.getId()){
+                clickedTable = table_list.get(i);
+                break;
+            }
+        }
+        Floor floor = realm.where(Floor.class).equalTo("floor_id", clickedTable.getFloor().getFloor_id()).findFirst();
         TextView tv = (TextView) v.findViewById(v.getId());
         Drawable tvDrawable;
         tvDrawable = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
@@ -816,7 +870,6 @@ public class TablePage extends AppCompatActivity implements
                         public void onClick(DialogInterface dialogInterface, int i) {
                             if(orderOfTableSwapTo != null){  //table for swap or transfer is has an order
                                 orderSwapTo = realm.copyFromRealm(orderOfTableSwapTo);
-
                                 if (orderSwapFrom.getState().equalsIgnoreCase("draft")) {
                                     tableSwapTo.setState("O");
                                 } else if (orderSwapFrom.getState().equalsIgnoreCase("onHold")) {
@@ -855,13 +908,14 @@ public class TablePage extends AppCompatActivity implements
                                     realm.insertOrUpdate(tableSwapFrom);
                                 }
                             });
-                            tableAdapter.notifyDataSetChanged();
                             orderSwapFrom = null;
                             orderSwapTo = null;
                             tableSwapTo = null;
                             tableSwapFrom = null;
                             tableSwapping = false;
                             turnOffSwapCancelBtn();
+                            //Temporarily
+                            displayTables(floor);
                         }
                     }).setNegativeButton("No", new DialogInterface.OnClickListener() {
                 @Override
@@ -869,6 +923,7 @@ public class TablePage extends AppCompatActivity implements
                     Toast.makeText(contextpage, "Choose a table for swapping or transferring", Toast.LENGTH_SHORT).show();
                 }
             }).setCancelable(false);
+
             AlertDialog alert = builder.create();
             if(tableSwapTo.getTable_id() == tableSwapFrom.getTable_id()){
                 Toast.makeText(contextpage, "Not allow to swap / transfer to the same table.", Toast.LENGTH_SHORT).show();
@@ -876,32 +931,281 @@ public class TablePage extends AppCompatActivity implements
                 alert.show();
             }
         }
+        Toast.makeText(TablePage.this, "table clicked" + v.getId() + "'" + tv.getText().charAt(2) + "'", Toast.LENGTH_SHORT).show();
     }
     @Override
-    public void onTableLongClick(int position) {
-        longClickOccupiedTable = table_list.get(position);
-
-        Order tableOrder = realm.where(Order.class).equalTo("table.table_id", longClickOccupiedTable.getTable_id()).findFirst();
-        String tableName = longClickOccupiedTable.getName();
+    public boolean onLongClick(View v) {
+        Table clickedTable = null;
+        longClickOccupiedTable = null;
+        for(int i = 0; i < table_list.size(); i++){
+            if(table_list.get(i).getTable_id() == v.getId()){
+                clickedTable = table_list.get(i);
+                break;
+            }
+        }
+        Floor floor = realm.where(Floor.class).equalTo("floor_id", clickedTable.getFloor().getFloor_id()).findFirst();
+        Order tableOrder = realm.where(Order.class).equalTo("table.table_id", clickedTable.getTable_id()).
+                        and().notEqualTo("state", "paid").findFirst();
+        String tableName = clickedTable.getName();
 
         if(tableOrder == null) {       //Table has no order(occupied) or vacant
-            if(longClickOccupiedTable.getState().equalsIgnoreCase("V")){  //vacant table
-                longClickOccupiedTable.setState("O");
+            if(clickedTable.getState().equalsIgnoreCase("V")){  //vacant table
+                clickedTable.setState("O");
                 Toast.makeText(TablePage.this, "" + tableName + " occupied successfully", Toast.LENGTH_SHORT).show();
             }else { //occupy table
-                longClickOccupiedTable.setState("V");
+                clickedTable.setState("V");
                 Toast.makeText(TablePage.this, "" + tableName + " occupy removed successfully", Toast.LENGTH_SHORT).show();
             }
-
+            longClickOccupiedTable = clickedTable;
             realm.executeTransaction(new Realm.Transaction() {
                 @Override
                 public void execute(Realm realm) {
                     realm.insertOrUpdate(longClickOccupiedTable);
                 }
             });
-            tableAdapter.notifyDataSetChanged();
+            update_table_state.add(clickedTable);
+            displayTables(floor);
+            new updateTable().execute();
         }else{      //Table has an order
             Toast.makeText(TablePage.this, "This table has an order", Toast.LENGTH_SHORT).show();
         }
+        return true;
     }
+
+    //Toolbar
+    private void showCashInOut() {
+        PopupWindow popup = new PopupWindow(contextpage);
+        View layout = getLayoutInflater().inflate(R.layout.cash_in_out_popup, null);
+        popup.setContentView(layout);
+        // Set content width and height
+        popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
+        popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
+        // Closes the popup window when touch outside of it - when looses focus
+        popup.setOutsideTouchable(true);
+        popup.setFocusable(true);
+        // Show anchored to button
+        popup.setElevation(8);
+        popup.setBackgroundDrawable(null);
+        popup.showAtLocation(binding.getRoot(), Gravity.CENTER, 0, 0);
+        //blur background
+        View container = (View) popup.getContentView().getParent();
+        WindowManager wm = (WindowManager) TablePage.this.getSystemService(Context.WINDOW_SERVICE);
+        WindowManager.LayoutParams p = (WindowManager.LayoutParams) container.getLayoutParams();
+        p.flags |= WindowManager.LayoutParams.FLAG_DIM_BEHIND;
+        p.dimAmount = 0.3f;
+        wm.updateViewLayout(container, p);
+
+        cash_in_rb = (RadioButton)layout.findViewById(R.id.cash_in_rb);
+        cash_out_rb = (RadioButton)layout.findViewById(R.id.cash_out_rb);
+        cash_in_out_amount = (EditText)layout.findViewById(R.id.cash_in_out_amount_et);
+        cash_in_out_reason = (EditText)layout.findViewById(R.id.cash_in_out_reason_et);
+        cash_in_out_cancel = (MaterialButton)layout.findViewById(R.id.cash_in_out_cancel_btn);
+        cash_in_out_confirm = (MaterialButton)layout.findViewById(R.id.cash_in_out_confirm_btn);
+
+        cash_in_out_cancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                popup.dismiss();
+                Toast.makeText(contextpage, "Cancel", Toast.LENGTH_SHORT).show();
+            }
+        });
+        cash_in_out_confirm.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                popup.dismiss();
+                Toast.makeText(contextpage, "Confirm", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    private void showRefreshPopup(View view) {
+        PopupWindow popup = new PopupWindow(contextpage);
+        View layout = getLayoutInflater().inflate(R.layout.toolbar_sync_popup, null);
+        popup.setContentView(layout);
+        // Set content width and height
+        popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
+        popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
+        // Closes the popup window when touch outside of it - when looses focus
+        popup.setOutsideTouchable(true);
+        popup.setFocusable(true);
+        // Show anchored to button
+        popup.setElevation(8);
+        popup.setBackgroundDrawable(null);
+        popup.showAsDropDown(binding.toolbarLayoutIncl.toolbarRefresh, -120, 0);
+
+        //Popup Buttons
+        product_sync_btn = (TextView) layout.findViewById(R.id.sync_product_btn);
+        transactions_sync_btn = (TextView)layout.findViewById(R.id.sync_transaction_btn);
+
+        product_sync_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(contextpage, "refresh / sync products", Toast.LENGTH_SHORT).show();
+                popup.dismiss();
+            }
+        });
+
+        transactions_sync_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(contextpage, "refresh / sync transactions", Toast.LENGTH_SHORT).show();
+                popup.dismiss();
+            }
+        });
+    }
+
+    //Table clicked
+//    @Override
+//    public void onTableClick(int position, View v) {
+//        Table clickedTable = table_list.get(position);
+//
+//        TextView tv = (TextView) v.findViewById(v.getId());
+//        Drawable tvDrawable;
+//        tvDrawable = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
+//
+//        if(!tableSwapping) {
+//            if (clickedTable.getState().equalsIgnoreCase("V")) {
+//                if (!tableSelecting) {
+//                    //case: table is not selecting, operation: select a table
+//                    tableSelecting = true;
+//                    DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.darkOrange));
+//                    v.setBackground(tvDrawable);
+//                    lastClickedTableView = v;
+//                    vacantTableSelected = clickedTable;
+//                } else if (lastClickedTableView == v) {
+//                    //case: table is selecting and click on the selecting table, operation: make it unselect on same table
+//                    tableSelecting = false;
+//                    Drawable tvDrawable1;
+//                    tvDrawable1 = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
+//                    DrawableCompat.setTint(tvDrawable1, getResources().getColor(R.color.green));
+//                    lastClickedTableView.setBackground(tvDrawable1);
+//                    vacantTableSelected = null;
+//                } else {
+//                    //case: selecting one table, and click to select another table, operation: unselect on last table & select table
+//                    tableSelecting = true;
+//                    DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.darkOrange));
+//                    v.setBackground(tvDrawable);
+//                    Drawable tvDrawable1;
+//                    tvDrawable1 = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
+//                    DrawableCompat.setTint(tvDrawable1, getResources().getColor(R.color.green));
+//                    lastClickedTableView.setBackground(tvDrawable1);
+//                    lastClickedTableView = v;
+//                    vacantTableSelected = clickedTable;
+//                }
+//            } else if (clickedTable.getState().equalsIgnoreCase("H")) {
+//                if (!onlyVacantTable) {//not only vacant table can be selected
+//                    showAddonAndProceed(v, clickedTable);
+//                } else {  //only vacant table can be selected
+//                    Toast.makeText(contextpage, "Only vacant table can be selected while ordering", Toast.LENGTH_SHORT).show();
+//                }
+//            } else { //occupied
+//                if (!onlyVacantTable) {//not only vacant table can be selected
+//                    showAddonAndProceed(v, clickedTable);
+//                } else {
+//                    Toast.makeText(contextpage, "Only vacant table can be selected while ordering", Toast.LENGTH_SHORT).show();
+//                }
+//            }
+//        }else{// swap or transfer table
+//            tableSwapTo = clickedTable;
+//            Order orderOfTableSwapTo = realm.where(Order.class).equalTo("table.table_id", tableSwapTo.getTable_id()).
+//                    and().notEqualTo("state", "paid").findFirst();
+//            Order orderOfTableSwapFrom = realm.where(Order.class).equalTo("table.table_id", tableSwapFrom.getTable_id()).
+//                    and().notEqualTo("state", "paid").findFirst();
+//            orderSwapFrom = realm.copyFromRealm(orderOfTableSwapFrom);
+//            //popup
+//            AlertDialog.Builder builder = new AlertDialog.Builder(TablePage.this);
+//            builder.setMessage("Swap / transfer table " + tableSwapFrom.getName() +
+//                    " to " + tableSwapTo.getName() + "?")
+//                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+//                        @Override
+//                        public void onClick(DialogInterface dialogInterface, int i) {
+//                            if(orderOfTableSwapTo != null){  //table for swap or transfer is has an order
+//                                orderSwapTo = realm.copyFromRealm(orderOfTableSwapTo);
+//
+//                                if (orderSwapFrom.getState().equalsIgnoreCase("draft")) {
+//                                    tableSwapTo.setState("O");
+//                                } else if (orderSwapFrom.getState().equalsIgnoreCase("onHold")) {
+//                                    tableSwapTo.setState("H");
+//                                }
+//
+//                                if(orderSwapTo.getState().equalsIgnoreCase("draft")){
+//                                    tableSwapFrom.setState("O");
+//                                }else if(orderSwapTo.getState().equalsIgnoreCase("onHold")){
+//                                    tableSwapFrom.setState("H");
+//                                }
+//                                orderSwapFrom.setTable(tableSwapTo);
+//                                orderSwapTo.setTable(tableSwapFrom);
+//                            }else{  //table for swap or transfer has no order
+//                                if(tableSwapTo.getState().equalsIgnoreCase("O")){
+//                                    tableSwapFrom.setState("O");
+//                                }else {
+//                                    tableSwapFrom.setState("V");
+//                                }
+//
+//                                if (orderSwapFrom.getState().equalsIgnoreCase("draft")) {
+//                                    tableSwapTo.setState("O");
+//                                } else if (orderSwapFrom.getState().equalsIgnoreCase("onHold")) {
+//                                    tableSwapTo.setState("H");
+//                                }
+//                                orderSwapFrom.setTable(tableSwapTo);
+//                            }
+//                            realm.executeTransaction(new Realm.Transaction() {
+//                                @Override
+//                                public void execute(Realm realm) {
+//                                    realm.insertOrUpdate(orderSwapFrom);
+//                                    if(orderOfTableSwapTo != null) {
+//                                        realm.insertOrUpdate(orderSwapTo);
+//                                    }
+//                                    realm.insertOrUpdate(tableSwapTo);
+//                                    realm.insertOrUpdate(tableSwapFrom);
+//                                }
+//                            });
+//                            tableAdapter.notifyDataSetChanged();
+//                            orderSwapFrom = null;
+//                            orderSwapTo = null;
+//                            tableSwapTo = null;
+//                            tableSwapFrom = null;
+//                            tableSwapping = false;
+//                            turnOffSwapCancelBtn();
+//                        }
+//                    }).setNegativeButton("No", new DialogInterface.OnClickListener() {
+//                @Override
+//                public void onClick(DialogInterface dialogInterface, int i) {
+//                    Toast.makeText(contextpage, "Choose a table for swapping or transferring", Toast.LENGTH_SHORT).show();
+//                }
+//            }).setCancelable(false);
+//            AlertDialog alert = builder.create();
+//            if(tableSwapTo.getTable_id() == tableSwapFrom.getTable_id()){
+//                Toast.makeText(contextpage, "Not allow to swap / transfer to the same table.", Toast.LENGTH_SHORT).show();
+//            }else {
+//                alert.show();
+//            }
+//        }
+//    }
+//    @Override
+//    public void onTableLongClick(int position) {
+//        longClickOccupiedTable = table_list.get(position);
+//
+//        Order tableOrder = realm.where(Order.class).equalTo("table.table_id", longClickOccupiedTable.getTable_id()).findFirst();
+//        String tableName = longClickOccupiedTable.getName();
+//
+//        if(tableOrder == null) {       //Table has no order(occupied) or vacant
+//            if(longClickOccupiedTable.getState().equalsIgnoreCase("V")){  //vacant table
+//                longClickOccupiedTable.setState("O");
+//                Toast.makeText(TablePage.this, "" + tableName + " occupied successfully", Toast.LENGTH_SHORT).show();
+//            }else { //occupy table
+//                longClickOccupiedTable.setState("V");
+//                Toast.makeText(TablePage.this, "" + tableName + " occupy removed successfully", Toast.LENGTH_SHORT).show();
+//            }
+//
+//            realm.executeTransaction(new Realm.Transaction() {
+//                @Override
+//                public void execute(Realm realm) {
+//                    realm.insertOrUpdate(longClickOccupiedTable);
+//                }
+//            });
+//            tableAdapter.notifyDataSetChanged();
+//        }else{      //Table has an order
+//            Toast.makeText(TablePage.this, "This table has an order", Toast.LENGTH_SHORT).show();
+//        }
+//    }
 }

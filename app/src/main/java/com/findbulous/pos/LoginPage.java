@@ -75,8 +75,8 @@ public class LoginPage extends AppCompatActivity {
                 Intent intent = new Intent(contextpage, ChoosePOSPermissionPage.class);
                 startActivity(intent);
                 finish();
-                new loadProduct().execute();
-                new loadFloorAndTable().execute();
+                //new loadProduct().execute();
+                //new loadFloorAndTable().execute();
             }
         });
         binding.registerBtn.setOnClickListener(new View.OnClickListener() {

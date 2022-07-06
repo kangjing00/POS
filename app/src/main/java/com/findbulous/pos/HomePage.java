@@ -1423,7 +1423,7 @@ public class HomePage extends AppCompatActivity implements ProductAdapter.OnItem
         //Internet Connection Checking
         timer = new Timer();
         final int MILLISECONDS = 5000; //5 seconds
-        timer.schedule(new CheckConnection(contextpage), 0, MILLISECONDS);
+        //timer.schedule(new CheckConnection(contextpage), 0, MILLISECONDS);
 
         int currentOrderId = cartSharedPreference.getInt("orderId", -1);
         Order order = realm.where(Order.class).equalTo("order_id", currentOrderId).findFirst();
