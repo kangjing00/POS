@@ -1,6 +1,5 @@
 package com.findbulous.pos;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.FragmentManager;
@@ -19,10 +18,11 @@ import android.widget.Toast;
 import com.findbulous.pos.CashierFragments.FragmentCashierDrawer;
 import com.findbulous.pos.CashierFragments.FragmentSaleHistory;
 import com.findbulous.pos.CashierFragments.FragmentTodaySale;
+import com.findbulous.pos.Network.CheckConnection;
 import com.findbulous.pos.databinding.CashierPageBinding;
 import com.google.android.material.button.MaterialButton;
 
-public class CashierPage extends AppCompatActivity {
+public class CashierPage extends CheckConnection {
 
     private CashierPageBinding binding;
     private FragmentManager fm;

@@ -14,12 +14,11 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.Spinner;
 import android.widget.Toast;
-
+import com.findbulous.pos.Network.CheckConnection;
 import com.findbulous.pos.databinding.RegisterPageBinding;
 
-public class RegisterPage extends AppCompatActivity {
+public class RegisterPage extends CheckConnection {
 
     private RegisterPageBinding binding;
 
@@ -32,10 +31,11 @@ public class RegisterPage extends AppCompatActivity {
         contextpage = RegisterPage.this;
         binding = DataBindingUtil.setContentView(this, R.layout.register_page);
 
+
         String[] genders = getResources().getStringArray(R.array.gender);
-        ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_spinner_item, genders);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        binding.genderSpinner.setDropDownVerticalOffset(80);
+        ArrayAdapter adapter = new ArrayAdapter(this, R.layout.textview_with_padding, genders);
+        adapter.setDropDownViewResource(R.layout.textview_with_padding);
+        binding.genderSpinner.setDropDownVerticalOffset(90);
         binding.genderSpinner.setAdapter(adapter);
         binding.genderSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -97,7 +97,7 @@ public class RegisterPage extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if(inputCheck()){
-                    //register acc
+                    //registerAccount();
                 }
             }
         });
@@ -111,14 +111,24 @@ public class RegisterPage extends AppCompatActivity {
         });
     }
 
+    private void registerAccount(){
+        
+        
+    }
+
     private boolean inputCheck(){
         if(nullOrEmptyCheck(binding.emailEt) && nullOrEmptyCheck(binding.passwordEt)
                 && nullOrEmptyCheck(binding.confirmPasswordEt) && nullOrEmptyCheck(binding.usernameEt)){
             if(emailCheck(binding.emailEt)) {
-                if (samePasswordCheck(binding.passwordEt, binding.confirmPasswordEt)) {
-                    return true;
+                if(binding.passwordEt.getText().toString().length() >= 8){
+                    if (samePasswordCheck(binding.passwordEt, binding.confirmPasswordEt)) {
+                        return true;
+                    }else{
+                        Toast.makeText(contextpage, "Password and confirm password must be same", Toast.LENGTH_SHORT).show();
+                        return false;
+                    }
                 }else{
-                    Toast.makeText(contextpage, "Password and confirm password must be same", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(contextpage, "Minimum password length should be 8 characters", Toast.LENGTH_SHORT).show();
                     return false;
                 }
             }else{

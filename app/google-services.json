@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "919623793455",
+    "project_id": "point-of-sale-b262a",
+    "storage_bucket": "point-of-sale-b262a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:919623793455:android:44ce652376d2e0f252ffda",
+        "android_client_info": {
+          "package_name": "com.findbulous.pos"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "919623793455-hp2jco2mlmeaosr72g8be4eetif7gqgr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAHVb9K-vudrL8qKGEeVExTwxIncjjOtUM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "919623793455-hp2jco2mlmeaosr72g8be4eetif7gqgr.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

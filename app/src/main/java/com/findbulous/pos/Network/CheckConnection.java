@@ -1,9 +1,13 @@
 package com.findbulous.pos.Network;
 
 import android.content.Context;
+import android.content.IntentFilter;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.findbulous.pos.Floor;
 import com.findbulous.pos.State;
@@ -29,41 +33,47 @@ import javax.net.ssl.HttpsURLConnection;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
-public class CheckConnection extends TimerTask {
+public class CheckConnection extends AppCompatActivity implements ConnectivityChangeReceiver.OnConnectivityChangedListener {
+
+    private ConnectivityChangeReceiver connectivityChangeReceiver;
+
+
     private Context context;
     private Realm realm;
     private boolean updated = false;
-    private ArrayList<State> states;
     private ArrayList<Floor> floors;
     private ArrayList<Table> tables;
     private RealmResults<Table> table_list;
 
-    public CheckConnection(Context context){
-        this.context = context;
-//        realm = Realm.getDefaultInstance();
-//        states = new ArrayList<>();
-//        floors = new ArrayList<>();
-//        tables = new ArrayList<Table>();
+    @Override
+    protected void onCreate(Bundle savedInstance) {
+        super.onCreate(savedInstance);
+        connectivityChangeReceiver = new ConnectivityChangeReceiver(this);
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("android.net.conn.CONNECTIVITY_CHANGE");
+        registerReceiver(connectivityChangeReceiver, filter);
 
-//        table_list = realm.where(Table.class).findAll();
-//        tables.addAll(realm.copyFromRealm(table_list));
+        realm = Realm.getDefaultInstance();
+        tables = new ArrayList<Table>();
     }
-    public void run() {
-        if(NetworkUtils.isNetworkAvailable(context)){
-            //CONNECTED
-            Log.d("Wifi Tagggg", "Connectedddddddddddddd");
 
-//            if(!updated){
-//                //new updateTable().execute();
-//                updated = true;
-//            }
-            //keep retrieve latest data
+    @Override
+    public void onConnectivityChanged(boolean isConnected){
+        if(isConnected){
+            System.out.println("Internet Connected");
             //new loadFloorAndTable().execute();
-        }else {
-            //DISCONNECTED
-            Log.d("Wifi Tagggg", "Wifi Losssssssssssssss");
-//            updated = false;
+//            table_list = realm.where(Table.class).findAll();
+//            tables.addAll(realm.copyFromRealm(table_list));
+//            new updateTable().execute();
+        }else{
+            System.out.println("Internet Disconnected");
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(connectivityChangeReceiver);
     }
 
     public class updateTable extends AsyncTask<String, String, String> {
@@ -158,7 +168,6 @@ public class CheckConnection extends TimerTask {
 
                 no_connection = true;
                 connection_error = e.getMessage();
-
             }
 
             return null;
@@ -169,13 +178,12 @@ public class CheckConnection extends TimerTask {
             super.onPostExecute(result);
 
             if(no_connection){
-
-            }else{
                 System.out.println("Connection Error Message: " + connection_error);
+            }else{
+
             }
         }
     }
-
 
     public class loadFloorAndTable extends AsyncTask<String, String, String> {
         @Override
@@ -217,13 +225,6 @@ public class CheckConnection extends TimerTask {
                     if (status.equals("OK")) {
                         JSONObject jresult = json.getJSONObject("result");
                         JSONArray jfloors = jresult.getJSONArray("floors");
-                        JSONArray jstates = jresult.getJSONArray("states");
-
-                        for(int i = 0; i < jstates.length(); i++){
-                            JSONObject js = jstates.getJSONObject(i);
-                            State state = new State((i+1), js.getString("code"), js.getString("name"));
-                            states.add(state);
-                        }
 
                         for (int a = 0; a < jfloors.length(); a++) {
                             JSONObject jf = jfloors.getJSONObject(a);
@@ -259,12 +260,10 @@ public class CheckConnection extends TimerTask {
                 public void execute(Realm realm) {
                     realm.insertOrUpdate(floors);
                     realm.insertOrUpdate(tables);
-                    realm.insertOrUpdate(states);
                 }
             });
             floors.clear();
             tables.clear();
-            states.clear();
         }
     }
 }

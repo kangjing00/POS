@@ -4,19 +4,19 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.Toast;
 
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
-import com.findbulous.pos.Adapters.OrderHistoryAdapter;
 import com.findbulous.pos.Adapters.OrderOnHoldAdapter;
 import com.findbulous.pos.Customer;
-import com.findbulous.pos.CustomerPage;
 import com.findbulous.pos.HomePage;
 import com.findbulous.pos.Order;
 import com.findbulous.pos.Order_Line;
@@ -46,6 +46,14 @@ public class FragmentOrderOnHold extends Fragment implements OrderOnHoldAdapter.
         realm = Realm.getDefaultInstance();
 
         binding.orderOnHoldRv.setLayoutManager(new StaggeredGridLayoutManager(4, StaggeredGridLayoutManager.VERTICAL));
+        //binding.orderOnHoldRv.setLayoutManager(new GridAutoFitLayoutManager(getContext(), 0));
+        ViewTreeObserver viewTreeObserver = binding.orderOnHoldRv.getViewTreeObserver();
+        viewTreeObserver.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                calculateSize();
+            }
+        });
         binding.orderOnHoldRv.setHasFixedSize(true);
         orders = new ArrayList<>();
         orderOnHoldAdapter = new OrderOnHoldAdapter(orders, getContext(), this);
@@ -60,6 +68,19 @@ public class FragmentOrderOnHold extends Fragment implements OrderOnHoldAdapter.
 
         return view;
     }
+
+    private static final int columnWidth = 280;
+    private void calculateSize() {
+        int spanCount = (int) Math.floor(binding.orderOnHoldRv.getWidth() / convertDPToPixels(columnWidth));
+        ((StaggeredGridLayoutManager) binding.orderOnHoldRv.getLayoutManager()).setSpanCount(spanCount);
+    }
+    private float convertDPToPixels(int dp) {
+        DisplayMetrics metrics = new DisplayMetrics();
+        getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        float logicalDensity = metrics.density;
+        return dp * logicalDensity;
+    }
+
 
     private void getOnHoldOrderFromRealm(){
         RealmResults<Order> results = realm.where(Order.class).equalTo("state", "onHold").findAll();

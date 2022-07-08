@@ -18,6 +18,7 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.findbulous.pos.Adapters.PaymentOrderLineAdapter;
+import com.findbulous.pos.Network.CheckConnection;
 import com.findbulous.pos.PaymentTab.PaymentMethodPagerAdapter;
 import com.findbulous.pos.databinding.PaymentPageBinding;
 import com.google.android.material.button.MaterialButton;
@@ -27,7 +28,7 @@ import java.util.ArrayList;
 
 import io.realm.Realm;
 
-public class PaymentPage extends AppCompatActivity {
+public class PaymentPage extends CheckConnection {
 
     private PaymentPageBinding binding;
     private PaymentMethodPagerAdapter paymentMethodPagerAdapter;

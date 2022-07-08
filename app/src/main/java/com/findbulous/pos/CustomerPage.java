@@ -34,6 +34,7 @@ import com.findbulous.pos.Adapters.CartOrderLineAdapter;
 import com.findbulous.pos.CustomerFragments.FragmentAddCustomer;
 import com.findbulous.pos.CustomerFragments.FragmentCustomer;
 import com.findbulous.pos.CustomerFragments.FragmentCustomerDetail;
+import com.findbulous.pos.Network.CheckConnection;
 import com.findbulous.pos.Network.NetworkUtils;
 import com.findbulous.pos.databinding.CustomerPageBinding;
 import com.google.android.material.button.MaterialButton;
@@ -43,7 +44,7 @@ import java.util.ArrayList;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
-public class CustomerPage extends AppCompatActivity implements CartOrderLineAdapter.OnItemClickListener{
+public class CustomerPage extends CheckConnection implements CartOrderLineAdapter.OnItemClickListener{
 
     private CustomerPageBinding binding;
     private FragmentManager fm;

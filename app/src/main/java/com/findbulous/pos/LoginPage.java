@@ -19,6 +19,7 @@ import android.widget.Toast;
 
 import com.findbulous.pos.Network.NetworkUtils;
 import com.findbulous.pos.databinding.LoginActivityBinding;
+import com.google.firebase.auth.FirebaseAuth;
 
 import org.json.JSONArray;
 import org.json.JSONException;

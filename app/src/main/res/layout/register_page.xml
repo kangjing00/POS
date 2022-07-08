@@ -176,8 +176,7 @@
                 android:layout_marginTop="15dp"
                 android:layout_toRightOf="@id/gender_icon"
                 android:background="@drawable/custom_input"
-                android:dropDownWidth="190dp"
-                android:padding="15dp"
+                android:dropDownWidth="205dp"
                 android:popupBackground="@drawable/custom_drop_down" />
 
 

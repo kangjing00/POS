@@ -17,10 +17,11 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.findbulous.pos.Network.CheckConnection;
 import com.findbulous.pos.databinding.SettingPageBinding;
 import com.google.android.material.button.MaterialButton;
 
-public class SettingPage extends AppCompatActivity {
+public class SettingPage extends CheckConnection {
 
     private SettingPageBinding binding;
     private FragmentManager fm;

@@ -60,7 +60,7 @@ import javax.net.ssl.HttpsURLConnection;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
-public class TablePage extends AppCompatActivity implements
+public class TablePage extends CheckConnection implements
                         FloorAdapter.FloorClickInterface, View.OnClickListener, View.OnLongClickListener {
 
     private TablePageBinding binding;
@@ -738,7 +738,55 @@ public class TablePage extends AppCompatActivity implements
     private void getFloorFromRealm(){
         RealmResults<Floor> results = realm.where(Floor.class).findAll();
         floor_list.addAll(realm.copyFromRealm(results));
+
+//        System.out.println("Before Shuffle:");
+//        for(int i = 0; i < floor_list.size(); i++){
+//            System.out.println(floor_list.get(i).getSequence());
+//        }
+//        Collections.shuffle(floor_list);
+//        System.out.println("After Shuffle:");
+//        for(int i = 0; i < floor_list.size(); i++){
+//            System.out.println(floor_list.get(i).getSequence());
+//        }
+//        quickSort(floor_list, 0, floor_list.size()-1);
+//        System.out.println("After QuickSort:");
+//        for(int i = 0; i < floor_list.size(); i++){
+//            System.out.println(floor_list.get(i).getSequence());
+//        }
     }
+    private void quickSort(ArrayList<Floor> floors, int begin, int end) {
+        if (begin < end) {
+            int partitionIndex = partition(floors, begin, end);
+
+            quickSort(floors, begin, partitionIndex-1);
+            quickSort(floors, partitionIndex+1, end);
+        }
+    }
+    private int partition(ArrayList<Floor> floors, int begin, int end) {
+        int pivot = floors.get(end).getSequence();
+        int i = (begin-1);
+
+        for (int j = begin; j < end; j++) {
+            if (floors.get(j).getSequence() <= pivot) {
+                i++;
+
+                Floor swapTemp = floors.get(i);
+                floors.remove(i);
+                floors.add(i, floors.get(j));
+                floors.remove(j);
+                floors.add(j, swapTemp);
+            }
+        }
+
+        Floor swapTemp = floors.get(i+1);
+        floors.remove(i+1);
+        floors.add(i+1, floors.get(end-1));
+        floors.remove(end);
+        floors.add(end, swapTemp);
+
+        return i+1;
+    }
+
     //Display & Refresh Tables
     private void displayTables(Floor floor){
         RealmResults<Table> tables = realm.where(Table.class).equalTo("floor.floor_id", floor.getFloor_id()).findAll();

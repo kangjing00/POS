@@ -43,7 +43,7 @@ import java.util.Timer;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
-public class HomePage extends AppCompatActivity implements ProductAdapter.OnItemClickListener, CartOrderLineAdapter.OnItemClickListener{
+public class HomePage extends CheckConnection implements ProductAdapter.OnItemClickListener, CartOrderLineAdapter.OnItemClickListener{
 
     private HomePageBinding binding;
     //Product Modifier Choice Popup

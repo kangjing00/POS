@@ -20,6 +20,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.findbulous.pos.Adapters.OrderOrderLineAdapter;
+import com.findbulous.pos.Network.CheckConnection;
 import com.findbulous.pos.OrderFragments.FragmentOfflineOrder;
 import com.findbulous.pos.OrderFragments.FragmentOrderHistory;
 import com.findbulous.pos.OrderFragments.FragmentOrderOnHold;
@@ -31,7 +32,7 @@ import java.util.ArrayList;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
-public class OrderPage extends AppCompatActivity {
+public class OrderPage extends CheckConnection {
 
     private OrderPageBinding binding;
     private FragmentManager fm;
