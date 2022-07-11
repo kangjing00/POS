@@ -31,6 +31,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
@@ -45,7 +46,10 @@ public class LoginPage extends AppCompatActivity {
 
     private Realm realm;
 
+    private ArrayList<POS_Category> product_categories;
     private ArrayList<Product> products;
+    private ArrayList<Product_Tax> product_taxes;
+
     private ArrayList<Floor> floors;
     private ArrayList<State> states;
     private ArrayList<Table> tables;
@@ -65,7 +69,10 @@ public class LoginPage extends AppCompatActivity {
         Realm.setDefaultConfiguration(config);
         realm = Realm.getDefaultInstance();
 
+        product_categories = new ArrayList<>();
         products = new ArrayList<>();
+        product_taxes = new ArrayList<>();
+
         floors = new ArrayList<>();
         states = new ArrayList<>();
         tables = new ArrayList<>();
@@ -76,14 +83,14 @@ public class LoginPage extends AppCompatActivity {
                 Intent intent = new Intent(contextpage, ChoosePOSPermissionPage.class);
                 startActivity(intent);
                 finish();
-                //new loadProduct().execute();
-                //new loadFloorAndTable().execute();
+                new loadProduct().execute();
+                new loadFloorAndTable().execute();
             }
         });
         binding.registerBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //deleteRealm();
+                deleteRealm();
                 Intent intent = new Intent(contextpage, RegisterPage.class);
                 startActivity(intent);
                 finish();
@@ -120,7 +127,7 @@ public class LoginPage extends AppCompatActivity {
             String jsonUrl =url + "&agent=" + agent;
             System.out.println(jsonUrl);
 
-            int page = 1, counter = 0;
+            int page = 1, productCounter = 0, categoryCounter = 0;
             while(page > 0){
                 String jsonUrlPage = jsonUrl + "&page=" + page;
                 URL obj;
@@ -151,21 +158,89 @@ public class LoginPage extends AppCompatActivity {
 
                         if (status.equals("OK")) {
                             JSONObject jresult = json.getJSONObject("result");
-                            JSONArray jcproducts = jresult.getJSONArray("products");
+                            JSONArray jcategories = jresult.getJSONArray("pos_categories");
+                            JSONArray jproducts = jresult.getJSONArray("products");
 
-                            if(jcproducts.length() != 0){
+                            if((jproducts.length() != 0) || (jcategories.length() != 0)){
                                 page++;
                             }else{
                                 page = -1;
                             }
 
-                            for (int a = 0; a < jcproducts.length(); a++) {
-                                JSONObject ja = jcproducts.getJSONObject(a);
-                                Product product = new Product(Integer.valueOf(ja.getString("product_id")),
-                                        ja.getString("name"), ja.getDouble("list_price"), ja.getString("display_list_price"));
+                            page = -1;
+                            // Product Category
+                            for(int a = 0; a < jcategories.length(); a++){
+                                loadProductCategories(jcategories.getJSONObject(a));
+//                                JSONObject jo = jcategories.getJSONObject(a);
+//                                JSONArray jSubCategories = jo.getJSONArray("pos_categories");
+//
+//                                POS_Category product_category = new POS_Category(jo.getInt("pos_categ_id"),
+//                                        jo.getString("name"), null);
+//                                POS_Category product_sub_category = null;
+//
+//                                if(jSubCategories.length() > 0){
+//                                    for(int x = 0; x < jSubCategories.length(); x++){
+//                                        JSONObject joSubCategory = jSubCategories.getJSONObject(x);
+//                                        product_sub_category = new POS_Category(joSubCategory.getInt("pos_categ_id"),
+//                                                joSubCategory.getString("name"), null);
+//
+//                                    }
+//                                }
+//
+////                                boolean hasSubCategory = false;
+////                                JSONObject jSubObject = null;
+////                                if(jo.getJSONObject("pos_categories") != null){
+////                                    hasSubCategory = true;
+////                                    jSubObject = jo.getJSONObject("pos_categories");
+////                                }else {
+////                                    product_categories.add(product_category);
+////                                    System.out.println(product_category.getName());
+////                                }
+////
+////                                while(hasSubCategory) {
+////                                    POS_Category product_sub_category = new POS_Category(jSubObject.getInt("pos_categ_id"),
+////                                            jSubObject.getString("name"), null);
+////                                    product_category.setPos_categories(product_sub_category);
+////                                    product_categories.add(product_category);
+////
+////                                    if(jSubObject.getJSONObject("pos_categories") != null){
+////                                        jSubObject = jSubObject.getJSONObject("pos_categories");
+////                                        product_category = product_sub_category;
+////                                    }else{
+////                                        hasSubCategory = false;
+////                                        product_categories.add(product_sub_category);
+////                                    }
+////                                    System.out.println(product_category.getName());
+////                                    categoryCounter++;
+////                                }
+//                                categoryCounter++;
+                            }
+
+                            // Product
+                            for (int a = 0; a < jproducts.length(); a++) {
+                                JSONObject jo = jproducts.getJSONObject(a);
+                                JSONArray jProductTax = null;
+                                Product product = new Product(jo.getInt("product_id"), jo.getString("name"),
+                                        jo.getString("default_code"), jo.getDouble("list_price"), jo.getDouble("standard_price"),
+                                        jo.getDouble("margin"), jo.getDouble("margin_percent"),jo.getDouble("price_incl_tax"),
+                                        jo.getDouble("price_excl_tax"), jo.getString("display_list_price"),jo.getString("display_standard_price"),
+                                        jo.getString("display_margin"), jo.getString("display_margin_percent"), jo.getString("display_price_incl_tax"),
+                                        jo.getString("display_price_excl_tax"));
+                            // Product Taxes
+                                if(jo.getJSONArray("taxes").length() > 0){
+                                    jProductTax = jo.getJSONArray("taxes");
+                                    for(int x = 0; x < jProductTax.length(); x++){
+                                        JSONObject joProductTax = jProductTax.getJSONObject(x);
+                                        String product_tax_id = product.getProduct_id() + joProductTax.getString("tax_id");
+                                        Product_Tax product_tax = new Product_Tax(Integer.valueOf(product_tax_id),
+                                                joProductTax.getDouble("amount"), joProductTax.getString("display_amount"), product);
+                                        product_taxes.add(product_tax);
+                                    }
+                                }
+
                                 products.add(product);
                                 System.out.println(products.get(a).getName());
-                                counter++;
+                                productCounter++;
                             }
                         }
                     }catch (JSONException e) {
@@ -178,7 +253,8 @@ public class LoginPage extends AppCompatActivity {
                     System.out.println(connection_error);
                 }
             }
-            System.out.println("Counter: " + counter);
+            System.out.println("Product Counter: " + productCounter);
+            System.out.println("Category Counter: " + categoryCounter);
             return null;
         }
 
@@ -191,11 +267,54 @@ public class LoginPage extends AppCompatActivity {
                     @Override
                     public void execute(Realm realm) {
                         realm.insertOrUpdate(products);
+                        realm.insertOrUpdate(product_categories);
+                        realm.insertOrUpdate(product_taxes);
                     }
                 });
             }
         }
     }
+    private void loadProductCategories(JSONObject data){
+        try {
+            POS_Category product_category = new POS_Category(data.getInt("pos_categ_id"),
+                    data.getString("name"), null);
+            POS_Category last_product_category = product_category;
+            int counter = (data.getJSONArray("pos_categories").length() > 0)? data.getJSONArray("pos_categories").length(): 0;
+            while(counter > 0){
+
+
+
+                counter--;
+            }
+            product_categories.add(product_category);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+//        Iterator<String> it = data.keys();
+//        while (it.hasNext()) {
+//            String key = it.next();
+//
+//            try {
+//                if (data.get(key) instanceof JSONArray) {
+//                    JSONArray arry = data.getJSONArray(key);
+//                    int size = arry.length();
+//                    for (int i = 0; i < size; i++) {
+//                        loadProductCategories(arry.getJSONObject(i));
+//                    }
+//                } else if (data.get(key) instanceof JSONObject) {
+//                    loadProductCategories(data.getJSONObject(key));
+//                } else {
+//                    System.out.println("" + key + " : " + data.optString(key));
+//                }
+//            } catch (Throwable e) {
+//                System.out.println("" + key + " : " + data.optString(key));
+//                e.printStackTrace();
+//
+//            }
+//        }
+    }
+
     public class loadFloorAndTable extends AsyncTask<String, String, String> {
         @Override
         protected String doInBackground(String... strings) {

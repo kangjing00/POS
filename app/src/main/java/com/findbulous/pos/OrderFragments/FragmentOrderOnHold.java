@@ -1,5 +1,6 @@
 package com.findbulous.pos.OrderFragments;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -76,9 +77,13 @@ public class FragmentOrderOnHold extends Fragment implements OrderOnHoldAdapter.
     }
     private float convertDPToPixels(int dp) {
         DisplayMetrics metrics = new DisplayMetrics();
-        getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        float logicalDensity = metrics.density;
-        return dp * logicalDensity;
+        final Activity activity = getActivity();
+        if(activity != null) {
+            getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
+            float logicalDensity = metrics.density;
+            return dp * logicalDensity;
+        }
+        return 1;
     }
 
 

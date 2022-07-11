@@ -453,9 +453,6 @@ public class TablePage extends CheckConnection implements
 
             if(no_connection){
                 System.out.println("Connection Error Message: " + connection_error);
-//                timer = new Timer();
-//                final int MILLISECONDS = 5000; //5 seconds
-//                timer.schedule(new CheckConnection(contextpage), 0, MILLISECONDS);
             }
         }
     }

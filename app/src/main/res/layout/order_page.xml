@@ -37,54 +37,62 @@
             <include android:id="@+id/navbar_layout_include" layout="@layout/navbar_layout" />
         </ScrollView>
 
-        <RadioGroup
-            android:id="@+id/order_radioGroup"
+
+        <HorizontalScrollView
+            android:id="@+id/horizontalScrollView"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_margin="20dp"
             android:background="@drawable/box_corner_nopadding_white"
-            android:orientation="horizontal"
-            android:paddingStart="10dp"
-            android:paddingTop="5dp"
-            android:paddingEnd="10dp"
-            android:paddingBottom="5dp"
-            app:layout_constraintEnd_toStartOf="@id/order_relativeLayout"
+            android:scrollbars="none"
+            app:layout_constraintEnd_toStartOf="@+id/order_relativeLayout"
             app:layout_constraintStart_toEndOf="@+id/navbar_layout_include_sv"
             app:layout_constraintTop_toBottomOf="@+id/appBar">
-
-            <RadioButton
-                android:id="@+id/order_history_rb"
-                android:layout_width="wrap_content"
+            <RadioGroup
+                android:id="@+id/order_radioGroup"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="5dp"
-                android:background="@drawable/navbtn_selector"
-                android:button="@android:color/transparent"
-                android:padding="8dp"
-                android:text="Order History"
-                android:textColor="@drawable/categorybtn_text_color" />
+                android:background="@drawable/box_corner_nopadding_white"
+                android:orientation="horizontal"
+                android:paddingStart="10dp"
+                android:paddingTop="5dp"
+                android:paddingEnd="10dp"
+                android:paddingBottom="5dp">
 
-            <RadioButton
-                android:id="@+id/order_on_hold_rb"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="5dp"
-                android:background="@drawable/navbtn_selector"
-                android:button="@android:color/transparent"
-                android:padding="8dp"
-                android:text="Order On Hold"
-                android:textColor="@drawable/categorybtn_text_color" />
+                <RadioButton
+                    android:id="@+id/order_history_rb"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/navbtn_selector"
+                    android:button="@android:color/transparent"
+                    android:padding="8dp"
+                    android:text="Order History"
+                    android:textColor="@drawable/categorybtn_text_color" />
 
-            <RadioButton
-                android:id="@+id/offline_order_rb"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="5dp"
-                android:background="@drawable/navbtn_selector"
-                android:button="@android:color/transparent"
-                android:padding="8dp"
-                android:text="Offline Order"
-                android:textColor="@drawable/categorybtn_text_color" />
-        </RadioGroup>
+                <RadioButton
+                    android:id="@+id/order_on_hold_rb"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/navbtn_selector"
+                    android:button="@android:color/transparent"
+                    android:padding="8dp"
+                    android:text="Order On Hold"
+                    android:textColor="@drawable/categorybtn_text_color" />
+
+                <RadioButton
+                    android:id="@+id/offline_order_rb"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/navbtn_selector"
+                    android:button="@android:color/transparent"
+                    android:padding="8dp"
+                    android:text="Offline Order"
+                    android:textColor="@drawable/categorybtn_text_color" />
+            </RadioGroup>
+        </HorizontalScrollView>
 
         <FrameLayout
             android:id="@+id/order_fragment_fl"
@@ -92,7 +100,7 @@
             android:layout_height="0dp"
             app:layout_constraintEnd_toStartOf="@id/order_relativeLayout"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/order_radioGroup"
+            app:layout_constraintTop_toBottomOf="@+id/horizontalScrollView"
             app:layout_constraintStart_toEndOf="@id/navbar_layout_include_sv"/>
 
         <RelativeLayout

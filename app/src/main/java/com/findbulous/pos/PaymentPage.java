@@ -4,6 +4,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -161,6 +163,8 @@ public class PaymentPage extends CheckConnection {
         binding.paymentOrderDetailViewAllBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                showOrderProducts();
+
                 Toast.makeText(contextpage, "View All Button Clicked", Toast.LENGTH_SHORT).show();
             }
         });
@@ -280,6 +284,36 @@ public class PaymentPage extends CheckConnection {
             }
         );
         }
+    }
+
+    private void showOrderProducts() {
+        PopupWindow popup = new PopupWindow(contextpage);
+        View layout = getLayoutInflater().inflate(R.layout.payment_order_line_popup, null);
+        popup.setContentView(layout);
+        // Set content width and height
+        popup.setHeight(1350);
+        popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
+        // Closes the popup window when touch outside of it - when looses focus
+        popup.setOutsideTouchable(true);
+        popup.setFocusable(true);
+        // Show anchored to button
+        popup.setElevation(8);
+        popup.setBackgroundDrawable(null);
+        //RecyclerView
+        RecyclerView products_rv = (RecyclerView)layout.findViewById(R.id.payment_order_products_rv);
+        products_rv.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
+        products_rv.setHasFixedSize(true);
+        products_rv.setAdapter(orderLineAdapter);
+
+
+        popup.showAtLocation(binding.getRoot(), Gravity.CENTER, 0, 0);
+        //blur background
+        View container = (View) popup.getContentView().getParent();
+        WindowManager wm = (WindowManager) PaymentPage.this.getSystemService(Context.WINDOW_SERVICE);
+        WindowManager.LayoutParams p = (WindowManager.LayoutParams) container.getLayoutParams();
+        p.flags |= WindowManager.LayoutParams.FLAG_DIM_BEHIND;
+        p.dimAmount = 0.3f;
+        wm.updateViewLayout(container, p);
     }
 
     private void tableOccupiedToVacant(Table table){
