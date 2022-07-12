@@ -48,108 +48,117 @@
             app:layout_constraintStart_toEndOf="@+id/navbar_layout_include_sv"
             app:layout_constraintTop_toBottomOf="@+id/appBar">
 
-            <RadioGroup
-                android:id="@+id/product_category_radioGroup"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingStart="10dp"
-                android:paddingTop="5dp"
-                android:paddingEnd="10dp"
-                android:paddingBottom="5dp">
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/product_category_rv"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:paddingStart="10dp"
+                    android:paddingTop="5dp"
+                    android:paddingEnd="10dp"
+                    android:paddingBottom="5dp"
+                    tools:listitem="@layout/view_product_category_list"/>
+<!--            <RadioGroup-->
+<!--                android:id="@+id/product_category_radioGroup"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:orientation="horizontal"-->
+<!--                android:paddingStart="10dp"-->
+<!--                android:paddingTop="5dp"-->
+<!--                android:paddingEnd="10dp"-->
+<!--                android:paddingBottom="5dp">-->
 
-                <RadioButton
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="5dp"
-                    android:background="@drawable/navbtn_selector"
-                    android:button="@android:color/transparent"
-                    android:padding="8dp"
-                    android:text="Starters"
-                    android:textColor="@drawable/categorybtn_text_color" />
+<!--                <RadioButton-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_margin="5dp"-->
+<!--                    android:background="@drawable/navbtn_selector"-->
+<!--                    android:button="@android:color/transparent"-->
+<!--                    android:padding="8dp"-->
+<!--                    android:text="Starters"-->
+<!--                    android:textColor="@drawable/categorybtn_text_color" />-->
 
-                <RadioButton
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="5dp"
-                    android:background="@drawable/navbtn_selector"
-                    android:button="@android:color/transparent"
-                    android:padding="8dp"
-                    android:text="Breakfast"
-                    android:textColor="@drawable/categorybtn_text_color" />
+<!--                <RadioButton-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_margin="5dp"-->
+<!--                    android:background="@drawable/navbtn_selector"-->
+<!--                    android:button="@android:color/transparent"-->
+<!--                    android:padding="8dp"-->
+<!--                    android:text="Breakfast"-->
+<!--                    android:textColor="@drawable/categorybtn_text_color" />-->
 
-                <RadioButton
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="5dp"
-                    android:background="@drawable/navbtn_selector"
-                    android:button="@android:color/transparent"
-                    android:fontFamily="@font/roboto_medium"
-                    android:padding="8dp"
-                    android:text="Lunch"
-                    android:textColor="@drawable/categorybtn_text_color" />
+<!--                <RadioButton-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_margin="5dp"-->
+<!--                    android:background="@drawable/navbtn_selector"-->
+<!--                    android:button="@android:color/transparent"-->
+<!--                    android:fontFamily="@font/roboto_medium"-->
+<!--                    android:padding="8dp"-->
+<!--                    android:text="Lunch"-->
+<!--                    android:textColor="@drawable/categorybtn_text_color" />-->
 
-                <RadioButton
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="5dp"
-                    android:background="@drawable/navbtn_selector"
-                    android:button="@android:color/transparent"
-                    android:padding="8dp"
-                    android:text="Supper"
-                    android:textColor="@drawable/categorybtn_text_color" />
+<!--                <RadioButton-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_margin="5dp"-->
+<!--                    android:background="@drawable/navbtn_selector"-->
+<!--                    android:button="@android:color/transparent"-->
+<!--                    android:padding="8dp"-->
+<!--                    android:text="Supper"-->
+<!--                    android:textColor="@drawable/categorybtn_text_color" />-->
 
-                <RadioButton
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="5dp"
-                    android:background="@drawable/navbtn_selector"
-                    android:button="@android:color/transparent"
-                    android:padding="8dp"
-                    android:text="Desserts"
-                    android:textColor="@drawable/categorybtn_text_color" />
+<!--                <RadioButton-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_margin="5dp"-->
+<!--                    android:background="@drawable/navbtn_selector"-->
+<!--                    android:button="@android:color/transparent"-->
+<!--                    android:padding="8dp"-->
+<!--                    android:text="Desserts"-->
+<!--                    android:textColor="@drawable/categorybtn_text_color" />-->
 
-                <RadioButton
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="5dp"
-                    android:background="@drawable/navbtn_selector"
-                    android:button="@android:color/transparent"
-                    android:padding="8dp"
-                    android:text="Beverages"
-                    android:textColor="@drawable/categorybtn_text_color" />
+<!--                <RadioButton-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_margin="5dp"-->
+<!--                    android:background="@drawable/navbtn_selector"-->
+<!--                    android:button="@android:color/transparent"-->
+<!--                    android:padding="8dp"-->
+<!--                    android:text="Beverages"-->
+<!--                    android:textColor="@drawable/categorybtn_text_color" />-->
 
-                <RadioButton
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="5dp"
-                    android:background="@drawable/navbtn_selector"
-                    android:button="@android:color/transparent"
-                    android:padding="8dp"
-                    android:text="Category 3"
-                    android:textColor="@drawable/categorybtn_text_color" />
+<!--                <RadioButton-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_margin="5dp"-->
+<!--                    android:background="@drawable/navbtn_selector"-->
+<!--                    android:button="@android:color/transparent"-->
+<!--                    android:padding="8dp"-->
+<!--                    android:text="Category 3"-->
+<!--                    android:textColor="@drawable/categorybtn_text_color" />-->
 
-                <RadioButton
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="5dp"
-                    android:background="@drawable/navbtn_selector"
-                    android:button="@android:color/transparent"
-                    android:padding="8dp"
-                    android:text="Category 3"
-                    android:textColor="@drawable/categorybtn_text_color" />
+<!--                <RadioButton-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_margin="5dp"-->
+<!--                    android:background="@drawable/navbtn_selector"-->
+<!--                    android:button="@android:color/transparent"-->
+<!--                    android:padding="8dp"-->
+<!--                    android:text="Category 3"-->
+<!--                    android:textColor="@drawable/categorybtn_text_color" />-->
 
-                <RadioButton
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="5dp"
-                    android:background="@drawable/navbtn_selector"
-                    android:button="@android:color/transparent"
-                    android:padding="8dp"
-                    android:text="Category 3"
-                    android:textColor="@drawable/categorybtn_text_color" />
+<!--                <RadioButton-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_margin="5dp"-->
+<!--                    android:background="@drawable/navbtn_selector"-->
+<!--                    android:button="@android:color/transparent"-->
+<!--                    android:padding="8dp"-->
+<!--                    android:text="Category 3"-->
+<!--                    android:textColor="@drawable/categorybtn_text_color" />-->
 
-            </RadioGroup>
+<!--            </RadioGroup>-->
         </HorizontalScrollView>
         <!--    </LinearLayout>-->
         <androidx.recyclerview.widget.RecyclerView

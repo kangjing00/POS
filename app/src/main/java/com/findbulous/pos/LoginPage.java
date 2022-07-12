@@ -35,6 +35,7 @@ import java.util.Iterator;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
+import io.realm.RealmList;
 import io.realm.RealmResults;
 
 public class LoginPage extends AppCompatActivity {
@@ -83,14 +84,14 @@ public class LoginPage extends AppCompatActivity {
                 Intent intent = new Intent(contextpage, ChoosePOSPermissionPage.class);
                 startActivity(intent);
                 finish();
-                new loadProduct().execute();
-                new loadFloorAndTable().execute();
+                //new loadProduct().execute();
+                //new loadFloorAndTable().execute();
             }
         });
         binding.registerBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                deleteRealm();
+                //deleteRealm();
                 Intent intent = new Intent(contextpage, RegisterPage.class);
                 startActivity(intent);
                 finish();
@@ -127,7 +128,7 @@ public class LoginPage extends AppCompatActivity {
             String jsonUrl =url + "&agent=" + agent;
             System.out.println(jsonUrl);
 
-            int page = 1, productCounter = 0, categoryCounter = 0;
+            int page = 1, productCounter = 0;
             while(page > 0){
                 String jsonUrlPage = jsonUrl + "&page=" + page;
                 URL obj;
@@ -166,56 +167,12 @@ public class LoginPage extends AppCompatActivity {
                             }else{
                                 page = -1;
                             }
-
+                            // page = -1 below for testing purpose
                             page = -1;
-                            // Product Category
-                            for(int a = 0; a < jcategories.length(); a++){
-                                loadProductCategories(jcategories.getJSONObject(a));
-//                                JSONObject jo = jcategories.getJSONObject(a);
-//                                JSONArray jSubCategories = jo.getJSONArray("pos_categories");
-//
-//                                POS_Category product_category = new POS_Category(jo.getInt("pos_categ_id"),
-//                                        jo.getString("name"), null);
-//                                POS_Category product_sub_category = null;
-//
-//                                if(jSubCategories.length() > 0){
-//                                    for(int x = 0; x < jSubCategories.length(); x++){
-//                                        JSONObject joSubCategory = jSubCategories.getJSONObject(x);
-//                                        product_sub_category = new POS_Category(joSubCategory.getInt("pos_categ_id"),
-//                                                joSubCategory.getString("name"), null);
-//
-//                                    }
-//                                }
-//
-////                                boolean hasSubCategory = false;
-////                                JSONObject jSubObject = null;
-////                                if(jo.getJSONObject("pos_categories") != null){
-////                                    hasSubCategory = true;
-////                                    jSubObject = jo.getJSONObject("pos_categories");
-////                                }else {
-////                                    product_categories.add(product_category);
-////                                    System.out.println(product_category.getName());
-////                                }
-////
-////                                while(hasSubCategory) {
-////                                    POS_Category product_sub_category = new POS_Category(jSubObject.getInt("pos_categ_id"),
-////                                            jSubObject.getString("name"), null);
-////                                    product_category.setPos_categories(product_sub_category);
-////                                    product_categories.add(product_category);
-////
-////                                    if(jSubObject.getJSONObject("pos_categories") != null){
-////                                        jSubObject = jSubObject.getJSONObject("pos_categories");
-////                                        product_category = product_sub_category;
-////                                    }else{
-////                                        hasSubCategory = false;
-////                                        product_categories.add(product_sub_category);
-////                                    }
-////                                    System.out.println(product_category.getName());
-////                                    categoryCounter++;
-////                                }
-//                                categoryCounter++;
-                            }
 
+
+                            // Product Category
+                            loadProductCategories(jcategories, true);
                             // Product
                             for (int a = 0; a < jproducts.length(); a++) {
                                 JSONObject jo = jproducts.getJSONObject(a);
@@ -226,7 +183,7 @@ public class LoginPage extends AppCompatActivity {
                                         jo.getDouble("price_excl_tax"), jo.getString("display_list_price"),jo.getString("display_standard_price"),
                                         jo.getString("display_margin"), jo.getString("display_margin_percent"), jo.getString("display_price_incl_tax"),
                                         jo.getString("display_price_excl_tax"));
-                            // Product Taxes
+                                // Product Taxes
                                 if(jo.getJSONArray("taxes").length() > 0){
                                     jProductTax = jo.getJSONArray("taxes");
                                     for(int x = 0; x < jProductTax.length(); x++){
@@ -239,7 +196,6 @@ public class LoginPage extends AppCompatActivity {
                                 }
 
                                 products.add(product);
-                                System.out.println(products.get(a).getName());
                                 productCounter++;
                             }
                         }
@@ -254,7 +210,6 @@ public class LoginPage extends AppCompatActivity {
                 }
             }
             System.out.println("Product Counter: " + productCounter);
-            System.out.println("Category Counter: " + categoryCounter);
             return null;
         }
 
@@ -274,45 +229,37 @@ public class LoginPage extends AppCompatActivity {
             }
         }
     }
-    private void loadProductCategories(JSONObject data){
-        try {
-            POS_Category product_category = new POS_Category(data.getInt("pos_categ_id"),
-                    data.getString("name"), null);
-            POS_Category last_product_category = product_category;
-            int counter = (data.getJSONArray("pos_categories").length() > 0)? data.getJSONArray("pos_categories").length(): 0;
-            while(counter > 0){
+    //Recursive retrieve category and sub-category and subsub-category and subsubsub...
+    private RealmList<POS_Category> loadProductCategories(JSONArray array, boolean firstLevel){
+        RealmList<POS_Category> categories_list = new RealmList<>();
+        RealmList<POS_Category> sub_categories_list;
+        POS_Category product_category;
+        int counter = 0;
+        while(counter < array.length()){
+            try {
+                JSONObject data = array.getJSONObject(counter);
+                product_category = new POS_Category(data.getInt("pos_categ_id"),
+                        data.getString("name"), null);
 
+                // Is there any Sub-categories?
+                JSONArray ja_sub_categories = data.getJSONArray("pos_categories");
+                if (ja_sub_categories.length() > 0) {
+                    //Second level category list
+                    sub_categories_list = loadProductCategories(ja_sub_categories, false); //second lvl = third lvl
+                    product_category.setPos_categories(sub_categories_list);
+                }
+                if(firstLevel)
+                    product_categories.add(product_category);
 
-
-                counter--;
+                //Main level category list
+                categories_list.add(product_category);
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
-            product_categories.add(product_category);
-        } catch (JSONException e) {
-            e.printStackTrace();
+            counter++;
         }
-
-//        Iterator<String> it = data.keys();
-//        while (it.hasNext()) {
-//            String key = it.next();
-//
-//            try {
-//                if (data.get(key) instanceof JSONArray) {
-//                    JSONArray arry = data.getJSONArray(key);
-//                    int size = arry.length();
-//                    for (int i = 0; i < size; i++) {
-//                        loadProductCategories(arry.getJSONObject(i));
-//                    }
-//                } else if (data.get(key) instanceof JSONObject) {
-//                    loadProductCategories(data.getJSONObject(key));
-//                } else {
-//                    System.out.println("" + key + " : " + data.optString(key));
-//                }
-//            } catch (Throwable e) {
-//                System.out.println("" + key + " : " + data.optString(key));
-//                e.printStackTrace();
-//
-//            }
-//        }
+        //Main level category list
+        return categories_list;
     }
 
     public class loadFloorAndTable extends AsyncTask<String, String, String> {

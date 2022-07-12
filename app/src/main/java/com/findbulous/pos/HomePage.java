@@ -28,6 +28,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.findbulous.pos.Adapters.CartOrderLineAdapter;
 import com.findbulous.pos.Adapters.ProductAdapter;
+import com.findbulous.pos.Adapters.ProductCategoryAdapter;
 import com.findbulous.pos.Network.CheckConnection;
 import com.findbulous.pos.Network.NetworkUtils;
 import com.findbulous.pos.databinding.HomePageBinding;
@@ -38,7 +39,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.TimeZone;
-import java.util.Timer;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -65,19 +65,21 @@ public class HomePage extends CheckConnection implements ProductAdapter.OnItemCl
     private SharedPreferences cartSharedPreference, customerSharedPreference;
     // Creating an Editor object to edit(write to the file)
     private SharedPreferences.Editor cartSharedPreferenceEdit, customerSharedPreferenceEdit;
+    //Adapter and arraylist for recyclerview
     private ProductAdapter productAdapter;
-    private ArrayList<Product> list;
-    private Realm realm;
     private CartOrderLineAdapter orderLineAdapter;
+    private ProductCategoryAdapter productCategoryAdapter;
+    private ArrayList<Product> list;
     private ArrayList<Order_Line> order_lines;
+    private ArrayList<POS_Category> product_categories;
+    //Realm
+    private Realm realm;
     //Current order
     private Order currentOrder;
     //OnHold customer
     private Customer onHoldCustomer;
     //Update table while order onhold
     private Table updateTableOnHold;
-    //Internet Connection
-    private Timer timer;
     //Number of Customer Popup
     private EditText number_customer_et;
 
@@ -1420,10 +1422,6 @@ public class HomePage extends CheckConnection implements ProductAdapter.OnItemCl
     @Override
     public void onResume() {
         super.onResume();
-        //Internet Connection Checking
-        timer = new Timer();
-        final int MILLISECONDS = 5000; //5 seconds
-        //timer.schedule(new CheckConnection(contextpage), 0, MILLISECONDS);
 
         int currentOrderId = cartSharedPreference.getInt("orderId", -1);
         Order order = realm.where(Order.class).equalTo("order_id", currentOrderId).findFirst();
@@ -1437,11 +1435,5 @@ public class HomePage extends CheckConnection implements ProductAdapter.OnItemCl
         refreshCartCurrentCustomer();
         refreshNote();
         refreshCustomerNumber();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        timer.cancel();
     }
 }
