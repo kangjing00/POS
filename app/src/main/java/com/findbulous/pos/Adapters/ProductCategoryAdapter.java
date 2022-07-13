@@ -3,18 +3,10 @@ package com.findbulous.pos.Adapters;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.RadioButton;
-
-import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.findbulous.pos.Floor;
 import com.findbulous.pos.POS_Category;
-import com.findbulous.pos.databinding.ViewFloorListBinding;
 import com.findbulous.pos.databinding.ViewProductCategoryListBinding;
-
 import java.util.ArrayList;
-import java.util.Stack;
 
 public class ProductCategoryAdapter extends RecyclerView.Adapter<ProductCategoryAdapter.ProductCategoryViewHolder>{
 
