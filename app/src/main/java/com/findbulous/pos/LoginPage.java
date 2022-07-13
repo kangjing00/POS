@@ -162,14 +162,17 @@ public class LoginPage extends AppCompatActivity {
                             JSONArray jcategories = jresult.getJSONArray("pos_categories");
                             JSONArray jproducts = jresult.getJSONArray("products");
 
-                            if((jproducts.length() != 0) || (jcategories.length() != 0)){
-                                page++;
-                            }else{
-                                page = -1;
-                            }
+//                            if((jproducts.length() != 0) || (jcategories.length() != 0)){
+//                                page++;
+//                            }else{
+//                                page = -1;
+//                            }
                             // page = -1 below for testing purpose
-                            page = -1;
-
+                            if(page == 2){
+                                page = -1;
+                            }else {
+                                page++;
+                            }
 
                             // Product Category
                             loadProductCategories(jcategories, true);

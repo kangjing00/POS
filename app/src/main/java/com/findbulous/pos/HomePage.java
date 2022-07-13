@@ -11,8 +11,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,6 +36,15 @@ import com.findbulous.pos.Network.NetworkUtils;
 import com.findbulous.pos.databinding.HomePageBinding;
 import com.google.android.material.button.MaterialButton;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -41,9 +52,11 @@ import java.util.Date;
 import java.util.TimeZone;
 
 import io.realm.Realm;
+import io.realm.RealmList;
 import io.realm.RealmResults;
 
-public class HomePage extends CheckConnection implements ProductAdapter.OnItemClickListener, CartOrderLineAdapter.OnItemClickListener{
+public class HomePage extends CheckConnection implements ProductCategoryAdapter.ProductCategoryClickInterface,
+        ProductAdapter.OnItemClickListener, CartOrderLineAdapter.OnItemClickListener{
 
     private HomePageBinding binding;
     //Product Modifier Choice Popup
@@ -115,7 +128,14 @@ public class HomePage extends CheckConnection implements ProductAdapter.OnItemCl
         currentOrder = new Order();
         updateTableOnHold = new Table();
         onHoldCustomer = null;
-        //Menu Recycler view
+        //Menu Category Recycler view
+        binding.productCategoryRv.setLayoutManager(new LinearLayoutManager(contextpage, LinearLayoutManager.HORIZONTAL, false));
+        binding.productCategoryRv.setHasFixedSize(true);
+        product_categories = new ArrayList<>();
+        productCategoryAdapter = new ProductCategoryAdapter(product_categories, this);
+        getProductCategoryFromRealm();
+        binding.productCategoryRv.setAdapter(productCategoryAdapter);
+        //Menu Product Recycler view
         binding.productListRv.setLayoutManager(new GridLayoutManager(contextpage, 4, LinearLayoutManager.VERTICAL, false));
         binding.productListRv.setHasFixedSize(true);
         list = new ArrayList<>();
@@ -144,6 +164,14 @@ public class HomePage extends CheckConnection implements ProductAdapter.OnItemCl
         }
 
         //OnClickListener
+        //Menu
+        binding.allCategoryBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                getProductCategoryFromRealm();
+                getProductFromRealm();
+            }
+        });
         //Toolbar buttons
         {
         binding.toolbarLayoutIncl.toolbarSearchIcon.setOnClickListener(new View.OnClickListener(){
@@ -466,7 +494,73 @@ public class HomePage extends CheckConnection implements ProductAdapter.OnItemCl
         }
     }
 
+    private void getProductCategoryFromRealm(){
+        //doesnt appear in any other realmlist
+        RealmResults<POS_Category> results = realm.where(POS_Category.class).findAll();
+        ArrayList<POS_Category> category_list = new ArrayList<>();
+        ArrayList<POS_Category> temp_sub_category = new ArrayList<>();
+        ArrayList<POS_Category> not_first_level_category = new ArrayList<>();
+        category_list.addAll(realm.copyFromRealm(results));
+        for(int x = 0; x < category_list.size(); x++) {
+            for (int i = 0; i < category_list.size(); i++) {
+                temp_sub_category.clear();
+                temp_sub_category.addAll(category_list.get(i).getPos_categories());
+                for (int j = 0; j < temp_sub_category.size(); j++) {
+                    if (category_list.get(x).getPos_categ_id() == temp_sub_category.get(j).getPos_categ_id()){
+                        not_first_level_category.add(category_list.get(x));
+                    }
+                }
+            }
+        }
+        category_list.removeAll(not_first_level_category);
+        product_categories.clear();
+        product_categories.addAll(category_list);
+        productCategoryAdapter.notifyDataSetChanged();
+    }
+    private void getProductCategoryFromRealm(POS_Category category){
+        ArrayList<POS_Category> allRelatedCategory = new ArrayList<>();
+
+        RealmResults<POS_Category> results = realm.where(POS_Category.class).findAll();
+        ArrayList<POS_Category> all_category_list = new ArrayList<>();
+        all_category_list.addAll(realm.copyFromRealm(results));
+
+        allRelatedCategory.addAll(getAllRelatedCategory(category, all_category_list));
+
+        product_categories.clear();
+        product_categories.addAll(allRelatedCategory);
+        productCategoryAdapter.notifyDataSetChanged();
+    }
+    private ArrayList<POS_Category> getAllRelatedCategory(POS_Category category, ArrayList<POS_Category> category_list){
+        //add parent & itself
+        ArrayList<POS_Category> all_list = new ArrayList<>();
+        all_list.addAll(getParentCategry(category, category_list));
+        //add sub-category
+        for(int i = 0; i < category.getPos_categories().size(); i++){
+            all_list.add(category.getPos_categories().get(i));
+        }
+        return all_list;
+    }
+    private ArrayList<POS_Category> getParentCategry(POS_Category category, ArrayList<POS_Category> category_list){
+        ArrayList<POS_Category> parent_list = new ArrayList<>();
+
+        int counter = 0;
+        while(counter < category_list.size()){
+            RealmList<POS_Category> sub_category = category_list.get(counter).getPos_categories();
+            POS_Category parent_category = null;
+            for(int i = 0; i < sub_category.size(); i++){
+                if(category.getPos_categ_id() == sub_category.get(i).getPos_categ_id()){
+                    parent_category = category_list.get(counter);
+                    parent_list.addAll(getParentCategry(parent_category, category_list));
+                }
+            }
+            counter++;
+        }
+        parent_list.add(category);
+        return parent_list;
+    }
+
     private void getProductFromRealm(){
+        list.clear();
         RealmResults<Product> results = realm.where(Product.class).findAll();
         list.addAll(realm.copyFromRealm(results));
         productAdapter.notifyDataSetChanged();
@@ -1408,7 +1502,102 @@ public class HomePage extends CheckConnection implements ProductAdapter.OnItemCl
         }
     }
 
-    //Menu
+    //Menu Category
+    @Override
+    public void onProductCategoryClick(int position){
+        POS_Category category = product_categories.get(position);
+
+        getProductCategoryFromRealm(category);
+
+        //Filter products process [NOT YET]
+        new getProductsByCategory(category.getPos_categ_id()).execute();
+
+        Toast.makeText(contextpage, "" + category.getName(), Toast.LENGTH_SHORT).show();
+    }
+    //API GET Products by category
+    public class getProductsByCategory extends AsyncTask<String, String, String> {
+
+        private int category_id;
+        private ArrayList<Product> product_list;
+
+        public getProductsByCategory(int category_id){
+            this.category_id = category_id;
+            this.product_list = new ArrayList<>();
+        }
+
+        @Override
+        protected String doInBackground(String... strings) {
+            String url = "https://www.c3rewards.com/api/merchant/?module=products";
+            String agent = "c092dc89b7aac085a210824fb57625db";
+            String jsonUrl = url + "&agent=" + agent + "&pos_categ_id=" + category_id;
+            System.out.println(jsonUrl);
+
+
+            URL obj;
+            try {
+                obj = new URL(jsonUrl);
+                HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+                // optional default is GET
+                con.setRequestMethod("GET");
+                //add request header
+                int responseCode = con.getResponseCode();
+                System.out.println("\nSending 'GET' request to URL : " + jsonUrl);
+                System.out.println("Response Code : " + responseCode);
+
+                BufferedReader in = new BufferedReader(
+                        new InputStreamReader(con.getInputStream()));
+                String inputLine;
+
+                StringBuilder response = new StringBuilder();
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                System.out.println(response);
+                String data = response.toString();
+                try {
+                    JSONObject json = new JSONObject(data);
+                    String status = json.getString("status");
+
+                    if (status.equals("OK")) {
+                        JSONObject jresult = json.getJSONObject("result");
+                        JSONArray jproducts = jresult.getJSONArray("products");
+
+                        for(int i = 0; i < jproducts.length(); i++){
+                            JSONObject jo = jproducts.getJSONObject(i);
+                            for(int j = 0; j < list.size(); j++){
+                                if(list.get(j).getProduct_id() == jo.getInt("product_id")){
+                                    product_list.add(list.get(j));
+                                    j = list.size();
+                                }
+                            }
+                        }
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            } catch (IOException e) {
+                Log.e("error", "cannot fetch data");
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            if(!NetworkUtils.isNetworkAvailable(contextpage)){
+                Toast.makeText(contextpage, "Required Internet Connection to filter", Toast.LENGTH_SHORT).show();
+            }else{
+                list.clear();
+                list.addAll(product_list);
+                productAdapter.notifyDataSetChanged();
+            }
+        }
+    }
+
+    //Menu Product
     @Override
     public void onMenuProductClick(int position) {
         showProductModifier(list.get(position), true);

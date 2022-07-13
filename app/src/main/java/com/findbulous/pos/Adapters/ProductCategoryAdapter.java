@@ -14,13 +14,14 @@ import com.findbulous.pos.databinding.ViewFloorListBinding;
 import com.findbulous.pos.databinding.ViewProductCategoryListBinding;
 
 import java.util.ArrayList;
+import java.util.Stack;
 
 public class ProductCategoryAdapter extends RecyclerView.Adapter<ProductCategoryAdapter.ProductCategoryViewHolder>{
 
     private ArrayList<POS_Category> categories;
     private ProductCategoryClickInterface listener;
-    private RadioButton lastClickedRB;
-    private int firstCategoryCheck = 0;
+//    private ArrayList<RadioButton> allButtons;
+//    private POS_Category clickedCategory;
 
     public class ProductCategoryViewHolder extends RecyclerView.ViewHolder{
         private final ViewProductCategoryListBinding binding;
@@ -34,7 +35,8 @@ public class ProductCategoryAdapter extends RecyclerView.Adapter<ProductCategory
     public ProductCategoryAdapter(ArrayList<POS_Category> categories, ProductCategoryClickInterface listener){
         this.categories = categories;
         this.listener = listener;
-        lastClickedRB = null;
+//        this.allButtons = new ArrayList<>();
+//        this.clickedCategory = null;
     }
 
 
@@ -49,21 +51,25 @@ public class ProductCategoryAdapter extends RecyclerView.Adapter<ProductCategory
     public void onBindViewHolder(ProductCategoryViewHolder holder, int position) {
         POS_Category category = categories.get(position);
         holder.binding.setCategory(category);
-
-
-        if(position == firstCategoryCheck){
-            holder.binding.categoryBtn.setChecked(true);
-            lastClickedRB = holder.binding.categoryBtn;
-        }
+//        allButtons.add(holder.binding.categoryBtn);
 
         holder.binding.categoryBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(lastClickedRB != null)
-                    lastClickedRB.setChecked(false);
-                if(holder.binding.categoryBtn == lastClickedRB)
-                    holder.binding.categoryBtn.setChecked(true);
-                lastClickedRB = holder.binding.categoryBtn;
+//                for(int i = 0; i < categories.size(); i++){
+//                    if(categories.get(i).getPos_categ_id() == holder.binding.getCategory().getPos_categ_id()){
+//                        clickedCategory = categories.get(i);
+//                    }
+//                    allButtons.get(i).setChecked(false);
+//                }
+//
+//                for(int i = 0; i < allButtons.size(); i++){
+//                    allButtons.get(i).setChecked(true);
+//                    if(categories.get(i).getPos_categ_id() == clickedCategory.getPos_categ_id()){
+//                        break;
+//                    }
+//                }
+//                allButtons.clear();
                 listener.onProductCategoryClick(holder.getAdapterPosition());
             }
         });
