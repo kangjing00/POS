@@ -12,8 +12,7 @@ public class ProductCategoryAdapter extends RecyclerView.Adapter<ProductCategory
 
     private ArrayList<POS_Category> categories;
     private ProductCategoryClickInterface listener;
-//    private ArrayList<RadioButton> allButtons;
-//    private POS_Category clickedCategory;
+    private ArrayList<POS_Category> categories_clicked_wo_child;
 
     public class ProductCategoryViewHolder extends RecyclerView.ViewHolder{
         private final ViewProductCategoryListBinding binding;
@@ -24,13 +23,11 @@ public class ProductCategoryAdapter extends RecyclerView.Adapter<ProductCategory
         }
     }
 
-    public ProductCategoryAdapter(ArrayList<POS_Category> categories, ProductCategoryClickInterface listener){
+    public ProductCategoryAdapter(ArrayList<POS_Category> categories, ProductCategoryClickInterface listener, ArrayList<POS_Category> categories_clicked_wo_child){
         this.categories = categories;
         this.listener = listener;
-//        this.allButtons = new ArrayList<>();
-//        this.clickedCategory = null;
+        this.categories_clicked_wo_child = categories_clicked_wo_child;
     }
-
 
     @Override
     public ProductCategoryViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -43,25 +40,17 @@ public class ProductCategoryAdapter extends RecyclerView.Adapter<ProductCategory
     public void onBindViewHolder(ProductCategoryViewHolder holder, int position) {
         POS_Category category = categories.get(position);
         holder.binding.setCategory(category);
-//        allButtons.add(holder.binding.categoryBtn);
+        holder.binding.categoryBtn.setChecked(false);
+
+        for(int i = 0; i < categories_clicked_wo_child.size(); i++){
+            if(holder.binding.getCategory().getPos_categ_id() == categories_clicked_wo_child.get(i).getPos_categ_id()){
+                holder.binding.categoryBtn.setChecked(true);
+            }
+        }
 
         holder.binding.categoryBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                for(int i = 0; i < categories.size(); i++){
-//                    if(categories.get(i).getPos_categ_id() == holder.binding.getCategory().getPos_categ_id()){
-//                        clickedCategory = categories.get(i);
-//                    }
-//                    allButtons.get(i).setChecked(false);
-//                }
-//
-//                for(int i = 0; i < allButtons.size(); i++){
-//                    allButtons.get(i).setChecked(true);
-//                    if(categories.get(i).getPos_categ_id() == clickedCategory.getPos_categ_id()){
-//                        break;
-//                    }
-//                }
-//                allButtons.clear();
                 listener.onProductCategoryClick(holder.getAdapterPosition());
             }
         });

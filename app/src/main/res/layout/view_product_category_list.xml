@@ -25,6 +25,7 @@
             android:gravity="center"
             android:button="@android:color/transparent"
             android:textColor="@drawable/categorybtn_text_color"
+            android:checked="false"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

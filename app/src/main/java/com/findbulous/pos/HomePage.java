@@ -85,6 +85,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
     private ArrayList<Product> list;
     private ArrayList<Order_Line> order_lines;
     private ArrayList<POS_Category> product_categories;
+    private ArrayList<POS_Category> categories_clicked_wo_child;
     //Realm
     private Realm realm;
     //Current order
@@ -128,11 +129,12 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         currentOrder = new Order();
         updateTableOnHold = new Table();
         onHoldCustomer = null;
+        categories_clicked_wo_child = new ArrayList<>();
         //Menu Category Recycler view
         binding.productCategoryRv.setLayoutManager(new LinearLayoutManager(contextpage, LinearLayoutManager.HORIZONTAL, false));
         binding.productCategoryRv.setHasFixedSize(true);
         product_categories = new ArrayList<>();
-        productCategoryAdapter = new ProductCategoryAdapter(product_categories, this);
+        productCategoryAdapter = new ProductCategoryAdapter(product_categories, this, categories_clicked_wo_child);
         getProductCategoryFromRealm();
         binding.productCategoryRv.setAdapter(productCategoryAdapter);
         //Menu Product Recycler view
@@ -170,6 +172,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
             public void onClick(View view) {
                 getProductCategoryFromRealm();
                 getProductFromRealm();
+                categories_clicked_wo_child.clear();
             }
         });
         //Toolbar buttons
@@ -534,6 +537,8 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         //add parent & itself
         ArrayList<POS_Category> all_list = new ArrayList<>();
         all_list.addAll(getParentCategry(category, category_list));
+        categories_clicked_wo_child.clear();
+        categories_clicked_wo_child.addAll(all_list);
         //add sub-category
         for(int i = 0; i < category.getPos_categories().size(); i++){
             all_list.add(category.getPos_categories().get(i));
@@ -557,6 +562,9 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         }
         parent_list.add(category);
         return parent_list;
+    }
+    public ArrayList<POS_Category> getCategories_clicked_wo_child(){
+        return categories_clicked_wo_child;
     }
 
     private void getProductFromRealm(){
