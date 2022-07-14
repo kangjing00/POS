@@ -127,7 +127,7 @@ public class CashierPage extends CheckConnection {
                    Intent intent = new Intent(contextpage, HomePage.class);
                    startActivity(intent);
                    finish();
-                   Toast.makeText(contextpage, "Home Button Clicked", Toast.LENGTH_SHORT).show();
+//                   Toast.makeText(contextpage, "Home Button Clicked", Toast.LENGTH_SHORT).show();
                }
            }
         );
@@ -137,7 +137,7 @@ public class CashierPage extends CheckConnection {
                    Intent intent = new Intent(contextpage, CustomerPage.class);
                    startActivity(intent);
                    finish();
-                   Toast.makeText(contextpage, "Customers Button Clicked", Toast.LENGTH_SHORT).show();
+//                   Toast.makeText(contextpage, "Customers Button Clicked", Toast.LENGTH_SHORT).show();
                }
            }
         );
@@ -147,14 +147,14 @@ public class CashierPage extends CheckConnection {
                    Intent intent = new Intent(contextpage, TablePage.class);
                    startActivity(intent);
                    finish();
-                   Toast.makeText(contextpage, "Tables Button Clicked", Toast.LENGTH_SHORT).show();
+//                   Toast.makeText(contextpage, "Tables Button Clicked", Toast.LENGTH_SHORT).show();
                }
            }
         );
         binding.navbarLayoutInclude.navBarCashier.setOnClickListener(new View.OnClickListener(){
                @Override
                public void onClick(View view) {
-                   Toast.makeText(contextpage, "Cashier Button Clicked", Toast.LENGTH_SHORT).show();
+//                   Toast.makeText(contextpage, "Cashier Button Clicked", Toast.LENGTH_SHORT).show();
                }
            }
         );
@@ -164,14 +164,14 @@ public class CashierPage extends CheckConnection {
                   Intent intent = new Intent(contextpage, OrderPage.class);
                   startActivity(intent);
                   finish();
-                  Toast.makeText(contextpage, "Orders Button Clicked", Toast.LENGTH_SHORT).show();
+//                  Toast.makeText(contextpage, "Orders Button Clicked", Toast.LENGTH_SHORT).show();
               }
           }
         );
         binding.navbarLayoutInclude.navBarReports.setOnClickListener(new View.OnClickListener(){
                @Override
                public void onClick(View view) {
-                   Toast.makeText(contextpage, "Reports Button Clicked", Toast.LENGTH_SHORT).show();
+//                   Toast.makeText(contextpage, "Reports Button Clicked", Toast.LENGTH_SHORT).show();
                }
            }
         );
@@ -181,21 +181,21 @@ public class CashierPage extends CheckConnection {
                    Intent intent = new Intent(contextpage, SettingPage.class);
                    startActivity(intent);
                    finish();
-                   Toast.makeText(contextpage, "Settings Button Clicked", Toast.LENGTH_SHORT).show();
+//                   Toast.makeText(contextpage, "Settings Button Clicked", Toast.LENGTH_SHORT).show();
                }
            }
         );
         binding.navbarLayoutInclude.navBarProfile.setOnClickListener(new View.OnClickListener(){
                @Override
                public void onClick(View view) {
-                   Toast.makeText(contextpage, "Profile Button Clicked", Toast.LENGTH_SHORT).show();
+//                   Toast.makeText(contextpage, "Profile Button Clicked", Toast.LENGTH_SHORT).show();
                }
            }
         );
         binding.navbarLayoutInclude.navbarLogout.setOnClickListener(new View.OnClickListener(){
                @Override
                public void onClick(View view) {
-                   Toast.makeText(contextpage, "Logout Button Clicked", Toast.LENGTH_SHORT).show();
+//                   Toast.makeText(contextpage, "Logout Button Clicked", Toast.LENGTH_SHORT).show();
                }
            }
         );
