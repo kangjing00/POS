@@ -387,7 +387,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                 Toast.makeText(contextpage, "Scan Button Clicked", Toast.LENGTH_SHORT).show();
             }
         });
-        ArrayAdapter<String> orderTypes = new ArrayAdapter<String>(contextpage, android.R.layout.simple_list_item_1, getResources().getStringArray(R.array.order_types)){
+        ArrayAdapter<String> orderTypes = new ArrayAdapter<String>(contextpage, R.layout.textview_spinner_item, getResources().getStringArray(R.array.order_types)){
             @Override
             public View getDropDownView(int position, View convertView, ViewGroup parent){
                 View v = null;
@@ -412,7 +412,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                 return v;
             }
         };
-        orderTypes.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        orderTypes.setDropDownViewResource(R.layout.textview_spinner_item);
         binding.cartInclude.cartBtnPosType.setAdapter(orderTypes);
         binding.cartInclude.cartBtnPosType.setDropDownVerticalOffset(80);
         binding.cartInclude.cartBtnPosType.setSelection(cartSharedPreference.getInt("orderTypePosition", 1));

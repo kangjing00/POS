@@ -50,16 +50,19 @@
                 app:layout_constraintStart_toEndOf="@+id/product_order_setting_btn"
                 app:layout_constraintTop_toTopOf="parent" />
 
-
             <TextView
                 android:id="@+id/product_order_product_name"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:text="@{orderLine.product.name}"
                 android:layout_margin="10dp"
+                android:maxLines="1"
+                android:textAlignment="viewStart"
+                android:ellipsize="end"
                 app:layout_constraintBottom_toTopOf="@+id/product_order_product_option"
                 app:layout_constraintStart_toEndOf="@id/product_order_quantity"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/product_order_product_subtotal"/>
 
             <TextView
                 android:id="@+id/product_order_product_option"
