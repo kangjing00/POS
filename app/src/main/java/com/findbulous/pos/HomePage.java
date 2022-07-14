@@ -149,7 +149,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         binding.cartInclude.cartOrdersRv.setLayoutManager(new LinearLayoutManager(contextpage, LinearLayoutManager.VERTICAL, false));
         binding.cartInclude.cartOrdersRv.setHasFixedSize(true);
         order_lines = new ArrayList<>();
-        orderLineAdapter = new CartOrderLineAdapter(order_lines, this);
+        orderLineAdapter = new CartOrderLineAdapter(order_lines, this, contextpage);
         getOrderLineFromRealm();
         binding.cartInclude.cartOrdersRv.setAdapter(orderLineAdapter);
 
@@ -1379,14 +1379,16 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         }
     }
     @Override
-    public void discountUpdateOrderLine(int position, int discount) {
-        double subtotal;
-        double price_total = order_lines.get(position).getPrice_total();
-        subtotal = price_total - ((price_total * discount) / 100);
-        subtotal = Double.valueOf(String.format("%.2f", subtotal));
-        order_lines.get(position).setPrice_subtotal(subtotal);
-        order_lines.get(position).setDiscount(discount);
-        Order_Line updateOrderLine = order_lines.get(position);
+    public void discountUpdateOrderLine(int position, Order_Line updateOrderLine) {
+//        double subtotal;
+//        double price_total = order_lines.get(position).getPrice_total();
+//        subtotal = price_total - ((price_total * discount) / 100);
+//        subtotal = Double.valueOf(String.format("%.2f", subtotal));
+//        order_lines.get(position).setPrice_subtotal(subtotal);
+//        order_lines.get(position).setDiscount(discount);
+//        Order_Line updateOrderLine = order_lines.get(position);
+        order_lines.get(position).setPrice_subtotal(updateOrderLine.getPrice_subtotal());
+        order_lines.get(position).setDiscount(updateOrderLine.getDiscount());
 
         realm.executeTransaction(new Realm.Transaction() {
             @Override
@@ -1394,23 +1396,26 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                 realm.insertOrUpdate(updateOrderLine);
             }
         });
-        binding.cartInclude.cartOrdersRv.post(new Runnable() {
-            @Override
-            public void run() {
-                orderLineAdapter.notifyDataSetChanged();
-            }
-        });
+//        binding.cartInclude.cartOrdersRv.post(new Runnable() {
+//            @Override
+//            public void run() {
+//                orderLineAdapter.notifyDataSetChanged();
+//            }
+//        });
         updateOrderTotalAmount();
     }
     @Override
-    public void quantityUpdateOrderLine(int position, int quantity) {
-        double price_total = quantity * order_lines.get(position).getProduct().getList_price();
-        int discount = order_lines.get(position).getDiscount();
-        double subtotal = price_total - ((price_total * discount) / 100);
-        order_lines.get(position).setPrice_subtotal(subtotal);
-        order_lines.get(position).setQty(quantity);
-        order_lines.get(position).setPrice_total(price_total);
-        Order_Line updateOrderLine = order_lines.get(position);
+    public void quantityUpdateOrderLine(int position, Order_Line updateOrderLine) {
+//        double price_total = quantity * order_lines.get(position).getProduct().getList_price();
+//        int discount = order_lines.get(position).getDiscount();
+//        double subtotal = price_total - ((price_total * discount) / 100);
+//        order_lines.get(position).setPrice_subtotal(subtotal);
+//        order_lines.get(position).setQty(quantity);
+//        order_lines.get(position).setPrice_total(price_total);
+//        Order_Line updateOrderLine = order_lines.get(position);
+        order_lines.get(position).setPrice_subtotal(updateOrderLine.getPrice_subtotal());
+        order_lines.get(position).setQty(updateOrderLine.getQty());
+        order_lines.get(position).setPrice_total(updateOrderLine.getPrice_total());
 
         realm.executeTransaction(new Realm.Transaction() {
             @Override
@@ -1418,12 +1423,12 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                 realm.insertOrUpdate(updateOrderLine);
             }
         });
-        binding.cartInclude.cartOrdersRv.post(new Runnable() {
-            @Override
-            public void run() {
-                orderLineAdapter.notifyDataSetChanged();
-            }
-        });
+//        binding.cartInclude.cartOrdersRv.post(new Runnable() {
+//            @Override
+//            public void run() {
+//                orderLineAdapter.notifyDataSetChanged();
+//            }
+//        });
         updateOrderTotalAmount();
     }
 

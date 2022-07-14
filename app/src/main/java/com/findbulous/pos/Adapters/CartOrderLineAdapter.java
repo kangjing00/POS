@@ -1,8 +1,11 @@
 package com.findbulous.pos.Adapters;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
+
 import androidx.recyclerview.widget.RecyclerView;
 import com.findbulous.pos.Order_Line;
 import com.findbulous.pos.R;
@@ -13,6 +16,8 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
 
     private ArrayList<Order_Line> order_lines;
     private OnItemClickListener listener;
+    private Context context;
+    private int cancelledIndex;
 
     public class OrderLineProductViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
         private final ViewCartOrdersBinding binding;
@@ -29,9 +34,11 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
         }
     }
 
-    public CartOrderLineAdapter(ArrayList<Order_Line> order_lines, OnItemClickListener listener){
+    public CartOrderLineAdapter(ArrayList<Order_Line> order_lines, OnItemClickListener listener, Context c){
         this.order_lines = order_lines;
         this.listener = listener;
+        this.context = c;
+        this.cancelledIndex = -1;
     }
 
     @Override
@@ -43,7 +50,6 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
 
     @Override
     public void onBindViewHolder(OrderLineProductViewHolder holder, int position) {
-        int p = holder.getAdapterPosition();
         Order_Line order_line = order_lines.get(position);
         holder.binding.setOrderLine(order_line);
 
@@ -69,10 +75,34 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
                     int qty = 1;
 
                     if ((!holder.binding.productOrderQuantityEt.getText().toString().equalsIgnoreCase(""))
-                            && (!holder.binding.productOrderQuantityEt.getText().toString().equalsIgnoreCase("0"))) {
+                            && (Double.valueOf(holder.binding.productOrderQuantityEt.getText().toString()) != 0.0)) {
                         qty = Integer.parseInt(holder.binding.productOrderQuantityEt.getText().toString());
                     }
-                    listener.quantityUpdateOrderLine(p, qty);
+
+                    int p = holder.getLayoutPosition();
+                    if(cancelledIndex != -1){
+                        if(cancelledIndex == p){
+                            p = -1;
+                        }else if(cancelledIndex < p){
+                            p = p - 1;
+                        }
+                    }
+                    cancelledIndex = -1;
+
+                    if(p > -1) {
+                        double price_total = qty * order_lines.get(p).getProduct().getList_price();
+                        int discount = order_lines.get(p).getDiscount();
+                        double subtotal = price_total - ((price_total * discount) / 100);
+                        price_total = Double.valueOf(String.format("%.2f", price_total));
+                        subtotal = Double.valueOf(String.format("%.2f", subtotal));
+                        order_lines.get(p).setPrice_subtotal(subtotal);
+                        order_lines.get(p).setQty(qty);
+                        order_lines.get(p).setPrice_total(price_total);
+                        Order_Line updateOrderLine = order_lines.get(p);
+                        holder.binding.setOrderLine(updateOrderLine);
+
+                        listener.quantityUpdateOrderLine(p, updateOrderLine);
+                    }
                 }
             }
         });
@@ -105,13 +135,40 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
                 if(!hasFocus) {
                     int discount = 0;
                     if ((!holder.binding.productOrderDiscountEt.getText().toString().equalsIgnoreCase(""))
-                            && (!holder.binding.productOrderDiscountEt.getText().toString().equalsIgnoreCase("0"))) {
+                        && (Double.valueOf(holder.binding.productOrderDiscountEt.getText().toString()) != 0.0)
+                        && (Double.valueOf(holder.binding.productOrderDiscountEt.getText().toString()) <= 100.0)) {
                         discount = Integer.parseInt(holder.binding.productOrderDiscountEt.getText().toString());
                         holder.binding.productOrderProductTotalPrice.setVisibility(View.VISIBLE);
                     } else {
+                        if((Double.valueOf(holder.binding.productOrderDiscountEt.getText().toString()) > 100.0)) {
+                            Toast.makeText(context, "Discount over 100% is impossible", Toast.LENGTH_SHORT).show();
+                        }
                         holder.binding.productOrderProductTotalPrice.setVisibility(View.INVISIBLE);
                     }
-                    listener.discountUpdateOrderLine(p, discount);
+
+                    int p = holder.getLayoutPosition();
+                    if(cancelledIndex != -1){
+                        if(cancelledIndex == p){
+                            p = -1;
+                        }else if(cancelledIndex < p){
+                            p = p - 1;
+                        }
+                    }
+                    cancelledIndex = -1;
+
+                    if(p > -1) {
+                        double subtotal;
+                        double price_total = order_lines.get(p).getPrice_total();
+                        subtotal = price_total - ((price_total * discount) / 100);
+                        price_total = Double.valueOf(String.format("%.2f", price_total));
+                        subtotal = Double.valueOf(String.format("%.2f", subtotal));
+                        order_lines.get(p).setPrice_subtotal(subtotal);
+                        order_lines.get(p).setDiscount(discount);
+                        Order_Line updateOrderLine = order_lines.get(p);
+                        holder.binding.setOrderLine(updateOrderLine);
+
+                        listener.discountUpdateOrderLine(p, updateOrderLine);
+                    }
                 }
             }
         });
@@ -130,6 +187,7 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
         holder.binding.productOrderCancelProduct.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                cancelledIndex = holder.getAdapterPosition();
                 listener.onOrderLineCancelClick(holder.getAdapterPosition());
             }
         });
@@ -143,8 +201,8 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
     public interface OnItemClickListener{
         void onOrderLineClick(int position);
         void onOrderLineCancelClick(int position);
-        void discountUpdateOrderLine(int position, int discount);
-        void quantityUpdateOrderLine(int position, int quantity);
+        void discountUpdateOrderLine(int position, Order_Line updateOrderLine);
+        void quantityUpdateOrderLine(int position, Order_Line updateOrderLine);
     }
 
     private void closeSetting(OrderLineProductViewHolder holder){
