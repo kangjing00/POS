@@ -815,6 +815,13 @@ public class TablePage extends CheckConnection implements
                 }else{
                     DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.red));
                 }
+
+                if(vacantTableSelected != null)
+                    if(table.getTable_id() == vacantTableSelected.getTable_id()) {
+                        DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.darkOrange));
+                        lastClickedTableView = tableTv;
+                    }
+
                 tableTv.setBackground(tvDrawable);
 
                 tableTv.setId(table.getTable_id());
@@ -859,32 +866,47 @@ public class TablePage extends CheckConnection implements
 
         if(!tableSwapping) {
             if (clickedTable.getState().equalsIgnoreCase("V")) {
+
+                if(vacantTableSelected != null){
+                    tableSelecting = true;
+                }
+
                 if (!tableSelecting) {
                     //case: table is not selecting, operation: select a table
-                    tableSelecting = true;
                     DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.darkOrange));
                     v.setBackground(tvDrawable);
                     lastClickedTableView = v;
+                    tableSelecting = true;
                     vacantTableSelected = clickedTable;
                 } else if (lastClickedTableView == v) {
                     //case: table is selecting and click on the selecting table, operation: make it unselect on same table
+                    Drawable tvDrawable1;
+                    tvDrawable1 = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
+                    DrawableCompat.setTint(tvDrawable1, getResources().getColor(R.color.green));
+                    lastClickedTableView.setBackground(tvDrawable1);
                     tableSelecting = false;
-                    Drawable tvDrawable1;
-                    tvDrawable1 = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
-                    DrawableCompat.setTint(tvDrawable1, getResources().getColor(R.color.green));
-                    lastClickedTableView.setBackground(tvDrawable1);
                     vacantTableSelected = null;
-                } else {
-                    //case: selecting one table, and click to select another table, operation: unselect on last table & select table
-                    tableSelecting = true;
-                    DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.darkOrange));
-                    v.setBackground(tvDrawable);
-                    Drawable tvDrawable1;
-                    tvDrawable1 = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
-                    DrawableCompat.setTint(tvDrawable1, getResources().getColor(R.color.green));
-                    lastClickedTableView.setBackground(tvDrawable1);
-                    lastClickedTableView = v;
-                    vacantTableSelected = clickedTable;
+                } else { // operation on the same floor and the same floor while navigate from other floor.
+                    if(vacantTableSelected.getTable_id() == clickedTable.getTable_id()){
+                        //case: table is selecting and click on the selecting table, operation: make it unselect on same table
+                        DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.green));
+                        v.setBackground(tvDrawable);
+                        tableSelecting = false;
+                        vacantTableSelected = null;
+                        lastClickedTableView = null;
+                    }else {
+                        //case: selecting one table, and click to select another table, operation: unselect on last table & select table
+                        DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.darkOrange));
+                        v.setBackground(tvDrawable);
+                        Drawable tvDrawable1;
+                        tvDrawable1 = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
+                        DrawableCompat.setTint(tvDrawable1, getResources().getColor(R.color.green));
+                        lastClickedTableView.setBackground(tvDrawable1);
+                        lastClickedTableView = v;
+                        tableSelecting = true;
+                        vacantTableSelected = clickedTable;
+                    }
+
                 }
             } else if (clickedTable.getState().equalsIgnoreCase("H")) {
                 if (!onlyVacantTable) {//not only vacant table can be selected
