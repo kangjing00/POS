@@ -39,8 +39,7 @@ public class PaymentOrderLineAdapter extends RecyclerView.Adapter<PaymentOrderLi
         Order_Line order_line = order_lines.get(position);
         holder.binding.setOrderLine(order_line);
 
-        int disc = order_line.getDiscount();
-        if(disc <= 0){
+        if(!order_line.isHas_discount()){
             holder.binding.paymentProductProductDiscount.setVisibility(View.INVISIBLE);
             holder.binding.paymentProductProductPrice.setVisibility(View.INVISIBLE);
         }else{

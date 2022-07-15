@@ -110,62 +110,118 @@
                 android:layout_margin="10dp"
                 app:tint="@color/darkGrey" />
 
-            <RelativeLayout
-                android:id="@+id/product_order_quantity_discount_rl"
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/product_order_quantity_discount_cl"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:layout_margin="10dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="20dp"
                 android:orientation="vertical"
                 android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/product_order_quantity"
                 app:layout_constraintTop_toBottomOf="@+id/product_order_product_option">
 
-                <TextView
-                    android:id="@+id/textView"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:id="@+id/title_ll"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:fontFamily="@font/roboto_regular"
-                    android:text="Quantity"/>
+                    app:layout_constraintTop_toTopOf="parent">
 
-                <EditText
-                    android:id="@+id/product_order_quantity_et"
-                    android:layout_width="150dp"
-                    android:layout_height="wrap_content"
-                    android:layout_below="@+id/textView"
-                    android:background="@drawable/custom_input"
-                    android:gravity="end"
-                    android:inputType="number"
-                    android:maxLines="1"
-                    android:padding="15dp"
-                    android:text="@{String.valueOf(orderLine.qty)}"
-                    android:textSize="12dp"/>
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_weight="1">
+                        <TextView
+                            android:id="@+id/textView"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/roboto_regular"
+                            android:text="Quantity"/>
 
-                <TextView
-                    android:id="@+id/textView1"
-                    android:layout_width="150dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="20dp"
-                    android:layout_toRightOf="@+id/product_order_quantity_et"
-                    android:fontFamily="@font/roboto_regular"
-                    android:text="Discount(%)"/>
+                        <EditText
+                            android:id="@+id/product_order_quantity_et"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/custom_input"
+                            android:gravity="end"
+                            android:inputType="number"
+                            android:maxLines="1"
+                            android:padding="15dp"
+                            android:text="@{String.valueOf(orderLine.qty)}"
+                            android:textSize="12dp"/>
+                    </LinearLayout>
 
-                <EditText
-                    android:id="@+id/product_order_discount_et"
-                    android:layout_width="150dp"
-                    android:layout_height="wrap_content"
-                    android:layout_below="@+id/textView1"
-                    android:layout_marginLeft="20dp"
-                    android:layout_toRightOf="@+id/product_order_quantity_et"
-                    android:background="@drawable/custom_input"
-                    android:gravity="end"
-                    android:maxLines="1"
-                    android:padding="15dp"
-                    android:text='@{String.valueOf(orderLine.discount)}'
-                    android:textSize="12dp"
-                    android:inputType="number"/>
-            </RelativeLayout>
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginLeft="20dp"
+                        android:layout_weight="3">
+
+                        <TextView
+                            android:id="@+id/textView1"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/roboto_regular"
+                            android:text="Discount(%)"/>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="2">
+                            <RadioGroup
+                                android:id="@+id/discount_rg"
+                                android:layout_width="wrap_content"
+                                android:layout_height="match_parent"
+                                android:orientation="horizontal">
+
+                                <RadioButton
+                                    android:id="@+id/discount_radio_btn_amount"
+                                    android:layout_width="40dp"
+                                    android:layout_height="40dp"
+                                    android:button="@android:color/transparent"
+                                    android:drawableStart="@drawable/ic_amount"
+                                    android:drawableTint="@drawable/navbtn_icon_color"
+                                    android:background="@drawable/cart_order_add_popup_radio_btn_selector"
+                                    android:paddingLeft="9dp"
+                                    android:layout_marginRight="5dp"
+                                    android:gravity="center"
+                                    android:layout_gravity="center" />
+
+                                <RadioButton
+                                    android:id="@+id/discount_radio_btn_percentage"
+                                    android:layout_width="40dp"
+                                    android:layout_height="40dp"
+                                    android:button="@android:color/transparent"
+                                    android:drawableStart="@drawable/ic_percentage"
+                                    android:paddingLeft="9dp"
+                                    android:drawableTint="@drawable/navbtn_icon_color"
+                                    android:background="@drawable/cart_order_add_popup_radio_btn_selector"
+                                    android:gravity="center"
+                                    android:layout_gravity="center" />
+                            </RadioGroup>
+                            <EditText
+                                android:id="@+id/product_order_discount_et"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/custom_input"
+                                android:gravity="end"
+                                android:inputType="number"
+                                android:maxLines="1"
+                                android:padding="15dp"
+                                android:layout_marginStart="5dp"
+                                android:text='@{orderLine.is_percentage? (String.format("%d", orderLine.discount_percent)) : (String.format("%.2f", orderLine.amount_discount)) }'
+                                android:textSize="12dp"
+                                android:layout_weight="1"/>
+                        </LinearLayout>
+
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.cardview.widget.CardView>
 </layout>

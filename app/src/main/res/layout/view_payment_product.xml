@@ -59,7 +59,7 @@
             android:id="@+id/payment_product_product_discount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text='@{String.format("%d%% Disc", orderLine.discount)}'
+            android:text='@{orderLine.is_percentage? (String.format("%d%% Disc", orderLine.discount_percent)) : (String.format("RM %.2f Disc", orderLine.amount_discount))}'
             android:textSize="8dp"
             android:textColor="@color/darkGrey"
             android:layout_marginRight="10dp"

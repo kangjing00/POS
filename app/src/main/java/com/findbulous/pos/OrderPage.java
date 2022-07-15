@@ -336,13 +336,17 @@ public class OrderPage extends CheckConnection {
         double amount_total = orderSelected.getAmount_total();
         double amount_paid = orderSelected.getAmount_paid();
         double balance = amount_paid - amount_total;
-        double subtotal = 0.0, discount = 0.0;
+        double subtotal = 0.0, product_discount = 0.0, order_discount = 0.0;
         for(int i = 0; i < order_lines.size(); i++){
             subtotal += order_lines.get(i).getPrice_total();
-            discount += ((order_lines.get(i).getPrice_total() * order_lines.get(i).getDiscount()) / 100);
+            product_discount += order_lines.get(i).getAmount_discount();
         }
-        if(discount != 0.0){
-            discount = -discount;
+        if(product_discount != 0.0){
+            product_discount = -product_discount;
+        }
+
+        if(orderSelected.isHas_order_discount()){
+            order_discount = -orderSelected.getAmount_order_discount();
         }
 
         binding.orderDetailTax.setText(String.format("%.2f", tax));
@@ -351,7 +355,8 @@ public class OrderPage extends CheckConnection {
         binding.orderDetailCash.setText(String.format("%.2f", amount_paid));
         binding.orderDetailBalance.setText(String.format("%.2f", balance));
         binding.orderDetailSubtotal.setText(String.format("%.2f", subtotal));
-        binding.orderDetailDiscount.setText(String.format("%.2f", discount));
+        binding.orderDetailProductDiscount.setText(String.format("%.2f", product_discount));
+        binding.orderDetailOrderDiscount.setText(String.format("%.2f", order_discount));
 
         binding.orderDetailOrderId.setText("#" + orderSelected.getOrder_id());
         if(orderSelected.getTable() != null){
@@ -374,7 +379,7 @@ public class OrderPage extends CheckConnection {
         binding.orderDetailCash.setText("0.00");
         binding.orderDetailBalance.setText("0.00");
         binding.orderDetailSubtotal.setText("0.00");
-        binding.orderDetailDiscount.setText("0.00");
+        binding.orderDetailProductDiscount.setText("0.00");
 
         binding.orderDetailOrderId.setText("#00000");
         binding.orderDetailType.setText("[Order Type]");
