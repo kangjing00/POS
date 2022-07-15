@@ -20,11 +20,11 @@
 
             <ImageView
                 android:id="@+id/product_details_image"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
+                android:layout_width="300dp"
+                android:layout_height="300dp"
+                android:layout_centerHorizontal="true"
                 android:scaleType="fitCenter"
-                android:src="@drawable/noodles"
-                android:layout_centerHorizontal="true"/>
+                android:src="@drawable/noodles" />
             <TextView
                 android:id="@+id/product_details_name"
                 android:layout_width="wrap_content"
@@ -67,6 +67,7 @@
         android:layout_height="wrap_content"
         android:text="Done"
         android:padding="8dp"
+        android:layout_marginTop="20dp"
         android:textColor="@color/white"
         android:textAlignment="center"
         android:background="@drawable/box_btm_corner_dark_orange"

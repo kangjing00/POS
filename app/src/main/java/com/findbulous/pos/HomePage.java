@@ -1523,92 +1523,128 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         getProductCategoryFromRealm(category);
 
         //Filter products process [NOT YET]
-        new getProductsByCategory(category.getPos_categ_id()).execute();
+        //new getProductsByCategory(category.getPos_categ_id()).execute();
 
-        Toast.makeText(contextpage, "" + category.getName(), Toast.LENGTH_SHORT).show();
+        ArrayList<POS_Category> allSubCategories = new ArrayList<>();
+        Integer allSubCategoryIds[];
+        allSubCategories.addAll(getAllSubCategory(category));
+        allSubCategoryIds = new Integer[allSubCategories.size()];
+
+        for (int back = (allSubCategories.size() - 1), front = 0; back >= 0; back--, front++) {
+            allSubCategoryIds[front] = allSubCategories.get(back).getPos_categ_id();
+        }
+
+        RealmResults<Product> results = realm.where(Product.class)
+                .in("category.pos_categ_id", allSubCategoryIds).findAll();
+        list.clear();
+        list.addAll(realm.copyFromRealm(results));
+
+        productAdapter.notifyDataSetChanged();
+
+        Toast.makeText(contextpage, "Filter Category: " + category.getName(), Toast.LENGTH_SHORT).show();
+    }
+    //Filter product by category and its sub-category
+    private ArrayList<POS_Category> getAllSubCategory(POS_Category category){
+        ArrayList<POS_Category> sub_category_list = new ArrayList<>();
+        POS_Category sub_category = null;
+        int counter = 0;
+        while(counter < category.getPos_categories().size()) {
+            if (category.getPos_categories().size() != 0) {
+                sub_category = category.getPos_categories().get(counter);
+
+                for (int i = 0; i < sub_category.getPos_categories().size(); i++) {
+                    sub_category_list.addAll(getAllSubCategory(sub_category.getPos_categories().get(i)));
+                }
+                sub_category_list.add(sub_category);
+            }
+            counter++;
+        }
+        sub_category_list.add(category);
+
+        return sub_category_list;
     }
     //API GET Products by category
-    public class getProductsByCategory extends AsyncTask<String, String, String> {
-
-        private int category_id;
-        private ArrayList<Product> product_list;
-
-        public getProductsByCategory(int category_id){
-            this.category_id = category_id;
-            this.product_list = new ArrayList<>();
-        }
-
-        @Override
-        protected String doInBackground(String... strings) {
-            String url = "https://www.c3rewards.com/api/merchant/?module=products";
-            String agent = "c092dc89b7aac085a210824fb57625db";
-            String jsonUrl = url + "&agent=" + agent + "&pos_categ_id=" + category_id;
-            System.out.println(jsonUrl);
-
-
-            URL obj;
-            try {
-                obj = new URL(jsonUrl);
-                HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-                // optional default is GET
-                con.setRequestMethod("GET");
-                //add request header
-                int responseCode = con.getResponseCode();
-                System.out.println("\nSending 'GET' request to URL : " + jsonUrl);
-                System.out.println("Response Code : " + responseCode);
-
-                BufferedReader in = new BufferedReader(
-                        new InputStreamReader(con.getInputStream()));
-                String inputLine;
-
-                StringBuilder response = new StringBuilder();
-
-                while ((inputLine = in.readLine()) != null) {
-                    response.append(inputLine);
-                }
-                in.close();
-
-                System.out.println(response);
-                String data = response.toString();
-                try {
-                    JSONObject json = new JSONObject(data);
-                    String status = json.getString("status");
-
-                    if (status.equals("OK")) {
-                        JSONObject jresult = json.getJSONObject("result");
-                        JSONArray jproducts = jresult.getJSONArray("products");
-
-                        for(int i = 0; i < jproducts.length(); i++){
-                            JSONObject jo = jproducts.getJSONObject(i);
-                            for(int j = 0; j < list.size(); j++){
-                                if(list.get(j).getProduct_id() == jo.getInt("product_id")){
-                                    product_list.add(list.get(j));
-                                    j = list.size();
-                                }
-                            }
-                        }
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            } catch (IOException e) {
-                Log.e("error", "cannot fetch data");
-            }
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(String s) {
-            if(!NetworkUtils.isNetworkAvailable(contextpage)){
-                Toast.makeText(contextpage, "Required Internet Connection to filter", Toast.LENGTH_SHORT).show();
-            }else{
-                list.clear();
-                list.addAll(product_list);
-                productAdapter.notifyDataSetChanged();
-            }
-        }
-    }
+//    public class getProductsByCategory extends AsyncTask<String, String, String> {
+//
+//        private int category_id;
+//        private ArrayList<Product> product_list;
+//
+//        public getProductsByCategory(int category_id){
+//            this.category_id = category_id;
+//            this.product_list = new ArrayList<>();
+//        }
+//
+//        @Override
+//        protected String doInBackground(String... strings) {
+//            String url = "https://www.c3rewards.com/api/merchant/?module=products";
+//            String agent = "c092dc89b7aac085a210824fb57625db";
+//            String jsonUrl = url + "&agent=" + agent + "&pos_categ_id=" + category_id;
+//            System.out.println(jsonUrl);
+//
+//
+//            URL obj;
+//            try {
+//                obj = new URL(jsonUrl);
+//                HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+//                // optional default is GET
+//                con.setRequestMethod("GET");
+//                //add request header
+//                int responseCode = con.getResponseCode();
+//                System.out.println("\nSending 'GET' request to URL : " + jsonUrl);
+//                System.out.println("Response Code : " + responseCode);
+//
+//                BufferedReader in = new BufferedReader(
+//                        new InputStreamReader(con.getInputStream()));
+//                String inputLine;
+//
+//                StringBuilder response = new StringBuilder();
+//
+//                while ((inputLine = in.readLine()) != null) {
+//                    response.append(inputLine);
+//                }
+//                in.close();
+//
+//                System.out.println(response);
+//                String data = response.toString();
+//                try {
+//                    JSONObject json = new JSONObject(data);
+//                    String status = json.getString("status");
+//
+//                    if (status.equals("OK")) {
+//                        JSONObject jresult = json.getJSONObject("result");
+//                        JSONArray jproducts = jresult.getJSONArray("products");
+//
+//                        for(int i = 0; i < jproducts.length(); i++){
+//                            JSONObject jo = jproducts.getJSONObject(i);
+//                            for(int j = 0; j < list.size(); j++){
+//                                if(list.get(j).getProduct_id() == jo.getInt("product_id")){
+//                                    product_list.add(list.get(j));
+//                                    j = list.size();
+//                                }
+//                            }
+//                        }
+//                    }
+//                } catch (JSONException e) {
+//                    e.printStackTrace();
+//                }
+//            } catch (IOException e) {
+//                Log.e("error", "cannot fetch data");
+//            }
+//
+//            return null;
+//        }
+//
+//        @Override
+//        protected void onPostExecute(String s) {
+//            if(!NetworkUtils.isNetworkAvailable(contextpage)){
+//                Toast.makeText(contextpage, "Required Internet Connection to filter", Toast.LENGTH_SHORT).show();
+//            }else{
+//                list.clear();
+//                list.addAll(product_list);
+//                productAdapter.notifyDataSetChanged();
+//            }
+//        }
+//    }
 
     //Menu Product
     @Override

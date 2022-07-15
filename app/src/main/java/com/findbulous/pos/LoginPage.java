@@ -31,6 +31,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Iterator;
 
 import io.realm.Realm;
@@ -122,6 +123,8 @@ public class LoginPage extends AppCompatActivity {
     public class loadProduct extends AsyncTask<String, String, String>{
         @Override
         protected String doInBackground(String... strings) {
+            long timeBefore = Calendar.getInstance().getTimeInMillis();
+
             String connection_error = "";
             String url = "https://www.c3rewards.com/api/merchant/?module=products";
             String agent = "c092dc89b7aac085a210824fb57625db";
@@ -162,30 +165,37 @@ public class LoginPage extends AppCompatActivity {
                             JSONArray jcategories = jresult.getJSONArray("pos_categories");
                             JSONArray jproducts = jresult.getJSONArray("products");
 
-//                            if((jproducts.length() != 0) || (jcategories.length() != 0)){
-//                                page++;
-//                            }else{
-//                                page = -1;
-//                            }
-                            // page = -1 below for testing purpose
-                            if(page == 2){
-                                page = -1;
-                            }else {
+                            if((jproducts.length() != 0)){ //|| (jcategories.length() != 0)
                                 page++;
+                            }else{
+                                page = -1;
                             }
 
                             // Product Category
-                            loadProductCategories(jcategories, true);
+                            if(page == 2)
+                                loadProductCategories(jcategories, true);
                             // Product
                             for (int a = 0; a < jproducts.length(); a++) {
                                 JSONObject jo = jproducts.getJSONObject(a);
                                 JSONArray jProductTax = null;
+                                int category_id = -1;
+                                if(!(jo.getString("pos_categ_id").isEmpty())){
+                                    category_id = jo.getInt("pos_categ_id");
+                                }
+                                POS_Category category = null;
+                                for(int i = 0; i < product_categories.size(); i++){
+                                    if(product_categories.get(i).getPos_categ_id() == category_id){
+                                        category = product_categories.get(i);
+                                    }
+                                }
+
                                 Product product = new Product(jo.getInt("product_id"), jo.getString("name"),
                                         jo.getString("default_code"), jo.getDouble("list_price"), jo.getDouble("standard_price"),
                                         jo.getDouble("margin"), jo.getDouble("margin_percent"),jo.getDouble("price_incl_tax"),
                                         jo.getDouble("price_excl_tax"), jo.getString("display_list_price"),jo.getString("display_standard_price"),
                                         jo.getString("display_margin"), jo.getString("display_margin_percent"), jo.getString("display_price_incl_tax"),
-                                        jo.getString("display_price_excl_tax"));
+                                        jo.getString("display_price_excl_tax"), category);
+
                                 // Product Taxes
                                 if(jo.getJSONArray("taxes").length() > 0){
                                     jProductTax = jo.getJSONArray("taxes");
@@ -213,6 +223,8 @@ public class LoginPage extends AppCompatActivity {
                 }
             }
             System.out.println("Product Counter: " + productCounter);
+            long timeAfter = Calendar.getInstance().getTimeInMillis();
+            System.out.println("Load product & category time: " + (timeAfter - timeBefore) + "ms");
             return null;
         }
 
@@ -221,6 +233,7 @@ public class LoginPage extends AppCompatActivity {
             if(!NetworkUtils.isNetworkAvailable(contextpage)){
                 Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
             }else{
+                long timeBefore = Calendar.getInstance().getTimeInMillis();
                 realm.executeTransaction(new Realm.Transaction() {
                     @Override
                     public void execute(Realm realm) {
@@ -229,6 +242,8 @@ public class LoginPage extends AppCompatActivity {
                         realm.insertOrUpdate(product_taxes);
                     }
                 });
+                long timeAfter = Calendar.getInstance().getTimeInMillis();
+                System.out.println("Update product & category to realm time: " + (timeAfter - timeBefore) + "ms");
             }
         }
     }
@@ -251,8 +266,10 @@ public class LoginPage extends AppCompatActivity {
                     sub_categories_list = loadProductCategories(ja_sub_categories, false); //second lvl = third lvl
                     product_category.setPos_categories(sub_categories_list);
                 }
-                if(firstLevel)
-                    product_categories.add(product_category);
+
+                System.out.println("p1111: " + product_category.getPos_categ_id());
+                product_categories.add(product_category);
+
 
                 //Main level category list
                 categories_list.add(product_category);

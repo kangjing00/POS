@@ -15,6 +15,8 @@ public class Product extends RealmObject {
     private String display_list_price, display_standard_price, display_margin, display_margin_percent,
             display_price_incl_tax, display_price_excl_tax;
 
+    private POS_Category category;
+
     @LinkingObjects("product")
     private final RealmResults<Product_Tax> product_taxes = null;
 
@@ -23,7 +25,7 @@ public class Product extends RealmObject {
                    double list_price, double standard_price, double margin, double margin_percent,
                    double price_incl_tax, double price_excl_tax,
                    String display_list_price, String display_standard_price, String display_margin, String display_margin_percent,
-                   String display_price_incl_tax, String display_price_excl_tax) {
+                   String display_price_incl_tax, String display_price_excl_tax, POS_Category category) {
         this.product_id = product_id;
         this.name = name;
         this.default_code = default_code;
@@ -39,6 +41,7 @@ public class Product extends RealmObject {
         this.display_margin_percent = display_margin_percent;
         this.display_price_incl_tax = display_price_incl_tax;
         this.display_price_excl_tax = display_price_excl_tax;
+        this.category = category;
     }
     public Product(){
         product_id = -1;
@@ -56,6 +59,7 @@ public class Product extends RealmObject {
         display_margin_percent = null;
         display_price_incl_tax = null;
         display_price_excl_tax = null;
+        category = null;
     }
 
     public int getProduct_id() {
@@ -174,5 +178,13 @@ public class Product extends RealmObject {
 
     public void setDisplay_margin_percent(String display_margin_percent) {
         this.display_margin_percent = display_margin_percent;
+    }
+
+    public POS_Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(POS_Category category) {
+        this.category = category;
     }
 }
