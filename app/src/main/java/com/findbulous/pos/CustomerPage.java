@@ -72,7 +72,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
     private Order currentOrder;
     //OnHold customer
     private Customer onHoldCustomer;
-    //Update table while order onhold
+    //Update table while order onHold
     private Table updateTableOnHold;
     //Recyclerview
     private CartOrderLineAdapter orderLineAdapter;

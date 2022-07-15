@@ -380,6 +380,7 @@ public class OrderPage extends CheckConnection {
         binding.orderDetailBalance.setText("0.00");
         binding.orderDetailSubtotal.setText("0.00");
         binding.orderDetailProductDiscount.setText("0.00");
+        binding.orderDetailOrderDiscount.setText("0.00");
 
         binding.orderDetailOrderId.setText("#00000");
         binding.orderDetailType.setText("[Order Type]");
