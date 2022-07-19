@@ -7,6 +7,9 @@
         <variable
             name="product"
             type="com.findbulous.pos.Product" />
+        <variable
+            name="product_tax"
+            type="com.findbulous.pos.Product_Tax" />
     </data>
     
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -83,11 +86,19 @@
                 android:text='@{String.format("RM %.2f", product.price_incl_tax)}'
                 android:textSize="18dp" />
 
+            <TextView
+                android:id="@+id/product_tax"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tax"
+                android:layout_below="@id/product_details_price"
+                android:layout_alignParentEnd="true" />
+
             <LinearLayout
                 android:id="@+id/linearLayout1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/product_details_default_code"
+                android:layout_below="@id/product_tax"
                 android:layout_marginTop="10dp">
 
                 <TextView
@@ -162,7 +173,7 @@
                     android:id="@+id/textView2"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Inveontry"
+                    android:text="Inventory"
                     android:textSize="20dp" />
 
                 <View
@@ -175,17 +186,23 @@
                     android:background="@color/black" />
             </LinearLayout>
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/outlet_inventory_rv"
-                android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:layout_below="@id/linearLayout2" />
+            <TextView
+                android:id="@+id/inventory_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/linearLayout2"
+                android:text="Restaurant:  000 Units available,  000 forecasted"/>
+<!--            <androidx.recyclerview.widget.RecyclerView-->
+<!--                android:id="@+id/outlet_inventory_rv"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="200dp"-->
+<!--                android:layout_below="@id/linearLayout2" />-->
 
             <LinearLayout
                 android:id="@+id/linearLayout3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/outlet_inventory_rv"
+                android:layout_below="@id/inventory_tv"
                 android:layout_marginTop="10dp">
                 <TextView
                     android:id="@+id/textView3"
@@ -208,6 +225,7 @@
                 android:id="@+id/tableLayout2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
                 android:layout_below="@id/linearLayout3">
                 <TableRow>
                     <TextView
@@ -243,7 +261,6 @@
         android:layout_height="wrap_content"
         android:text="Done"
         android:padding="8dp"
-        android:layout_marginTop="5dp"
         android:textColor="@color/white"
         android:textAlignment="center"
         android:background="@drawable/box_btm_corner_dark_orange"
