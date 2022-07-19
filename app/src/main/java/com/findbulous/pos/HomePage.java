@@ -34,6 +34,7 @@ import com.findbulous.pos.Adapters.ProductCategoryAdapter;
 import com.findbulous.pos.Network.CheckConnection;
 import com.findbulous.pos.Network.NetworkUtils;
 import com.findbulous.pos.databinding.HomePageBinding;
+import com.findbulous.pos.databinding.ProductDetailsPopupBinding;
 import com.google.android.material.button.MaterialButton;
 
 import org.json.JSONArray;
@@ -1144,8 +1145,9 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
 
     private void showProductDetails(Product product){
         PopupWindow popup = new PopupWindow(contextpage);
-        View layout = getLayoutInflater().inflate(R.layout.product_details_popup, null);
-        popup.setContentView(layout);
+        ProductDetailsPopupBinding popupBinding = ProductDetailsPopupBinding.inflate(getLayoutInflater());
+        //View layout = getLayoutInflater().inflate(R.layout.product_details_popup, null);
+        popup.setContentView(popupBinding.getRoot());
         // Set content width and height
         popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
         popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
@@ -1164,15 +1166,9 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         p.dimAmount = 0.3f;
         wm.updateViewLayout(container, p);
 
-        TextView product_name = layout.findViewById(R.id.product_details_name);
-        TextView product_price = layout.findViewById(R.id.product_details_price);
-        TextView done_btn = layout.findViewById(R.id.product_details_done_btn);
+        popupBinding.setProduct(product);
 
-        product_name.setText(product.getName());
-        product_price.setText(String.format("RM %.2f", product.getList_price()));
-
-
-        done_btn.setOnClickListener(new View.OnClickListener() {
+        popupBinding.productDetailsDoneBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 popup.dismiss();

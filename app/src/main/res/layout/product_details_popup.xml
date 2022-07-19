@@ -1,15 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="500dp"
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    
+    <data>
+        <variable
+            name="product"
+            type="com.findbulous.pos.Product" />
+    </data>
+    
+    <androidx.constraintlayout.widget.ConstraintLayout
+    android:layout_width="600dp"
     android:layout_height="wrap_content"
     android:background="@drawable/box_corner_nopadding_white">
 
     <ScrollView
         android:id="@+id/scrollView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="10dp"
+        android:layout_height="600dp"
+        android:padding="15dp"
+        android:scrollbars="none"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -20,44 +30,210 @@
 
             <ImageView
                 android:id="@+id/product_details_image"
-                android:layout_width="300dp"
-                android:layout_height="300dp"
-                android:layout_centerHorizontal="true"
+                android:layout_width="280dp"
+                android:layout_height="280dp"
                 android:scaleType="fitCenter"
-                android:src="@drawable/noodles" />
-            <TextView
-                android:id="@+id/product_details_name"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Product's Name"
-                android:layout_marginTop="5dp"
-                android:layout_centerHorizontal="true"
-                android:layout_below="@id/product_details_image"/>
-            <TextView
-                android:id="@+id/product_details_price"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="RM 00.00"
-                android:layout_centerHorizontal="true"
-                android:layout_below="@id/product_details_name" />
+                android:src="@drawable/burger" />
 
             <TextView
-                android:id="@+id/textView1"
-                android:layout_width="match_parent"
+                android:id="@+id/textView"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/product_details_price"
-                android:fontFamily="@font/roboto_regular"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="20dp"
+                android:layout_toEndOf="@id/product_details_image"
                 android:text="Description:"
-                android:textSize="17dp" />
+                android:textSize="18dp" />
+
             <TextView
                 android:id="@+id/product_details_desc"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/textView1"
-                android:text="Delicious and mouthwatering food, you will never forget the taste. Including chicken breast, rice, eggs, salmon fish, and broccoli."
+                android:layout_above="@id/product_details_name"
+                android:layout_below="@id/textView"
+                android:layout_marginStart="20dp"
+                android:layout_toEndOf="@id/product_details_image"
                 android:fontFamily="@font/roboto_regular"
-                android:layout_alignParentStart="true"
-                android:layout_marginStart="10dp"/>
+                android:text="Delicious and mouthwatering food, you will never forget the taste. Including chicken breast, rice, eggs, salmon fish, and broccoli." />
+
+            <TextView
+                android:id="@+id/product_details_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/product_details_image"
+                android:layout_marginTop="10dp"
+                android:text="@{product.name}"
+                android:textSize="18dp" />
+
+            <TextView
+                android:id="@+id/product_details_default_code"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/product_details_name"
+                android:text="@{product.default_code}"
+                android:textColor="@color/darkGrey" />
+
+            <TextView
+                android:id="@+id/product_details_price"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/product_details_image"
+                android:layout_alignParentEnd="true"
+                android:layout_marginTop="10dp"
+                android:text='@{String.format("RM %.2f", product.price_incl_tax)}'
+                android:textSize="18dp" />
+
+            <LinearLayout
+                android:id="@+id/linearLayout1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/product_details_default_code"
+                android:layout_marginTop="10dp">
+
+                <TextView
+                    android:id="@+id/textView1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Financials"
+                    android:textSize="20dp" />
+
+                <View
+                    android:id="@+id/line1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="2dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="5dp"
+                    android:background="@color/black" />
+            </LinearLayout>
+
+            <TableLayout
+                android:id="@+id/tableLayout1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/linearLayout1">
+                <TableRow>
+                    <TextView
+                        android:layout_width="120dp"
+                        android:text="Price excl. VAT:"/>
+
+                    <TextView
+                        android:id="@+id/price_excl_tax"
+                        android:text='@{String.format("RM %.2f", product.price_excl_tax)}'/>
+                </TableRow>
+
+                <TableRow>
+                    <TextView
+                        android:text="Cost:"/>
+
+                    <TextView
+                        android:id="@+id/standard_price"
+                        android:text='@{String.format("RM %.2f", product.standard_price)}'/>
+
+                    <TextView
+                        android:layout_marginStart="30dp"
+                        android:layout_width="120dp"
+                        android:text="Public Pricelist:"/>
+
+                    <TextView
+                        android:id="@+id/list_price"
+                        android:text='@{String.format("RM %.2f", product.list_price)}'/>
+                </TableRow>
+
+                <TableRow>
+                    <TextView
+                        android:text="Margin:"/>
+
+                    <TextView
+                        android:id="@+id/margin_margin_percent"
+                        android:text='@{String.format("RM %.2f (%.2f%%)", product.margin, product.margin_percent)}'/>
+                </TableRow>
+
+            </TableLayout>
+
+            <LinearLayout
+                android:id="@+id/linearLayout2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/tableLayout1"
+                android:layout_marginTop="10dp">
+
+                <TextView
+                    android:id="@+id/textView2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Inveontry"
+                    android:textSize="20dp" />
+
+                <View
+                    android:id="@+id/line2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="2dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="5dp"
+                    android:background="@color/black" />
+            </LinearLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/outlet_inventory_rv"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:layout_below="@id/linearLayout2" />
+
+            <LinearLayout
+                android:id="@+id/linearLayout3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/outlet_inventory_rv"
+                android:layout_marginTop="10dp">
+                <TextView
+                    android:id="@+id/textView3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Order"
+                    android:textSize="20dp" />
+
+                <View
+                    android:id="@+id/line3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="2dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="5dp"
+                    android:background="@color/black" />
+            </LinearLayout>
+
+            <TableLayout
+                android:id="@+id/tableLayout2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/linearLayout3">
+                <TableRow>
+                    <TextView
+                        android:layout_width="150dp"
+                        android:text="Total Price excl. VAT:"/>
+
+                    <TextView
+                        android:text="RM 0.00"/>
+                </TableRow>
+
+                <TableRow>
+                    <TextView
+                        android:text="Total Cost:"/>
+
+                    <TextView
+                        android:text="RM 0.00"/>
+                </TableRow>
+
+                <TableRow>
+                    <TextView
+                        android:text="Total Margin:"/>
+
+                    <TextView
+                        android:text="RM 0.00 (0%)"/>
+                </TableRow>
+            </TableLayout>
         </RelativeLayout>
     </ScrollView>
 
@@ -67,7 +243,7 @@
         android:layout_height="wrap_content"
         android:text="Done"
         android:padding="8dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="5dp"
         android:textColor="@color/white"
         android:textAlignment="center"
         android:background="@drawable/box_btm_corner_dark_orange"
@@ -77,3 +253,5 @@
         app:layout_constraintEnd_toEndOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>
