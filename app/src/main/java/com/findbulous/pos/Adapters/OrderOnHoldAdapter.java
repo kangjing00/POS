@@ -48,7 +48,7 @@ public class OrderOnHoldAdapter extends RecyclerView.Adapter<OrderOnHoldAdapter.
         holder.binding.setOrder(order);
 
         if(order.getTable() != null){
-            holder.binding.tableName.setText(order.getTable().getName());
+            holder.binding.tableName.setText(order.getTable().getFloor().getName() + " / " + order.getTable().getName());
         }else{
             holder.binding.tableName.setText("Takeaway");
         }

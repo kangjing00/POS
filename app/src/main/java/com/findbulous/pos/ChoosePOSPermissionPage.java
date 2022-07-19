@@ -89,8 +89,8 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         tables = new ArrayList<>();
 
         new getCheckOpenedSession().execute();
-        new loadProduct().execute();//<<<<<<<<<<<<<<<<<<<<<<<
-        new loadFloorAndTable().execute();//<<<<<<<<<<<<<<<<<<<
+        //new loadProduct().execute();//<<<<<<<<<<<<<<<<<<<<<<<
+        //new loadFloorAndTable().execute();//<<<<<<<<<<<<<<<<<<<
 
 
         SimpleDateFormat dateFormatter = new SimpleDateFormat("dd/MM/yyyy");

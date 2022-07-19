@@ -362,7 +362,8 @@ public class OrderPage extends CheckConnection {
 
         binding.orderDetailOrderId.setText("#" + orderSelected.getOrder_id());
         if(orderSelected.getTable() != null){
-            binding.orderDetailType.setText("Dine-in - " + orderSelected.getTable().getName());
+            binding.orderDetailType.setText("Dine-in - " + orderSelected.getTable().getFloor().getName() + " / "
+                    + orderSelected.getTable().getName());
         }else {
             binding.orderDetailType.setText("Takeaway");
         }

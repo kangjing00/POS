@@ -143,7 +143,8 @@ public class TablePage extends CheckConnection implements
             int orderId = currentOrderSharedPreference.getInt("orderId", -1);
             Order result = realm.where(Order.class).equalTo("order_id", orderId).findFirst();
             if(result.getTable() != null) {
-                binding.tableInformationTableName.setText("Table " + result.getTable().getName());
+                binding.tableInformationTableName.setText(result.getTable().getFloor().getName()
+                        + " / " + result.getTable().getName());
                 binding.tableInformationOrderId.setText("#" + result.getOrder_id());
             }
             onlyVacantTable = true;
