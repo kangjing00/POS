@@ -86,6 +86,9 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
     private ArrayList<Order_Line> order_lines;
     private ArrayList<POS_Category> product_categories;
     private ArrayList<POS_Category> categories_clicked_wo_child;
+    //Pos Session and Pos Config
+//    private POS_Session pos_session;
+    private POS_Config pos_config;
     //Realm
     private Realm realm;
     //Current order
@@ -126,6 +129,8 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         refreshCartCurrentCustomer();
 
         //Body
+        pos_config = realm.where(POS_Config.class).findFirst();
+//        pos_session = realm.where(POS_Session.class).findFirst();
         currentOrder = new Order();
         updateTableOnHold = new Table();
         onHoldCustomer = null;
@@ -471,7 +476,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                         });
                     }
                 }
-
+                //binding.cartInclude.cartBtnPosType.getSelectedItem().toString();
                 cartSharedPreferenceEdit.putInt("orderTypePosition", binding.cartInclude.cartBtnPosType.getSelectedItemPosition());
                 cartSharedPreferenceEdit.commit();
             }
@@ -1526,9 +1531,6 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
 
         getProductCategoryFromRealm(category);
 
-        //Filter products process [NOT YET]
-        //new getProductsByCategory(category.getPos_categ_id()).execute();
-
         ArrayList<POS_Category> allSubCategories = new ArrayList<>();
         Integer allSubCategoryIds[];
         allSubCategories.addAll(getAllSubCategory(category));
@@ -1567,88 +1569,6 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
 
         return sub_category_list;
     }
-    //API GET Products by category
-//    public class getProductsByCategory extends AsyncTask<String, String, String> {
-//
-//        private int category_id;
-//        private ArrayList<Product> product_list;
-//
-//        public getProductsByCategory(int category_id){
-//            this.category_id = category_id;
-//            this.product_list = new ArrayList<>();
-//        }
-//
-//        @Override
-//        protected String doInBackground(String... strings) {
-//            String url = "https://www.c3rewards.com/api/merchant/?module=products";
-//            String agent = "c092dc89b7aac085a210824fb57625db";
-//            String jsonUrl = url + "&agent=" + agent + "&pos_categ_id=" + category_id;
-//            System.out.println(jsonUrl);
-//
-//
-//            URL obj;
-//            try {
-//                obj = new URL(jsonUrl);
-//                HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-//                // optional default is GET
-//                con.setRequestMethod("GET");
-//                //add request header
-//                int responseCode = con.getResponseCode();
-//                System.out.println("\nSending 'GET' request to URL : " + jsonUrl);
-//                System.out.println("Response Code : " + responseCode);
-//
-//                BufferedReader in = new BufferedReader(
-//                        new InputStreamReader(con.getInputStream()));
-//                String inputLine;
-//
-//                StringBuilder response = new StringBuilder();
-//
-//                while ((inputLine = in.readLine()) != null) {
-//                    response.append(inputLine);
-//                }
-//                in.close();
-//
-//                System.out.println(response);
-//                String data = response.toString();
-//                try {
-//                    JSONObject json = new JSONObject(data);
-//                    String status = json.getString("status");
-//
-//                    if (status.equals("OK")) {
-//                        JSONObject jresult = json.getJSONObject("result");
-//                        JSONArray jproducts = jresult.getJSONArray("products");
-//
-//                        for(int i = 0; i < jproducts.length(); i++){
-//                            JSONObject jo = jproducts.getJSONObject(i);
-//                            for(int j = 0; j < list.size(); j++){
-//                                if(list.get(j).getProduct_id() == jo.getInt("product_id")){
-//                                    product_list.add(list.get(j));
-//                                    j = list.size();
-//                                }
-//                            }
-//                        }
-//                    }
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-//            } catch (IOException e) {
-//                Log.e("error", "cannot fetch data");
-//            }
-//
-//            return null;
-//        }
-//
-//        @Override
-//        protected void onPostExecute(String s) {
-//            if(!NetworkUtils.isNetworkAvailable(contextpage)){
-//                Toast.makeText(contextpage, "Required Internet Connection to filter", Toast.LENGTH_SHORT).show();
-//            }else{
-//                list.clear();
-//                list.addAll(product_list);
-//                productAdapter.notifyDataSetChanged();
-//            }
-//        }
-//    }
 
     //Menu Product
     @Override
@@ -1677,5 +1597,34 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         refreshCartCurrentCustomer();
         refreshNote();
         refreshCustomerNumber();
+
+        pos_config = realm.where(POS_Config.class).findFirst();
+        //set default starting pos_categ
+        if(pos_config.getIface_start_categ_id() > 0){
+            POS_Category category = realm.where(POS_Category.class).equalTo("pos_categ_id", pos_config.getIface_start_categ_id()).
+                    findFirst();
+
+            getProductCategoryFromRealm(category);
+
+            ArrayList<POS_Category> allSubCategories = new ArrayList<>();
+            Integer allSubCategoryIds[];
+            allSubCategories.addAll(getAllSubCategory(category));
+            allSubCategoryIds = new Integer[allSubCategories.size()];
+
+            for (int back = (allSubCategories.size() - 1), front = 0; back >= 0; back--, front++) {
+                allSubCategoryIds[front] = allSubCategories.get(back).getPos_categ_id();
+            }
+
+            RealmResults<Product> results = realm.where(Product.class)
+                    .in("category.pos_categ_id", allSubCategoryIds).findAll();
+            list.clear();
+            list.addAll(realm.copyFromRealm(results));
+
+            productAdapter.notifyDataSetChanged();
+        }
+        //is_table_management?
+        if(!pos_config.isIs_table_management()){
+            binding.navbarLayoutInclude.navBarTables.setVisibility(View.GONE);
+        }
     }
 }

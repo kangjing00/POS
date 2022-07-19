@@ -13,8 +13,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,7 +41,19 @@ import com.findbulous.pos.Network.NetworkUtils;
 import com.findbulous.pos.databinding.CustomerPageBinding;
 import com.google.android.material.button.MaterialButton;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Calendar;
+
+import javax.net.ssl.HttpsURLConnection;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -84,6 +98,8 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
     //Number of Customer Popup
     private EditText number_customer_et;
 
+    private POS_Config pos_config;
+
     private String statuslogin;
     private Context contextpage;
 
@@ -112,6 +128,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
         refreshCartCurrentCustomer();
 
         //Body Settings
+        pos_config = realm.where(POS_Config.class).findFirst();
         currentOrder = new Order();
         updateTableOnHold = new Table();
         onHoldCustomer = null;
@@ -387,7 +404,8 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                 Toast.makeText(contextpage, "Scan Button Clicked", Toast.LENGTH_SHORT).show();
             }
         });
-        ArrayAdapter<String> orderTypes = new ArrayAdapter<String>(contextpage, R.layout.textview_spinner_item, getResources().getStringArray(R.array.order_types)){
+        ArrayAdapter<String> orderTypes =
+                new ArrayAdapter<String>(contextpage, R.layout.textview_spinner_item, getResources().getStringArray(R.array.order_types)){
             @Override
             public View getDropDownView(int position, View convertView, ViewGroup parent){
                 View v = null;
@@ -412,8 +430,11 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                 return v;
             }
         };
+//        orderTypes.remove("Dine-In");
+//        orderTypes.add("Main Floor-t0");
         orderTypes.setDropDownViewResource(R.layout.textview_spinner_item);
         binding.cartInclude.cartBtnPosType.setAdapter(orderTypes);
+//        binding.cartInclude.cartBtnPosType.getAdapter().notifyAll();
         binding.cartInclude.cartBtnPosType.setDropDownVerticalOffset(80);
         binding.cartInclude.cartBtnPosType.setSelection(cartSharedPreference.getInt("orderTypePosition", 1));
         binding.cartInclude.cartBtnPosType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -1366,5 +1387,11 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
         refreshCartCurrentCustomer();
         refreshNote();
         refreshCustomerNumber();
+
+        pos_config = realm.where(POS_Config.class).findFirst();
+        //is_table_management?
+        if(!pos_config.isIs_table_management()){
+            binding.navbarLayoutInclude.navBarTables.setVisibility(View.GONE);
+        }
     }
 }

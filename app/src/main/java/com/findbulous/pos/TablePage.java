@@ -370,7 +370,7 @@ public class TablePage extends CheckConnection implements
             int postDataLength = postData.length;
 
             String agent = "c092dc89b7aac085a210824fb57625db";
-            String url = "https://www.c3rewards.com/api/merchant/?module=restaurants&action=update_table_state";
+            String url = "https://www.c3rewards.com/api/merchant/?module=pos&action=restaurant_update_table_state";
             url += "&agent=" + agent;
 
             URL obj;
@@ -644,92 +644,6 @@ public class TablePage extends CheckConnection implements
         binding.tableInformationCancelSwapBtn.setVisibility(View.GONE);
     }
 
-    //Insert dummy data
-//    private void insertDummyTableData(String idWord,int noRow, int noColumn, Floor floor){
-//        boolean active = true;
-//        Random random = new Random();
-//        int randomNo = 0;
-//
-//        for(int i = 1; i <= (noRow * noColumn); i++){
-//            randomNo = random.nextInt(9) + 2;
-//            saveTableToDb(idWord + i, randomNo,true, false, false, active, floor);
-//            if(i < 60) {
-//                active = !active;
-//            }else{
-//                active = true;
-//            }
-//        }
-//    }
-//    private void insertDummyFloorData(){
-//        boolean active = true;
-//
-//        Floor floor1 = saveFloorToDb("Ground Floor", true, 7, 18);
-//        insertDummyTableData("G", 7, 18, floor1);
-//        Floor floor2 = saveFloorToDb("First Floor", true, 5, 5);
-//        insertDummyTableData("F", 5, 5, floor2);
-//        Floor floor3 = saveFloorToDb("Second Floor", true, 10, 10);
-//        insertDummyTableData("S", 10, 10, floor3);
-//        Floor floor4 = saveFloorToDb("Third Floor", true, 5, 18);
-//        insertDummyTableData("T", 5, 18, floor4);
-//        Floor floor5 = saveFloorToDb("Fourth Floor", false, 0, 0);
-//        insertDummyTableData("F", 0, 0, floor5);
-//    }
-    //Save table data to Realm local database
-//    private void saveTableToDb(String tableName, int seats, boolean vacant, boolean onHold, boolean occupied, boolean active, Floor floor){
-//        Table table = new Table();
-//        Number id = realm.where(Table.class).max("table_id");
-//
-//        int nextID = -1;
-//        System.out.println(id);
-//        if(id == null){
-//            nextID = 1;
-//        }else{
-//            nextID = id.intValue() + 1;
-//        }
-//
-//        table.setTable_id(nextID);
-//        table.setTable_name(tableName);
-//        table.setSeats(seats);
-//        table.setVacant(vacant);
-//        table.setOnHold(onHold);
-//        table.setOccupied(occupied);
-//        table.setActive(active);
-//        table.setFloor(floor);
-//
-//        realm.executeTransaction(new Realm.Transaction() {
-//            @Override
-//            public void execute(Realm realm) {
-//                realm.insertOrUpdate(table);
-//            }
-//        });
-//    }
-//    private Floor saveFloorToDb(String floorName, boolean active, int noRow, int noColumn){
-//        Floor floor = new Floor();
-//        Number id = realm.where(Floor.class).max("floor_id");
-//
-//        int nextID = -1;
-//        System.out.println(id);
-//        if(id == null){
-//            nextID = 1;
-//        }else{
-//            nextID = id.intValue() + 1;
-//        }
-//        floor.setFloor_id(nextID);
-//        floor.setFloor_name(floorName);
-//        floor.setActive(active);
-//        floor.setNoRow(noRow);
-//        floor.setNoColumn(noColumn);
-//
-//        realm.executeTransaction(new Realm.Transaction() {
-//            @Override
-//            public void execute(Realm realm) {
-//                realm.insertOrUpdate(floor);
-//            }
-//        });
-//
-//        return floor;
-//    }
-    //Get data from Realm local database
 
     //Get Floor data from local realm
     private void getFloorFromRealm(){
@@ -796,7 +710,7 @@ public class TablePage extends CheckConnection implements
         for(int i = 0; i < table_list.size(); i++){
             Table table = table_list.get(i);
             TextView tableTv = new TextView(contextpage);
-            if(table.getActive().equalsIgnoreCase("t")){
+            if(table.getActive().equalsIgnoreCase("true")){
                 tableTv.setText(table.getName() + "\n" + table.getSeats());
                 tableTv.setWidth((int) ((table.getWidth())* getResources().getDisplayMetrics().density));
                 tableTv.setHeight((int) ((table.getHeight())* getResources().getDisplayMetrics().density));

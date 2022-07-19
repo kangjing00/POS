@@ -97,7 +97,7 @@ public class CheckConnection extends AppCompatActivity implements ConnectivityCh
             int postDataLength = postData.length;
 
             String agent = "c092dc89b7aac085a210824fb57625db";
-            String url = "https://www.c3rewards.com/api/merchant/?module=restaurants&action=update_table_state";
+            String url = "https://www.c3rewards.com/api/merchant/?module=pos&action=restaurant_update_table_state";
             url += "&agent=" + agent;
 
             URL obj;
@@ -188,7 +188,7 @@ public class CheckConnection extends AppCompatActivity implements ConnectivityCh
     public class loadFloorAndTable extends AsyncTask<String, String, String> {
         @Override
         protected String doInBackground(String... strings) {
-            String url = "https://www.c3rewards.com/api/merchant/?module=restaurants";
+            String url = "https://www.c3rewards.com/api/merchant/?module=pos&action=restaurant_floors";
             String agent = "c092dc89b7aac085a210824fb57625db";
             String jsonUrl = url + "&agent=" + agent;
             System.out.println(jsonUrl);

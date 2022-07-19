@@ -50,6 +50,8 @@ public class OrderPage extends CheckConnection {
     private ArrayList<Order_Line> order_lines;
     //Realm
     private Realm realm;
+    //POS config
+    private POS_Config pos_config;
     //Fragments
 //    private FragmentOrderHistory fragmentOrderHistory;
 //    private FragmentOrderOnHold fragmentOrderOnHold;
@@ -385,5 +387,15 @@ public class OrderPage extends CheckConnection {
         binding.orderDetailOrderId.setText("#00000");
         binding.orderDetailType.setText("[Order Type]");
         binding.orderDetailCustomerName.setText("[Customer Name]");
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        pos_config = realm.where(POS_Config.class).findFirst();
+        //is_table_management?
+        if(!pos_config.isIs_table_management()){
+            binding.navbarLayoutInclude.navBarTables.setVisibility(View.GONE);
+        }
     }
 }

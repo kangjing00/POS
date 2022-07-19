@@ -85,14 +85,14 @@ public class LoginPage extends AppCompatActivity {
                 Intent intent = new Intent(contextpage, ChoosePOSPermissionPage.class);
                 startActivity(intent);
                 finish();
-                //new loadProduct().execute();
-                //new loadFloorAndTable().execute();
+//                new loadProduct().execute();
+//                new loadFloorAndTable().execute();
             }
         });
         binding.registerBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //deleteRealm();
+//                deleteRealm();
                 Intent intent = new Intent(contextpage, RegisterPage.class);
                 startActivity(intent);
                 finish();
@@ -126,7 +126,7 @@ public class LoginPage extends AppCompatActivity {
             long timeBefore = Calendar.getInstance().getTimeInMillis();
 
             String connection_error = "";
-            String url = "https://www.c3rewards.com/api/merchant/?module=products";
+            String url = "https://www.c3rewards.com/api/merchant/?module=pos&action=products";
             String agent = "c092dc89b7aac085a210824fb57625db";
             String jsonUrl =url + "&agent=" + agent;
             System.out.println(jsonUrl);
@@ -170,7 +170,6 @@ public class LoginPage extends AppCompatActivity {
                             }else{
                                 page = -1;
                             }
-
                             // Product Category
                             if(page == 2)
                                 loadProductCategories(jcategories, true);
@@ -285,7 +284,7 @@ public class LoginPage extends AppCompatActivity {
     public class loadFloorAndTable extends AsyncTask<String, String, String> {
         @Override
         protected String doInBackground(String... strings) {
-            String url = "https://www.c3rewards.com/api/merchant/?module=restaurants";
+            String url = "https://www.c3rewards.com/api/merchant/?module=pos&action=restaurant_floors";
             String agent = "c092dc89b7aac085a210824fb57625db";
             String jsonUrl = url + "&agent=" + agent;
             System.out.println(jsonUrl);

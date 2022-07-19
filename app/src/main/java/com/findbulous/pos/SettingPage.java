@@ -21,6 +21,8 @@ import com.findbulous.pos.Network.CheckConnection;
 import com.findbulous.pos.databinding.SettingPageBinding;
 import com.google.android.material.button.MaterialButton;
 
+import io.realm.Realm;
+
 public class SettingPage extends CheckConnection {
 
     private SettingPageBinding binding;
@@ -33,6 +35,10 @@ public class SettingPage extends CheckConnection {
     private MaterialButton cash_in_out_cancel, cash_in_out_confirm;
     //Sync popup
     private TextView product_sync_btn, transactions_sync_btn;
+    //Realm
+    private Realm realm;
+    //POS config
+    private POS_Config pos_config;
 
     private String statuslogin;
     private Context contextpage;
@@ -49,6 +55,9 @@ public class SettingPage extends CheckConnection {
 
         //Nav Settings
         binding.navbarLayoutInclude.navBarSettings.setChecked(true);
+
+        realm = Realm.getDefaultInstance();
+
         //Fragment Settings
         fm = getSupportFragmentManager();
         ft = fm.beginTransaction();
@@ -247,5 +256,15 @@ public class SettingPage extends CheckConnection {
                 popup.dismiss();
             }
         });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        pos_config = realm.where(POS_Config.class).findFirst();
+        //is_table_management?
+        if(!pos_config.isIs_table_management()){
+            binding.navbarLayoutInclude.navBarTables.setVisibility(View.GONE);
+        }
     }
 }

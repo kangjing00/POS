@@ -49,7 +49,7 @@ public class FloorAdapter extends RecyclerView.Adapter<FloorAdapter.FloorViewHol
         Floor floor = floors.get(position);
         holder.binding.setFloor(floor);
 
-        if(!floor.getActive().equalsIgnoreCase("t")){
+        if(!floor.getActive().equalsIgnoreCase("true")){
             holder.binding.floorBtn.setVisibility(View.GONE);
         }
         if(position == firstFloorCheck){
