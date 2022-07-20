@@ -227,14 +227,6 @@ public class TablePage extends CheckConnection implements
         }
         //Toolbar buttons
         {
-        binding.toolbarLayoutIncl.toolbarSearchIcon.setOnClickListener(new View.OnClickListener(){
-               @Override
-               public void onClick(View view) {
-                   Toast.makeText(contextpage, "Search Button Clicked", Toast.LENGTH_SHORT).show();
-               }
-           }
-        );
-
         binding.toolbarLayoutIncl.toolbarRefresh.setOnClickListener(new View.OnClickListener(){
                 @Override
                 public void onClick(View view) {

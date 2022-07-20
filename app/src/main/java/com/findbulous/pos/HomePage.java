@@ -57,6 +57,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.TimeZone;
 
+import io.realm.Case;
 import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmResults;
@@ -160,6 +161,9 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
             binding.cartInclude.cartOrderDiscountBtn.setTextColor(contextpage.getResources().getColor(R.color.green));
         }
 
+        binding.toolbarLayoutIncl.toolbarSearchLayout.setVisibility(View.VISIBLE);
+
+
         //OnClickListener
         //Menu
         binding.allCategoryBtn.setOnClickListener(new View.OnClickListener() {
@@ -175,7 +179,14 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         binding.toolbarLayoutIncl.toolbarSearchIcon.setOnClickListener(new View.OnClickListener(){
                @Override
                public void onClick(View view) {
-                   Toast.makeText(contextpage, "Search Button Clicked", Toast.LENGTH_SHORT).show();
+                   String searchValue = binding.toolbarLayoutIncl.toolbarEtSearch.getText().toString().trim();
+                   RealmResults<Product> results = realm.where(Product.class).contains("name", searchValue, Case.INSENSITIVE)
+                           .findAll();
+                   getProductCategoryFromRealm();
+                   list.clear();
+                   list.addAll(results);
+                   categories_clicked_wo_child.clear();
+                   productAdapter.notifyDataSetChanged();
                }
            }
         );

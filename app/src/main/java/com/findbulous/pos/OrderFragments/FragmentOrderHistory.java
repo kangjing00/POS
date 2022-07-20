@@ -4,6 +4,8 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
@@ -16,6 +18,7 @@ import com.findbulous.pos.databinding.FragmentOrderHistoryBinding;
 
 import java.util.ArrayList;
 
+import io.realm.Case;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
@@ -39,6 +42,32 @@ public class FragmentOrderHistory extends Fragment implements OrderHistoryAdapte
         orderHistoryAdapter = new OrderHistoryAdapter(orders, this);
         getOrderHistoryFromRealm();
         binding.orderHistoryRv.setAdapter(orderHistoryAdapter);
+
+        binding.orderHistorySearchBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String searchValue = binding.orderHistoryEtSearch.getText().toString().trim();
+                RealmResults<Order> results = realm.where(Order.class).contains("customer.customer_name", searchValue, Case.INSENSITIVE)
+                        .findAll();
+                RealmResults<Order> allResults = realm.where(Order.class).equalTo("state", "paid").findAll();
+                try{
+                    int orderId = Integer.valueOf(searchValue);
+                    results = realm.where(Order.class).equalTo("customer.customer_name", searchValue)
+                            .or().equalTo("order_id", orderId).findAll();
+                }catch (Exception e){
+                    System.out.println("Error Message: " + e);
+                }
+
+                orders.clear();
+                if(searchValue.length() != 0) {
+                    orders.addAll(results);
+                }else{
+                    orders.addAll(allResults);
+                }
+                orderHistoryAdapter.notifyDataSetChanged();
+            }
+
+        });
 
         return view;
     }

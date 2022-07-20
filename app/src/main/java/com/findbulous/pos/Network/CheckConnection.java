@@ -61,6 +61,8 @@ public class CheckConnection extends AppCompatActivity implements ConnectivityCh
     public void onConnectivityChanged(boolean isConnected){
         if(isConnected){
             System.out.println("Internet Connected");
+            //if the account is main account, update the table and floor
+            //else if the account is no main account, load the table and floor
             //new loadFloorAndTable().execute();
 //            table_list = realm.where(Table.class).findAll();
 //            tables.addAll(realm.copyFromRealm(table_list));

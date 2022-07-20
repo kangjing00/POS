@@ -42,6 +42,7 @@
             android:background="@drawable/box_corner_nopadding"
             android:backgroundTint="@color/lightGrey"
             android:weightSum="10"
+            android:visibility="gone"
             android:layout_toRightOf="@+id/toolbar_title"
             android:layout_toLeftOf="@+id/toolbar_refresh"
             android:layout_centerVertical="true">
