@@ -33,8 +33,11 @@ import com.findbulous.pos.Adapters.ProductAdapter;
 import com.findbulous.pos.Adapters.ProductCategoryAdapter;
 import com.findbulous.pos.Network.CheckConnection;
 import com.findbulous.pos.Network.NetworkUtils;
+import com.findbulous.pos.databinding.CashInOutPopupBinding;
 import com.findbulous.pos.databinding.HomePageBinding;
 import com.findbulous.pos.databinding.ProductDetailsPopupBinding;
+import com.findbulous.pos.databinding.ProductModifierPopupBinding;
+import com.findbulous.pos.databinding.ToolbarSyncPopupBinding;
 import com.google.android.material.button.MaterialButton;
 
 import org.json.JSONArray;
@@ -60,21 +63,11 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         ProductAdapter.OnItemClickListener, CartOrderLineAdapter.OnItemClickListener{
 
     private HomePageBinding binding;
-    //Product Modifier Choice Popup
-    private TextView product_name_modifier;
-    private LinearLayout product_modifier_ll;
-    private MaterialButton product_modifier_popup_negative_btn, product_modifier_popup_positive_btn;
     //Cart //Popup
     private Button add_discount_popup_negative_btn, add_discount_popup_positive_btn;
     private EditText add_discount_popup_et;
     private MaterialButton add_note_popup_negative_btn, add_note_popup_positive_btn;
     private EditText add_note_popup_et;
-    //Cash in out popup
-    private RadioButton cash_in_rb, cash_out_rb;
-    private EditText cash_in_out_amount, cash_in_out_reason;
-    private MaterialButton cash_in_out_cancel, cash_in_out_confirm;
-    //Sync popup
-    private TextView product_sync_btn, transactions_sync_btn;
     // Storing data into SharedPreferences
     private SharedPreferences cartSharedPreference, customerSharedPreference;
     // Creating an Editor object to edit(write to the file)
@@ -608,8 +601,9 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
 
     private void showCashInOut() {
         PopupWindow popup = new PopupWindow(contextpage);
-        View layout = getLayoutInflater().inflate(R.layout.cash_in_out_popup, null);
-        popup.setContentView(layout);
+        CashInOutPopupBinding popupBinding = CashInOutPopupBinding.inflate(getLayoutInflater());
+//        View layout = getLayoutInflater().inflate(R.layout.cash_in_out_popup, null);
+        popup.setContentView(popupBinding.getRoot());
         // Set content width and height
         popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
         popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
@@ -628,21 +622,14 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         p.dimAmount = 0.3f;
         wm.updateViewLayout(container, p);
 
-        cash_in_rb = (RadioButton)layout.findViewById(R.id.cash_in_rb);
-        cash_out_rb = (RadioButton)layout.findViewById(R.id.cash_out_rb);
-        cash_in_out_amount = (EditText)layout.findViewById(R.id.cash_in_out_amount_et);
-        cash_in_out_reason = (EditText)layout.findViewById(R.id.cash_in_out_reason_et);
-        cash_in_out_cancel = (MaterialButton)layout.findViewById(R.id.cash_in_out_cancel_btn);
-        cash_in_out_confirm = (MaterialButton)layout.findViewById(R.id.cash_in_out_confirm_btn);
-
-        cash_in_out_cancel.setOnClickListener(new View.OnClickListener() {
+        popupBinding.cashInOutCancelBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 popup.dismiss();
                 Toast.makeText(contextpage, "Cancel", Toast.LENGTH_SHORT).show();
             }
         });
-        cash_in_out_confirm.setOnClickListener(new View.OnClickListener() {
+        popupBinding.cashInOutConfirmBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 popup.dismiss();
@@ -652,8 +639,9 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
     }
     private void showRefreshPopup(View view) {
         PopupWindow popup = new PopupWindow(contextpage);
-        View layout = getLayoutInflater().inflate(R.layout.toolbar_sync_popup, null);
-        popup.setContentView(layout);
+        ToolbarSyncPopupBinding popupBinding = ToolbarSyncPopupBinding.inflate(getLayoutInflater());
+        //View layout = getLayoutInflater().inflate(R.layout.toolbar_sync_popup, null);
+        popup.setContentView(popupBinding.getRoot());
         // Set content width and height
         popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
         popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
@@ -665,11 +653,8 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         popup.setBackgroundDrawable(null);
         popup.showAsDropDown(binding.toolbarLayoutIncl.toolbarRefresh, -120, 0);
 
-        //Popup Buttons
-        product_sync_btn = (TextView) layout.findViewById(R.id.sync_product_btn);
-        transactions_sync_btn = (TextView)layout.findViewById(R.id.sync_transaction_btn);
 
-        product_sync_btn.setOnClickListener(new View.OnClickListener() {
+        popupBinding.syncProductBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Toast.makeText(contextpage, "refresh / sync products", Toast.LENGTH_SHORT).show();
@@ -677,7 +662,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
             }
         });
 
-        transactions_sync_btn.setOnClickListener(new View.OnClickListener() {
+        popupBinding.syncTransactionBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Toast.makeText(contextpage, "refresh / sync transactions", Toast.LENGTH_SHORT).show();
@@ -1177,8 +1162,9 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
     }
     private void showProductModifier(Product product, boolean fromMenu){
         PopupWindow popup = new PopupWindow(contextpage);
-        View layout = getLayoutInflater().inflate(R.layout.product_modifier_popup, null);
-        popup.setContentView(layout);
+        ProductModifierPopupBinding popupBinding = ProductModifierPopupBinding.inflate(getLayoutInflater());
+//        View layout = getLayoutInflater().inflate(R.layout.product_modifier_popup, null);
+        popup.setContentView(popupBinding.getRoot());
         // Set content width and height
         popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
         popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
@@ -1197,33 +1183,35 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         p.dimAmount = 0.3f;
         wm.updateViewLayout(container, p);
 
-        product_name_modifier = layout.findViewById(R.id.product_name_modifier_popup);
-        product_modifier_ll = layout.findViewById(R.id.product_modifier_ll);
-        product_modifier_popup_negative_btn = layout.findViewById(R.id.product_modifier_popup_negative_btn);
-        product_modifier_popup_positive_btn = layout.findViewById(R.id.product_modifier_popup_positive_btn);
 
-        product_name_modifier.setText(product.getName());
-
+        popupBinding.productNameModifierPopup.setText(product.getName());
         // Add view for extra modifier
         TextView size_tv = new TextView(contextpage);
         size_tv.setText("Size");
         size_tv.setTextSize(20);
-        product_modifier_ll.addView(size_tv);
+        popupBinding.productModifierLl.addView(size_tv);
 
+//        if(pos_config.isIface_orderline_customer_notes()){
+//            popupBinding.textView1.setVisibility(View.VISIBLE);
+//            popupBinding.productModifierNote.setVisibility(View.VISIBLE);
+//        }else{
+//            popupBinding.textView1.setVisibility(View.GONE);
+//            popupBinding.productModifierNote.setVisibility(View.GONE);
+//        }
         if(fromMenu){
-            product_modifier_popup_positive_btn.setText("Add to Cart");
+            popupBinding.productModifierPopupPositiveBtn.setText("Add to Cart");
         }else{
-            product_modifier_popup_positive_btn.setText("Update");
+            popupBinding.productModifierPopupPositiveBtn.setText("Update");
         }
 
-        product_modifier_popup_negative_btn.setOnClickListener(new View.OnClickListener() {
+        popupBinding.productModifierPopupNegativeBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 popup.dismiss();
             }
         });
 
-        product_modifier_popup_positive_btn.setOnClickListener(new View.OnClickListener() {
+        popupBinding.productModifierPopupPositiveBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if(fromMenu) {

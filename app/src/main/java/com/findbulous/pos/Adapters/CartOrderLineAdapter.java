@@ -9,15 +9,19 @@ import android.widget.Toast;
 
 import androidx.recyclerview.widget.RecyclerView;
 import com.findbulous.pos.Order_Line;
+import com.findbulous.pos.POS_Config;
 import com.findbulous.pos.R;
 import com.findbulous.pos.databinding.ViewCartOrdersBinding;
 import java.util.ArrayList;
+
+import io.realm.Realm;
 
 public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdapter.OrderLineProductViewHolder> {
 
     private ArrayList<Order_Line> order_lines;
     private OnItemClickListener listener;
     private Context context;
+    private POS_Config pos_config;
     private int cancelledIndex;
 
     public class OrderLineProductViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
@@ -27,6 +31,12 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
             super(binding.getRoot());
             this.binding = binding;
             binding.getRoot().setOnClickListener(this);
+
+            if(pos_config.isManual_discount()){
+                binding.cartOrderLineDiscountLl.setVisibility(View.VISIBLE);
+            }else{
+                binding.cartOrderLineDiscountLl.setVisibility(View.GONE);
+            }
         }
 
         @Override
@@ -40,6 +50,14 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
         this.listener = listener;
         this.context = c;
         this.cancelledIndex = -1;
+        this.pos_config = null;
+        setPOSConfig();
+    }
+
+    private void setPOSConfig(){
+        Realm realm = Realm.getDefaultInstance();
+        POS_Config temp = realm.where(POS_Config.class).findFirst();
+        this.pos_config = realm.copyFromRealm(temp);
     }
 
     @Override

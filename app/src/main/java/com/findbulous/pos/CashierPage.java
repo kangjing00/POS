@@ -19,7 +19,9 @@ import com.findbulous.pos.CashierFragments.FragmentCashierDrawer;
 import com.findbulous.pos.CashierFragments.FragmentSaleHistory;
 import com.findbulous.pos.CashierFragments.FragmentTodaySale;
 import com.findbulous.pos.Network.CheckConnection;
+import com.findbulous.pos.databinding.CashInOutPopupBinding;
 import com.findbulous.pos.databinding.CashierPageBinding;
+import com.findbulous.pos.databinding.ToolbarSyncPopupBinding;
 import com.google.android.material.button.MaterialButton;
 
 import io.realm.Realm;
@@ -29,12 +31,6 @@ public class CashierPage extends CheckConnection {
     private CashierPageBinding binding;
     private FragmentManager fm;
     private FragmentTransaction ft;
-    //Cash in out popup
-    private RadioButton cash_in_rb, cash_out_rb;
-    private EditText cash_in_out_amount, cash_in_out_reason;
-    private MaterialButton cash_in_out_cancel, cash_in_out_confirm;
-    //Sync popup
-    private TextView product_sync_btn, transactions_sync_btn;
     //Realm
     private Realm realm;
     //POS config
@@ -212,8 +208,9 @@ public class CashierPage extends CheckConnection {
 
     private void showCashInOut() {
         PopupWindow popup = new PopupWindow(contextpage);
-        View layout = getLayoutInflater().inflate(R.layout.cash_in_out_popup, null);
-        popup.setContentView(layout);
+        CashInOutPopupBinding popupBinding = CashInOutPopupBinding.inflate(getLayoutInflater());
+//        View layout = getLayoutInflater().inflate(R.layout.cash_in_out_popup, null);
+        popup.setContentView(popupBinding.getRoot());
         // Set content width and height
         popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
         popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
@@ -232,21 +229,14 @@ public class CashierPage extends CheckConnection {
         p.dimAmount = 0.3f;
         wm.updateViewLayout(container, p);
 
-        cash_in_rb = (RadioButton)layout.findViewById(R.id.cash_in_rb);
-        cash_out_rb = (RadioButton)layout.findViewById(R.id.cash_out_rb);
-        cash_in_out_amount = (EditText)layout.findViewById(R.id.cash_in_out_amount_et);
-        cash_in_out_reason = (EditText)layout.findViewById(R.id.cash_in_out_reason_et);
-        cash_in_out_cancel = (MaterialButton)layout.findViewById(R.id.cash_in_out_cancel_btn);
-        cash_in_out_confirm = (MaterialButton)layout.findViewById(R.id.cash_in_out_confirm_btn);
-
-        cash_in_out_cancel.setOnClickListener(new View.OnClickListener() {
+        popupBinding.cashInOutCancelBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 popup.dismiss();
                 Toast.makeText(contextpage, "Cancel", Toast.LENGTH_SHORT).show();
             }
         });
-        cash_in_out_confirm.setOnClickListener(new View.OnClickListener() {
+        popupBinding.cashInOutConfirmBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 popup.dismiss();
@@ -256,8 +246,9 @@ public class CashierPage extends CheckConnection {
     }
     private void showRefreshPopup(View view) {
         PopupWindow popup = new PopupWindow(contextpage);
-        View layout = getLayoutInflater().inflate(R.layout.toolbar_sync_popup, null);
-        popup.setContentView(layout);
+        ToolbarSyncPopupBinding popupBinding = ToolbarSyncPopupBinding.inflate(getLayoutInflater());
+        //View layout = getLayoutInflater().inflate(R.layout.toolbar_sync_popup, null);
+        popup.setContentView(popupBinding.getRoot());
         // Set content width and height
         popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
         popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
@@ -269,11 +260,8 @@ public class CashierPage extends CheckConnection {
         popup.setBackgroundDrawable(null);
         popup.showAsDropDown(binding.toolbarLayoutIncl.toolbarRefresh, -120, 0);
 
-        //Popup Buttons
-        product_sync_btn = (TextView) layout.findViewById(R.id.sync_product_btn);
-        transactions_sync_btn = (TextView)layout.findViewById(R.id.sync_transaction_btn);
 
-        product_sync_btn.setOnClickListener(new View.OnClickListener() {
+        popupBinding.syncProductBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Toast.makeText(contextpage, "refresh / sync products", Toast.LENGTH_SHORT).show();
@@ -281,7 +269,7 @@ public class CashierPage extends CheckConnection {
             }
         });
 
-        transactions_sync_btn.setOnClickListener(new View.OnClickListener() {
+        popupBinding.syncTransactionBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Toast.makeText(contextpage, "refresh / sync transactions", Toast.LENGTH_SHORT).show();
