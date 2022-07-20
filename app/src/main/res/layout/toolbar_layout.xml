@@ -112,7 +112,8 @@
             android:backgroundTint="@color/darkOrange"
             android:drawableLeft="@drawable/ic_select_table"
             android:drawablePadding="10dp"
-            android:padding="8dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
             android:text="Cash In / Out"
             android:textAllCaps="false"
             app:icon="@drawable/ic_cash" />
