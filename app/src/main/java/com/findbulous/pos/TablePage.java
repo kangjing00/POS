@@ -33,6 +33,7 @@ import com.findbulous.pos.Adapters.FloorAdapter;
 import com.findbulous.pos.Adapters.TableAdapter;
 import com.findbulous.pos.Network.CheckConnection;
 import com.findbulous.pos.databinding.CashInOutPopupBinding;
+import com.findbulous.pos.databinding.TableAddonProceedPopupBinding;
 import com.findbulous.pos.databinding.TablePageBinding;
 import com.findbulous.pos.databinding.ToolbarSyncPopupBinding;
 import com.google.android.material.button.MaterialButton;
@@ -75,8 +76,6 @@ public class TablePage extends CheckConnection implements
     private ArrayList<Floor> floor_list;
     private ArrayList<Table> update_table_state;
     private FloorAdapter floorAdapter;
-    //Table onHold and occupied popup
-    private MaterialButton table_swap_transfer_btn, table_addon_btn, table_proceed_btn;
     //Realm
     private Realm realm;
     private SharedPreferences currentOrderSharedPreference, currentCustomerSharedPreference;
@@ -508,8 +507,9 @@ public class TablePage extends CheckConnection implements
     //OnHold and Occupied table popup
     private void showAddonAndProceed(View view, Table clickedTable) {
         PopupWindow popup = new PopupWindow(contextpage);
-        View layout = getLayoutInflater().inflate(R.layout.table_addon_proceed_popup, null);
-        popup.setContentView(layout);
+        TableAddonProceedPopupBinding popupBinding = TableAddonProceedPopupBinding.inflate(getLayoutInflater());
+//        View layout = getLayoutInflater().inflate(R.layout.table_addon_proceed_popup, null);
+        popup.setContentView(popupBinding.getRoot());
         // Set content width and height
         popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
         popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
@@ -521,32 +521,25 @@ public class TablePage extends CheckConnection implements
         popup.setBackgroundDrawable(null);
         popup.showAsDropDown(view);
 
-        TextView tvTableName = layout.findViewById(R.id.table_addon_proceed_popup_table_name);
-        TextView tvOrderID = layout.findViewById(R.id.table_addon_proceed_popup_order_id);
-        TextView orderTv = layout.findViewById(R.id.table_addon_proceed_popup_tv2);
-        //Popup Buttons
-        table_swap_transfer_btn = (MaterialButton)layout.findViewById(R.id.table_swap_transfer_btn);
-        table_addon_btn = (MaterialButton)layout.findViewById(R.id.table_addon_btn);
-        table_proceed_btn = (MaterialButton)layout.findViewById(R.id.table_proceed_btn);
 
-        tvTableName.setText(clickedTable.getName());
+        popupBinding.tableAddonProceedPopupTableName.setText(clickedTable.getName());
         Order order = realm.where(Order.class).equalTo("table.table_id", clickedTable.getTable_id()).
                 and().notEqualTo("state", "paid").findFirst();
         Customer customer = (order == null)? null : realm.where(Customer.class).equalTo("customer_id", order.getCustomer().getCustomer_id()).findFirst();
         int current_order_id = currentOrderSharedPreference.getInt("orderId", -1);
 
         if(order != null){
-            tvOrderID.setText("#" + order.getOrder_id());
-            tvOrderID.setVisibility(View.VISIBLE);
-            orderTv.setVisibility(View.VISIBLE);
-            table_swap_transfer_btn.setVisibility(View.VISIBLE);
+            popupBinding.tableAddonProceedPopupOrderId.setText("#" + order.getOrder_id());
+            popupBinding.tableAddonProceedPopupOrderId.setVisibility(View.VISIBLE);
+            popupBinding.tableAddonProceedPopupTv2.setVisibility(View.VISIBLE);
+            popupBinding.tableSwapTransferBtn.setVisibility(View.VISIBLE);
         }else{
-            table_swap_transfer_btn.setVisibility(View.GONE);
-            orderTv.setVisibility(View.GONE);
-            tvOrderID.setVisibility(View.GONE);
+            popupBinding.tableSwapTransferBtn.setVisibility(View.GONE);
+            popupBinding.tableAddonProceedPopupTv2.setVisibility(View.GONE);
+            popupBinding.tableAddonProceedPopupOrderId.setVisibility(View.GONE);
         }
 
-        table_swap_transfer_btn.setOnClickListener(new View.OnClickListener() {
+        popupBinding.tableSwapTransferBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 tableSwapping = true;
@@ -556,7 +549,7 @@ public class TablePage extends CheckConnection implements
                 Toast.makeText(TablePage.this, "Choose a table for swapping or transferring", Toast.LENGTH_SHORT).show();
             }
         });
-        table_addon_btn.setOnClickListener(new View.OnClickListener() {
+        popupBinding.tableAddonBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if(current_order_id == -1) { //no current order
@@ -594,7 +587,7 @@ public class TablePage extends CheckConnection implements
                 popup.dismiss();
             }
         });
-        table_proceed_btn.setOnClickListener(new View.OnClickListener() {
+        popupBinding.tableProceedBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if(current_order_id == -1) { //no current order
