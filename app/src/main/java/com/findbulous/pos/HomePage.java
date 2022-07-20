@@ -93,7 +93,6 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
 
     private String statuslogin;
     private Context contextpage;
-    private LoginPage login_page;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -185,7 +184,6 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                 @Override
                 public void onClick(View view) {
                     showRefreshPopup(view);
-                    Toast.makeText(contextpage, "Refresh Button Clicked", Toast.LENGTH_SHORT).show();
                 }
             }
         );
@@ -211,7 +209,6 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                 @Override
                 public void onClick(View view) {
                     showCashInOut();
-                    Toast.makeText(contextpage, "Cash in / out Button Clicked", Toast.LENGTH_SHORT).show();
                 }
             }
         );

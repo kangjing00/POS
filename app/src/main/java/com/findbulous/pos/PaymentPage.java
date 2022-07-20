@@ -269,7 +269,6 @@ public class PaymentPage extends CheckConnection {
                @Override
                public void onClick(View view) {
                    showRefreshPopup(view);
-                   Toast.makeText(contextpage, "Refresh Button Clicked", Toast.LENGTH_SHORT).show();
                }
            }
         );
@@ -286,7 +285,6 @@ public class PaymentPage extends CheckConnection {
                 @Override
                 public void onClick(View view) {
                     showCashInOut();
-                    Toast.makeText(contextpage, "Cash in / out Button Clicked", Toast.LENGTH_SHORT).show();
                 }
             }
         );
