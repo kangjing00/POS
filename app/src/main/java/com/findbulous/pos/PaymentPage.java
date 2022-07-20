@@ -23,6 +23,7 @@ import com.findbulous.pos.Adapters.PaymentOrderLineAdapter;
 import com.findbulous.pos.Network.CheckConnection;
 import com.findbulous.pos.PaymentTab.PaymentMethodPagerAdapter;
 import com.findbulous.pos.databinding.CashInOutPopupBinding;
+import com.findbulous.pos.databinding.PaymentAddTipPopupBinding;
 import com.findbulous.pos.databinding.PaymentPageBinding;
 import com.findbulous.pos.databinding.ToolbarSyncPopupBinding;
 import com.google.android.material.button.MaterialButton;
@@ -38,8 +39,6 @@ public class PaymentPage extends CheckConnection {
     private PaymentMethodPagerAdapter paymentMethodPagerAdapter;
     private String[] titles = new String[]{"Cash", "Other Modes"};
     private PaymentPageViewModel viewModel;
-    private Button add_popup_negative_btn, add_popup_positive_btn;
-    private EditText add_popup_et;
     //RecyclerView
     private ArrayList<Order_Line> order_lines;
     private PaymentOrderLineAdapter orderLineAdapter;
@@ -375,8 +374,9 @@ public class PaymentPage extends CheckConnection {
 
     private void showAddTipPopup(View view) {
         PopupWindow popup = new PopupWindow(contextpage);
-        View layout = getLayoutInflater().inflate(R.layout.payment_add_tip_popup, null);
-        popup.setContentView(layout);
+        PaymentAddTipPopupBinding popupBinding = PaymentAddTipPopupBinding.inflate(getLayoutInflater());
+//        View layout = getLayoutInflater().inflate(R.layout.payment_add_tip_popup, null);
+        popup.setContentView(popupBinding.getRoot());
         // Set content width and height
         popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
         popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
@@ -393,12 +393,9 @@ public class PaymentPage extends CheckConnection {
         popup.showAsDropDown(binding.paymentBarAddTip, -520, -180);
 
         //Popup Buttons
-        add_popup_negative_btn = (Button)layout.findViewById(R.id.add_tip_popup_negative_btn);
-        add_popup_positive_btn = (Button)layout.findViewById(R.id.add_tip_popup_positive_btn);
-        add_popup_et = (EditText)layout.findViewById(R.id.add_tip_popup_et);
-        add_popup_et.setText(binding.getPaymentPageViewModel().getPayment_tip().getValue());
+        popupBinding.addTipPopupEt.setText(binding.getPaymentPageViewModel().getPayment_tip().getValue());
 
-        add_popup_negative_btn.setOnClickListener(new View.OnClickListener(){
+        popupBinding.addTipPopupNegativeBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
                 popup.dismiss();
@@ -406,10 +403,10 @@ public class PaymentPage extends CheckConnection {
             }
         });
 
-        add_popup_positive_btn.setOnClickListener(new View.OnClickListener(){
+        popupBinding.addTipPopupPositiveBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                String tip_amount = String.format("%.2f", Double.valueOf(add_popup_et.getText().toString()));
+                String tip_amount = String.format("%.2f", Double.valueOf(popupBinding.addTipPopupEt.getText().toString()));
                 binding.getPaymentPageViewModel().setPayment_tip(tip_amount);
                 double amount_total = binding.getPaymentPageViewModel().getAmount_total();
                 binding.paymentGrandTotal.setText(String.format("%.2f", amount_total));

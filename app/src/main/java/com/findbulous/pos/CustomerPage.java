@@ -38,6 +38,8 @@ import com.findbulous.pos.CustomerFragments.FragmentCustomer;
 import com.findbulous.pos.CustomerFragments.FragmentCustomerDetail;
 import com.findbulous.pos.Network.CheckConnection;
 import com.findbulous.pos.Network.NetworkUtils;
+import com.findbulous.pos.databinding.CartOrderAddDiscountPopupBinding;
+import com.findbulous.pos.databinding.CartOrderAddNotePopupBinding;
 import com.findbulous.pos.databinding.CashInOutPopupBinding;
 import com.findbulous.pos.databinding.CustomerPageBinding;
 import com.findbulous.pos.databinding.ProductModifierPopupBinding;
@@ -68,11 +70,6 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
     private FragmentTransaction ft;
     private boolean customerFragment;
 
-    //Cart //Popup
-    private Button add_discount_popup_negative_btn, add_discount_popup_positive_btn;
-    private EditText add_discount_popup_et;
-    private MaterialButton  add_note_popup_negative_btn, add_note_popup_positive_btn;
-    private EditText add_note_popup_et;
     // Storing data into SharedPreferences
     private SharedPreferences cartSharedPreference, customerSharedPreference;
     // Creating an Editor object to edit(write to the file)
@@ -796,8 +793,9 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
     //Cart Note and Discount
     private void showCartOrderAddNotePopup(int btnID) {
         PopupWindow popup = new PopupWindow(contextpage);
-        View layout = getLayoutInflater().inflate(R.layout.cart_order_add_note_popup, null);
-        popup.setContentView(layout);
+        CartOrderAddNotePopupBinding popupBinding = CartOrderAddNotePopupBinding.inflate(getLayoutInflater());
+//        View layout = getLayoutInflater().inflate(R.layout.cart_order_add_note_popup, null);
+        popup.setContentView(popupBinding.getRoot());
         // Set content width and height
         popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
         popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
@@ -816,38 +814,35 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
         p.dimAmount = 0.3f;
         wm.updateViewLayout(container, p);
 
-        add_note_popup_negative_btn = (MaterialButton)layout.findViewById(R.id.add_note_popup_negative_btn);
-        add_note_popup_positive_btn = (MaterialButton)layout.findViewById(R.id.add_note_popup_positive_btn);
-        add_note_popup_et = (EditText)layout.findViewById(R.id.add_note_popup_et);
 
         if(currentOrder.getOrder_id() != -1) {
             if(currentOrder.getNote() != null){
                 if(!currentOrder.getNote().isEmpty()) {
-                    add_note_popup_et.setText(currentOrder.getNote());
+                    popupBinding.addNotePopupEt.setText(currentOrder.getNote());
                 }
             } else {
-                add_note_popup_et.setText("");
+                popupBinding.addNotePopupEt.setText("");
             }
         }else{
-            add_note_popup_et.setText("");
+            popupBinding.addNotePopupEt.setText("");
         }
         if(btnID == binding.cartInclude.cartOrderNoteBtn.getId()){
-            add_note_popup_positive_btn.setText("Add & Update");
+            popupBinding.addNotePopupPositiveBtn.setText("Add & Update");
         }else if(btnID == binding.cartInclude.cartOrderSummaryHoldBtn.getId()){
-            add_note_popup_positive_btn.setText("Proceed");
+            popupBinding.addNotePopupPositiveBtn.setText("Proceed");
         }
 
-        add_note_popup_negative_btn.setOnClickListener(new View.OnClickListener(){
+        popupBinding.addNotePopupNegativeBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
                 popup.dismiss();
                 Toast.makeText(contextpage, "Cancel", Toast.LENGTH_SHORT).show();
             }
         });
-        add_note_popup_positive_btn.setOnClickListener(new View.OnClickListener() {
+        popupBinding.addNotePopupPositiveBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String note = add_note_popup_et.getText().toString();
+                String note = popupBinding.addNotePopupEt.getText().toString();
                 if(!note.isEmpty()){
                     if(btnID != binding.cartInclude.cartOrderSummaryHoldBtn.getId()) {
                         binding.cartInclude.cartOrderNoteBtn.setTextColor(contextpage.getResources().getColor(R.color.green));
@@ -935,8 +930,9 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
     }
     private void showCartOrderAddDiscountPopup(View view) {
         PopupWindow popup = new PopupWindow(contextpage);
-        View layout = getLayoutInflater().inflate(R.layout.cart_order_add_discount_popup, null);
-        popup.setContentView(layout);
+        CartOrderAddDiscountPopupBinding popupBinding = CartOrderAddDiscountPopupBinding.inflate(getLayoutInflater());
+//        View layout = getLayoutInflater().inflate(R.layout.cart_order_add_discount_popup, null);
+        popup.setContentView(popupBinding.getRoot());
         // Set content width and height
         popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
         popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
@@ -958,42 +954,37 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
         p.flags |= WindowManager.LayoutParams.FLAG_DIM_BEHIND;
         p.dimAmount = 0.3f;
         wm.updateViewLayout(container, p);
-        //Popup Buttons
-        add_discount_popup_negative_btn = (Button)layout.findViewById(R.id.add_discount_popup_negative_btn);
-        add_discount_popup_positive_btn = (Button)layout.findViewById(R.id.add_discount_popup_positive_btn);
-        add_discount_popup_et = (EditText)layout.findViewById(R.id.add_discount_popup_et);
-        RadioButton add_discount_popup_radio_btn_amount = layout.findViewById(R.id.add_discount_popup_radio_btn_amount);
-        RadioButton add_discount_popup_radio_btn_percentage = layout.findViewById(R.id.add_discount_popup_radio_btn_percentage);
+
 
         if((currentOrder.getOrder_id() != -1) && (currentOrder.isHas_order_discount())) {
             if(currentOrder.isIs_percentage()){ //percentage
-                add_discount_popup_et.setText(String.valueOf(currentOrder.getDiscount_percent()));
-                add_discount_popup_radio_btn_percentage.setChecked(true);
-                add_discount_popup_radio_btn_amount.setChecked(false);
-                add_discount_popup_et.setInputType(InputType.TYPE_CLASS_NUMBER);
+                popupBinding.addDiscountPopupEt.setText(String.valueOf(currentOrder.getDiscount_percent()));
+                popupBinding.addDiscountPopupRadioBtnPercentage.setChecked(true);
+                popupBinding.addDiscountPopupRadioBtnAmount.setChecked(false);
+                popupBinding.addDiscountPopupEt.setInputType(InputType.TYPE_CLASS_NUMBER);
             }else{  //amount
-                add_discount_popup_et.setText(String.valueOf(currentOrder.getAmount_order_discount()));
-                add_discount_popup_radio_btn_percentage.setChecked(false);
-                add_discount_popup_radio_btn_amount.setChecked(true);
-                add_discount_popup_et.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+                popupBinding.addDiscountPopupEt.setText(String.valueOf(currentOrder.getAmount_order_discount()));
+                popupBinding.addDiscountPopupRadioBtnPercentage.setChecked(false);
+                popupBinding.addDiscountPopupRadioBtnAmount.setChecked(true);
+                popupBinding.addDiscountPopupEt.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
             }
         }else{
-            add_discount_popup_radio_btn_percentage.setChecked(true);
-            add_discount_popup_radio_btn_amount.setChecked(false);
-            add_discount_popup_et.setText("0");
+            popupBinding.addDiscountPopupRadioBtnPercentage.setChecked(true);
+            popupBinding.addDiscountPopupRadioBtnAmount.setChecked(false);
+            popupBinding.addDiscountPopupEt.setText("0");
         }
 
-        add_discount_popup_negative_btn.setOnClickListener(new View.OnClickListener(){
+        popupBinding.addDiscountPopupNegativeBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
                 popup.dismiss();
             }
         });
 
-        add_discount_popup_positive_btn.setOnClickListener(new View.OnClickListener(){
+        popupBinding.addDiscountPopupPositiveBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                String userInput = add_discount_popup_et.getText().toString();
+                String userInput = popupBinding.addDiscountPopupEt.getText().toString();
                 if((userInput.charAt(0) == '.') && (userInput.length() == 1)){
                     userInput = "0.0";
                 }
@@ -1001,7 +992,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                 if(discountInDouble > 0.0) {
                     String discount = String.format("%.2f", discountInDouble);
 
-                    if (add_discount_popup_radio_btn_amount.isChecked()) {
+                    if (popupBinding.addDiscountPopupRadioBtnAmount.isChecked()) {
                         currentOrder.setIs_percentage(false);
                     } else {
                         currentOrder.setIs_percentage(true);
@@ -1036,22 +1027,22 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
             }
         });
 
-        add_discount_popup_radio_btn_amount.setOnClickListener(new View.OnClickListener() {
+        popupBinding.addDiscountPopupRadioBtnAmount.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                add_discount_popup_et.setText(String.format("%.2f", Double.valueOf(add_discount_popup_et.getText().toString())));
-                add_discount_popup_et.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
-                add_discount_popup_radio_btn_amount.setChecked(true);
-                add_discount_popup_radio_btn_percentage.setChecked(false);
+                popupBinding.addDiscountPopupEt.setText(String.format("%.2f", Double.valueOf(popupBinding.addDiscountPopupEt.getText().toString())));
+                popupBinding.addDiscountPopupEt.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+                popupBinding.addDiscountPopupRadioBtnAmount.setChecked(true);
+                popupBinding.addDiscountPopupRadioBtnPercentage.setChecked(false);
             }
         });
-        add_discount_popup_radio_btn_percentage.setOnClickListener(new View.OnClickListener() {
+        popupBinding.addDiscountPopupRadioBtnPercentage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                add_discount_popup_et.setText(String.format("%d", Math.round(Double.valueOf(add_discount_popup_et.getText().toString()))));
-                add_discount_popup_et.setInputType(InputType.TYPE_CLASS_NUMBER);
-                add_discount_popup_radio_btn_percentage.setChecked(true);
-                add_discount_popup_radio_btn_amount.setChecked(false);
+                popupBinding.addDiscountPopupEt.setText(String.format("%d", Math.round(Double.valueOf(popupBinding.addDiscountPopupEt.getText().toString()))));
+                popupBinding.addDiscountPopupEt.setInputType(InputType.TYPE_CLASS_NUMBER);
+                popupBinding.addDiscountPopupRadioBtnPercentage.setChecked(true);
+                popupBinding.addDiscountPopupRadioBtnAmount.setChecked(false);
             }
         });
     }
