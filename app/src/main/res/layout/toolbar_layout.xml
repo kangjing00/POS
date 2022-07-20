@@ -29,7 +29,7 @@
             android:layout_marginStart="10dp"
             android:layout_marginEnd="10dp"
             android:fontFamily="@font/roboto_bold"
-            android:text="Restro POS"
+            android:text="Point-Of-Sale"
             android:textColor="@color/raisinBlack"
             android:textSize="28dp" />
 

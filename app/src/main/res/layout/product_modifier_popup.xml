@@ -74,7 +74,7 @@
         android:textAllCaps="false"
         android:padding="15dp"
         app:strokeColor="@color/darkOrange"
-        app:rippleColor="@color/linen"
+        app:rippleColor="@color/darkOrange"
         app:strokeWidth="2dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/product_modifier_popup_positive_btn"
