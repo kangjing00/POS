@@ -57,6 +57,8 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
 
     private ArrayList<POS_Category> product_categories;
     private ArrayList<Product> products;
+    private ArrayList<Attribute> attributes;
+    private ArrayList<Attribute_Value> attribute_values;
     private ArrayList<Product_Tax> product_taxes;
 
     private ArrayList<Floor> floors;
@@ -83,14 +85,16 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         pos_session = null;
         product_categories = new ArrayList<>();
         products = new ArrayList<>();
+        attributes = new ArrayList<>();
+        attribute_values = new ArrayList<>();
         product_taxes = new ArrayList<>();
         floors = new ArrayList<>();
         states = new ArrayList<>();
         tables = new ArrayList<>();
 
         new getCheckOpenedSession().execute();
-        //new loadProduct().execute();//<<<<<<<<<<<<<<<<<<<<<<<
-        //new loadFloorAndTable().execute();//<<<<<<<<<<<<<<<<<<<
+        new loadProduct().execute();//<<<<<<<<<<<<<<<<<<<<<<<
+        new loadFloorAndTable().execute();//<<<<<<<<<<<<<<<<<<<
 
 
         SimpleDateFormat dateFormatter = new SimpleDateFormat("dd/MM/yyyy");
@@ -342,7 +346,8 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                         pos_config = new POS_Config(jpos_config.getInt("id"), jpos_config.getString("name"),
                                 jpos_config.getBoolean("is_table_management"), jpos_config.getBoolean("iface_tipproduct"),
                                 jpos_config.getBoolean("iface_orderline_customer_notes"), start_categ_id,
-                                jpos_config.getBoolean("iface_orderline_notes"), jpos_config.getBoolean("manual_discount"));
+                                jpos_config.getBoolean("iface_orderline_notes"), jpos_config.getBoolean("manual_discount"),
+                                jpos_config.getBoolean("product_configurator"));
 
                         pos_session = new POS_Session(jpos_session.getInt("id"), jpos_session.getString("name"),
                                 jpos_session.getString("start_at"), jpos_session.getString("state"), pos_config);
@@ -438,7 +443,7 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                             }
                             // Product Category
                             if(page == 2)
-                                loadProductCategories(jcategories, true);
+                                loadProductCategories(jcategories);
                             // Product
                             for (int a = 0; a < jproducts.length(); a++) {
                                 JSONObject jo = jproducts.getJSONObject(a);
@@ -454,11 +459,40 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                                     }
                                 }
 
-                                Product product = new Product(jo.getInt("product_id"), jo.getString("name"),
-                                        jo.getString("default_code"), jo.getDouble("list_price"), jo.getDouble("standard_price"),
-                                        jo.getDouble("margin"), jo.getDouble("margin_percent"),jo.getDouble("price_incl_tax"),
-                                        jo.getDouble("price_excl_tax"), jo.getString("display_list_price"),jo.getString("display_standard_price"),
-                                        jo.getString("display_margin"), jo.getString("display_margin_percent"), jo.getString("display_price_incl_tax"),
+                                JSONArray jAttributes = jo.getJSONArray("attributes");
+                                if(jAttributes.length() > 0){
+                                    for(int i = 0; i < jAttributes.length(); i++){
+                                        JSONObject joAttribute = jAttributes.getJSONObject(i);
+                                        JSONArray jAttribute_values = joAttribute.getJSONArray("values");
+                                        if(jAttribute_values.length() > 0){
+                                            for(int x = 0; x < jAttribute_values.length(); x++){
+                                                JSONObject joAttribute_value = jAttribute_values.getJSONObject(x);
+                                                Attribute_Value attribute_value = new Attribute_Value(joAttribute_value.getInt("id"),
+                                                        joAttribute_value.getString("name"), joAttribute_value.getString("html_color"),
+                                                        joAttribute_value.getInt("sequence"), joAttribute_value.getInt("attribute_id"),
+                                                        joAttribute_value.getInt("color"), joAttribute_value.getInt("product_attribute_value_id"),
+                                                        joAttribute_value.getInt("attribute_line_id"), joAttribute_value.getInt("product_tmpl_id"),
+                                                        joAttribute_value.getInt("product_template_attribute_value_id"), joAttribute_value.getBoolean("ptav_active"),
+                                                        joAttribute_value.getDouble("price_extra"), joAttribute_value.getString("display_price_extra"));
+                                                attribute_values.add(attribute_value);
+                                            }
+                                            Attribute attribute = new Attribute(joAttribute.getInt("id"), joAttribute.getString("name"),
+                                                    joAttribute.getString("create_variant"), joAttribute.getString("display_type"),
+                                                    joAttribute.getString("visibility"), joAttribute.getInt("sequence"),
+                                                    joAttribute.getInt("product_tmpl_id"), joAttribute.getInt("attribute_id"),
+                                                    joAttribute.getInt("value_count"), joAttribute.getInt("attribute_line_id"),
+                                                    joAttribute.getBoolean("active"));
+                                            attributes.add(attribute);
+                                        }
+                                    }
+                                }
+
+                                Product product = new Product(jo.getInt("id"), jo.getInt("product_id"), jo.getInt("product_tmpl_id"),
+                                        jo.getString("name"), jo.getString("default_code"), jo.getDouble("list_price"),
+                                        jo.getDouble("standard_price"), jo.getDouble("margin"), jo.getDouble("margin_percent"),
+                                        jo.getDouble("price_incl_tax"), jo.getDouble("price_excl_tax"), jo.getString("display_list_price"),
+                                        jo.getString("display_standard_price"), jo.getString("display_margin"),
+                                        jo.getString("display_margin_percent"), jo.getString("display_price_incl_tax"),
                                         jo.getString("display_price_excl_tax"), category);
 
                                 // Product Taxes
@@ -467,7 +501,7 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                                     for(int x = 0; x < jProductTax.length(); x++){
                                         JSONObject joProductTax = jProductTax.getJSONObject(x);
                                         String product_tax_id = product.getProduct_id() + joProductTax.getString("tax_id");
-                                        Product_Tax product_tax = new Product_Tax(Integer.valueOf(product_tax_id),
+                                        Product_Tax product_tax = new Product_Tax(Integer.valueOf(product_tax_id), joProductTax.getString("name"),
                                                 joProductTax.getDouble("amount"), joProductTax.getString("display_amount"), product);
                                         product_taxes.add(product_tax);
                                     }
@@ -503,6 +537,8 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                     @Override
                     public void execute(Realm realm) {
                         realm.insertOrUpdate(products);
+                        realm.insertOrUpdate(attributes);
+                        realm.insertOrUpdate(attribute_values);
                         realm.insertOrUpdate(product_categories);
                         realm.insertOrUpdate(product_taxes);
                     }
@@ -513,7 +549,7 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         }
     }
     //Recursive retrieve category and sub-category and subsub-category and subsubsub...
-    private RealmList<POS_Category> loadProductCategories(JSONArray array, boolean firstLevel){
+    private RealmList<POS_Category> loadProductCategories(JSONArray array){
         RealmList<POS_Category> categories_list = new RealmList<>();
         RealmList<POS_Category> sub_categories_list;
         POS_Category product_category;
@@ -521,14 +557,23 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         while(counter < array.length()){
             try {
                 JSONObject data = array.getJSONObject(counter);
-                product_category = new POS_Category(data.getInt("pos_categ_id"),
-                        data.getString("name"), null);
+                int sequence = -1;
+                try{
+                    String sequence_string = data.getString("sequence");
+                    if(sequence_string.length() > 0){
+                        sequence = data.getInt("sequence");
+                    }
+                }catch (Exception e){
+                    System.out.println("Error Message: " + e);
+                }
+                product_category = new POS_Category(data.getInt("id"), data.getString("name"),
+                        sequence, data.getInt("pos_categ_id"), null);
 
                 // Is there any Sub-categories?
                 JSONArray ja_sub_categories = data.getJSONArray("pos_categories");
                 if (ja_sub_categories.length() > 0) {
                     //Second level category list
-                    sub_categories_list = loadProductCategories(ja_sub_categories, false); //second lvl = third lvl
+                    sub_categories_list = loadProductCategories(ja_sub_categories); //second lvl = third lvl
                     product_category.setPos_categories(sub_categories_list);
                 }
 
@@ -596,8 +641,9 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
 
                         for (int a = 0; a < jfloors.length(); a++) {
                             JSONObject jf = jfloors.getJSONObject(a);
-                            Floor floor = new Floor(jf.getInt("floor_id"), jf.getString("name"),
-                                    jf.getInt("sequence"), jf.getString("active"));
+                            Floor floor = new Floor(jf.getInt("id"), jf.getString("name"),
+                                    jf.getInt("pos_config_id"), jf.getInt("sequence"),
+                                    jf.getBoolean("active"), jf.getInt("floor_id"));
                             floors.add(floor);
 
                             JSONArray jtables = jf.getJSONArray("tables");
@@ -606,7 +652,7 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                                 Table table = new Table(jt.getInt("table_id"), jt.getString("name"),
                                         jt.getDouble("position_h"), jt.getDouble("position_v"),
                                         jt.getDouble("width"), jt.getDouble("height"), jt.getInt("seats"),
-                                        jt.getString("active"), jt.getString("state"), floor);
+                                        jt.getBoolean("active"), jt.getString("state"), floor);
                                 tables.add(table);
                             }
                         }

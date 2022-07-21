@@ -512,21 +512,21 @@ public class TablePage extends CheckConnection implements
         popup.showAsDropDown(view);
 
 
-        popupBinding.tableAddonProceedPopupTableName.setText(clickedTable.getName());
+        popupBinding.tableAddonProceedPopupTableName.setText("Table " + clickedTable.getName());
         Order order = realm.where(Order.class).equalTo("table.table_id", clickedTable.getTable_id()).
                 and().notEqualTo("state", "paid").findFirst();
         Customer customer = (order == null)? null : realm.where(Customer.class).equalTo("customer_id", order.getCustomer().getCustomer_id()).findFirst();
         int current_order_id = currentOrderSharedPreference.getInt("orderId", -1);
 
         if(order != null){
-            popupBinding.tableAddonProceedPopupOrderId.setText("#" + order.getOrder_id());
-            popupBinding.tableAddonProceedPopupOrderId.setVisibility(View.VISIBLE);
-            popupBinding.tableAddonProceedPopupTv2.setVisibility(View.VISIBLE);
+//            popupBinding.tableAddonProceedPopupOrderId.setText("#" + order.getOrder_id());
+//            popupBinding.tableAddonProceedPopupOrderId.setVisibility(View.VISIBLE);
+//            popupBinding.tableAddonProceedPopupTv2.setVisibility(View.VISIBLE);
             popupBinding.tableSwapTransferBtn.setVisibility(View.VISIBLE);
         }else{
             popupBinding.tableSwapTransferBtn.setVisibility(View.GONE);
-            popupBinding.tableAddonProceedPopupTv2.setVisibility(View.GONE);
-            popupBinding.tableAddonProceedPopupOrderId.setVisibility(View.GONE);
+//            popupBinding.tableAddonProceedPopupTv2.setVisibility(View.GONE);
+//            popupBinding.tableAddonProceedPopupOrderId.setVisibility(View.GONE);
         }
 
         popupBinding.tableSwapTransferBtn.setOnClickListener(new View.OnClickListener() {
@@ -680,7 +680,7 @@ public class TablePage extends CheckConnection implements
 
     //Display & Refresh Tables
     private void displayTables(Floor floor){
-        RealmResults<Table> tables = realm.where(Table.class).equalTo("floor.floor_id", floor.getFloor_id()).findAll();
+        RealmResults<Table> tables = realm.where(Table.class).equalTo("floor.id", floor.getId()).findAll();
         table_list.clear();
         table_list.addAll(realm.copyFromRealm(tables));
         binding.tableListRl.removeAllViews();
@@ -690,7 +690,7 @@ public class TablePage extends CheckConnection implements
         for(int i = 0; i < table_list.size(); i++){
             Table table = table_list.get(i);
             TextView tableTv = new TextView(contextpage);
-            if(table.getActive().equalsIgnoreCase("true")){
+            if(table.isActive()){
                 tableTv.setText(table.getName() + "\n" + table.getSeats());
                 tableTv.setWidth((int) ((table.getWidth())* getResources().getDisplayMetrics().density));
                 tableTv.setHeight((int) ((table.getHeight())* getResources().getDisplayMetrics().density));
@@ -753,7 +753,7 @@ public class TablePage extends CheckConnection implements
                 break;
             }
         }
-        Floor floor = realm.where(Floor.class).equalTo("floor_id", clickedTable.getFloor().getFloor_id()).findFirst();
+        Floor floor = realm.where(Floor.class).equalTo("id", clickedTable.getFloor().getId()).findFirst();
         TextView tv = (TextView) v.findViewById(v.getId());
         Drawable tvDrawable;
         tvDrawable = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
@@ -904,7 +904,7 @@ public class TablePage extends CheckConnection implements
                 break;
             }
         }
-        Floor floor = realm.where(Floor.class).equalTo("floor_id", clickedTable.getFloor().getFloor_id()).findFirst();
+        Floor floor = realm.where(Floor.class).equalTo("id", clickedTable.getFloor().getId()).findFirst();
         Order tableOrder = realm.where(Order.class).equalTo("table.table_id", clickedTable.getTable_id()).
                         and().notEqualTo("state", "paid").findFirst();
         String tableName = clickedTable.getName();

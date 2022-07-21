@@ -1,5 +1,6 @@
 package com.findbulous.pos;
 
+import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.RealmResults;
 import io.realm.annotations.LinkingObjects;
@@ -8,7 +9,8 @@ import io.realm.annotations.PrimaryKey;
 public class Product extends RealmObject {
 
     @PrimaryKey
-    private int product_id;
+    private int id;
+    private int product_id, product_tmpl_id;
     private String name, default_code;
     private double list_price, standard_price, margin, margin_percent,
             price_incl_tax, price_excl_tax;
@@ -21,12 +23,14 @@ public class Product extends RealmObject {
     private final RealmResults<Product_Tax> product_taxes = null;
 
     //Constructor
-    public Product(int product_id, String name, String default_code,
+    public Product(int id, int product_id, int product_tmpl_id, String name, String default_code,
                    double list_price, double standard_price, double margin, double margin_percent,
                    double price_incl_tax, double price_excl_tax,
                    String display_list_price, String display_standard_price, String display_margin, String display_margin_percent,
                    String display_price_incl_tax, String display_price_excl_tax, POS_Category category) {
+        this.id = id;
         this.product_id = product_id;
+        this.product_tmpl_id = product_tmpl_id;
         this.name = name;
         this.default_code = default_code;
         this.list_price = list_price;
@@ -44,7 +48,9 @@ public class Product extends RealmObject {
         this.category = category;
     }
     public Product(){
+        id = -1;
         product_id = -1;
+        product_tmpl_id = -1;
         name = null;
         default_code = null;
         list_price = -1;
@@ -186,5 +192,21 @@ public class Product extends RealmObject {
 
     public void setCategory(POS_Category category) {
         this.category = category;
+    }
+
+    public int getProduct_tmpl_id() {
+        return product_tmpl_id;
+    }
+
+    public void setProduct_tmpl_id(int product_tmpl_id) {
+        this.product_tmpl_id = product_tmpl_id;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 }

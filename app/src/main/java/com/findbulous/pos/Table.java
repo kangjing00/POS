@@ -9,13 +9,13 @@ public class Table extends RealmObject {
     private String name;
     private double position_h, position_v, width, height;
     private int seats;
-    private String active; // t = true, f = false
+    private boolean active;
     private String state; // V - vacant, H - on hold, O - occupied
 
     private Floor floor;
 
     //Constructor
-    public Table(int table_id, String name, double position_h, double position_v, double width, double height, int seats, String active, String state, Floor floor){
+    public Table(int table_id, String name, double position_h, double position_v, double width, double height, int seats, boolean active, String state, Floor floor){
         this.table_id = table_id;
         this.name = name;
         this.position_h = position_h;
@@ -35,7 +35,7 @@ public class Table extends RealmObject {
         width = -1;
         height = -1;
         seats = -1;
-        active = null;
+        active = false;
         state = null;
         floor = null;
     }
@@ -96,14 +96,6 @@ public class Table extends RealmObject {
         this.seats = seats;
     }
 
-    public String getActive() {
-        return active;
-    }
-
-    public void setActive(String active) {
-        this.active = active;
-    }
-
     public String getState() {
         return state;
     }
@@ -118,5 +110,13 @@ public class Table extends RealmObject {
 
     public void setFloor(Floor floor) {
         this.floor = floor;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 }

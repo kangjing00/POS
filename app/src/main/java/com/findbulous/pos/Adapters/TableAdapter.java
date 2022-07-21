@@ -47,7 +47,7 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.TableViewHol
         Table table = tables.get(position);
         holder.binding.setTable(table);
 
-        if(!table.getActive().equalsIgnoreCase("true")){
+        if(!table.isActive()){
             holder.binding.tableTv.setVisibility(View.INVISIBLE);
         }else {
             if (table.getState().equalsIgnoreCase("V")) {

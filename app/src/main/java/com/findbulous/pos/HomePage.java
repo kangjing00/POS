@@ -11,6 +11,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.InputType;
@@ -26,6 +28,8 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.findbulous.pos.Adapters.CartOrderLineAdapter;
@@ -55,6 +59,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.TimeZone;
 
 import io.realm.Case;
@@ -1017,7 +1022,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
         popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
         // Closes the popup window when touch outside of it - when looses focus
-        popup.setOutsideTouchable(true);
+        popup.setOutsideTouchable(false);
         popup.setFocusable(true);
         // Show anchored to button
         popup.setElevation(8);
@@ -1035,6 +1040,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         p.dimAmount = 0.3f;
         wm.updateViewLayout(container, p);
 
+        System.out.println("OUTSIDEEEEEEEEEEEEEEEEEEEEEE: " + popup.isOutsideTouchable());
 
         if((currentOrder.getOrder_id() != -1) && (currentOrder.isHas_order_discount())) {
             if(currentOrder.isIs_percentage()){
@@ -1184,11 +1190,134 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
 
 
         popupBinding.productNameModifierPopup.setText(product.getName());
-        // Add view for extra modifier
-        TextView size_tv = new TextView(contextpage);
-        size_tv.setText("Size");
-        size_tv.setTextSize(20);
-        popupBinding.productModifierLl.addView(size_tv);
+        // Add view for extra attributes
+        if(pos_config.isProduct_configurator()){
+            RealmResults attribute_results = realm.where(Attribute.class).equalTo("product_tmpl_id", product.getProduct_tmpl_id())
+                    .findAll();
+            ArrayList<Attribute> attributes = (ArrayList<Attribute>) realm.copyFromRealm(attribute_results);
+//            if(attributes.size() == 0){
+//                popupBinding.productModifierLl.setVisibility(View.GONE);
+//            }
+
+            for(int i = 0; i < attributes.size(); i++){
+                Attribute attribute = attributes.get(i);
+                //Attribute Name
+                TextView attribute_name_tv = new TextView(contextpage);
+                attribute_name_tv.setText(attribute.getName());
+                attribute_name_tv.setTextSize(20);
+                popupBinding.productModifierLl.addView(attribute_name_tv);
+                //Attribute Type
+                RealmResults attribute_values_results = realm.where(Attribute_Value.class).equalTo("attribute_id", attribute.getAttribute_id())
+                        .and().equalTo("product_tmpl_id", product.getProduct_tmpl_id()).findAll();
+                ArrayList<Attribute_Value> attribute_values = (ArrayList<Attribute_Value>) realm.copyFromRealm(attribute_values_results);
+
+                if(attribute.getDisplay_type().equalsIgnoreCase("radio")){ //radio button
+                    RadioGroup rg = new RadioGroup(contextpage);
+                    for(int x = 0; x < attribute_values.size(); x++){
+                        Attribute_Value attribute_value = attribute_values.get(x);
+                        RadioButton rb = new RadioButton(contextpage);
+                        rb.setId(attribute_value.getId());
+                        if(attribute_value.getPrice_extra() > 0){
+                            rb.setText(attribute_value.getName() + " (" + attribute_value.getDisplay_price_extra() + ")");
+                        }else{
+                            rb.setText(attribute_value.getName());
+                        }
+                        if(x == 0){
+                            rb.setChecked(true);
+                        }
+                        rg.addView(rb);
+                    }
+                    popupBinding.productModifierLl.addView(rg);
+                }else if(attribute.getDisplay_type().equalsIgnoreCase("select")){ // drop down list
+                    Spinner spinner = new Spinner(contextpage);
+                    String[] items = new String[attribute_values.size()];
+                    int[] item_ids = new int[attribute_values.size()];
+                    for(int x = 0; x < attribute_values.size(); x++){
+                        Attribute_Value attribute_value = attribute_values.get(x);
+                        item_ids[x] = attribute_value.getId();
+                        if(attribute_value.getPrice_extra() > 0){
+                            items[x] = attribute_value.getName() + " (" + attribute_value.getDisplay_price_extra() + ")";
+                        }else{
+                            items[x] = attribute_value.getName();
+                        }
+                        ArrayAdapter<String> itemAdapter = new ArrayAdapter<String>(contextpage, R.layout.textview_spinner_item, items){
+                            @Override
+                            public View getDropDownView(int position, View convertView, ViewGroup parent){
+                                View v = null;
+                                v = super.getDropDownView(position, null, parent);
+
+                                // If this is the selected item position
+                                if (position == spinner.getSelectedItemPosition()) {
+                                    if(position == (spinner.getCount() - 1)){ //last one
+                                        v.setBackground(getResources().getDrawable(R.drawable.box_btm_corner_dark_orange));
+                                    }else { //not the last one
+                                        v.setBackgroundColor(getResources().getColor(R.color.darkOrange));
+                                    }
+                                }
+                                else {
+                                    // for other views
+                                    if(position != (spinner.getCount() - 1)) { // not the last one
+                                        v.setBackgroundColor(getResources().getColor(R.color.lightGrey));
+                                    }else{  //last one
+                                        v.setBackground(getResources().getDrawable(R.drawable.box_btm_corner_light_grey));
+                                    }
+                                }
+                                return v;
+                            }
+                        };
+                        itemAdapter.setDropDownViewResource(R.layout.textview_spinner_item);
+                        spinner.setAdapter(itemAdapter);
+                        spinner.setDropDownVerticalOffset(80);
+                        spinner.setSelection(0);
+                        spinner.setPopupBackgroundDrawable(getResources().getDrawable(R.drawable.box_btm_corner_light_grey));
+                        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                            @Override
+                            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long l) {
+                                int id = item_ids[position];
+                            }
+                            @Override
+                            public void onNothingSelected(AdapterView<?> adapterView) {
+                            }
+                        });
+                    }
+                    popupBinding.productModifierLl.addView(spinner);
+                }else if(attribute.getDisplay_type().equalsIgnoreCase("color")){
+                    RadioGroup rg = new RadioGroup(contextpage);
+                    rg.setOrientation(LinearLayout.HORIZONTAL);
+                    for(int x = 0; x < attribute_values.size(); x++){
+                        Attribute_Value attribute_value = attribute_values.get(x);
+                        RadioButton rb = new RadioButton(contextpage);
+                        rb.setId(attribute_value.getId());
+                        rb.setWidth(50);
+                        rb.setHeight(50);
+                        rb.setBackgroundColor(Color.parseColor(attribute_value.getHtml_color()));
+                        rb.setButtonDrawable(null);
+                        if(x == 0){
+                            rb.setChecked(true);
+                        }
+                        rg.addView(rb);
+                    }
+                    popupBinding.productModifierLl.addView(rg);
+                }else if(attribute.getDisplay_type().equalsIgnoreCase("pills")){
+                    RadioGroup rg = new RadioGroup(contextpage);
+                    rg.setOrientation(LinearLayout.HORIZONTAL);
+                    for(int x = 0; x < attribute_values.size(); x++){
+                        Attribute_Value attribute_value = attribute_values.get(x);
+                        RadioButton rb = new RadioButton(contextpage);
+                        rb.setId(attribute_value.getId());
+                        rb.setText(attribute_value.getName());
+                        rb.setPadding(15, 15, 15, 15);
+                        rb.setButtonDrawable(getResources().getDrawable(R.drawable.pills_selector));
+                        if(x == 0){
+                            rb.setChecked(true);
+                        }
+                        rg.addView(rb);
+                    }
+                    popupBinding.productModifierLl.addView(rg);
+                }
+            }
+        }
+
 
 //        if(pos_config.isIface_orderline_customer_notes()){
 //            popupBinding.textView1.setVisibility(View.VISIBLE);

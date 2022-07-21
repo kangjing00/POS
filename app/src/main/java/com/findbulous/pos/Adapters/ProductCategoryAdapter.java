@@ -43,7 +43,7 @@ public class ProductCategoryAdapter extends RecyclerView.Adapter<ProductCategory
         holder.binding.categoryBtn.setChecked(false);
 
         for(int i = 0; i < categories_clicked_wo_child.size(); i++){
-            if(holder.binding.getCategory().getPos_categ_id() == categories_clicked_wo_child.get(i).getPos_categ_id()){
+            if(holder.binding.getCategory().getId() == categories_clicked_wo_child.get(i).getId()){
                 holder.binding.categoryBtn.setChecked(true);
             }
         }

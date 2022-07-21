@@ -6,20 +6,25 @@ import io.realm.annotations.PrimaryKey;
 
 public class POS_Category extends RealmObject {
     @PrimaryKey
-    private int pos_categ_id;
+    private int id;
     private String name;
+    private int sequence, pos_categ_id;
 
     private RealmList<POS_Category> pos_categories;
 
-    public POS_Category(int pos_categ_id, String name, RealmList<POS_Category> pos_categories){
-        this.pos_categ_id = pos_categ_id;
+    public POS_Category(int id, String name, int sequence, int pos_categ_id, RealmList<POS_Category> pos_categories){
+        this.id = id;
         this.name = name;
+        this.sequence = sequence;
+        this.pos_categ_id = pos_categ_id;
         this.pos_categories = pos_categories;
     }
 
     public POS_Category(){
-        pos_categ_id = -1;
+        id = -1;
         name = null;
+        sequence = -1;
+        pos_categ_id = -1;
         pos_categories = null;
     }
 
@@ -45,5 +50,21 @@ public class POS_Category extends RealmObject {
 
     public void setPos_categories(RealmList<POS_Category> pos_categories) {
         this.pos_categories = pos_categories;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getSequence() {
+        return sequence;
+    }
+
+    public void setSequence(int sequence) {
+        this.sequence = sequence;
     }
 }

@@ -383,13 +383,13 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:layout_marginTop="10dp"
                 android:layout_marginRight="20dp"
                 android:backgroundTint="@color/darkOrange"
-                android:padding="10dp"
-                android:text="Add New Customer"
-                android:textAllCaps="false"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
                 android:visibility="gone"
+                android:text="Apply Customer"
+                android:textAllCaps="false"
                 app:icon="@drawable/ic_add"
                 app:iconGravity="textStart" />
 
@@ -408,31 +408,41 @@
                     android:layout_width="60dp"
                     android:layout_height="60dp"
                     android:layout_centerVertical="true"
-                    android:layout_toLeftOf="@+id/payment_bar_customer_name"
+                    android:layout_toLeftOf="@+id/payment_bar_customer_name_id_ll"
                     android:src="@drawable/face1" />
 
-                <TextView
-                    android:id="@+id/payment_bar_customer_name"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="10dp"
-                    android:layout_marginTop="5dp"
-                    android:layout_marginRight="20dp"
-                    android:layout_toLeftOf="@+id/payment_bar_remove_customer_btn"
-                    android:text="Vincent Lobo"
-                    android:textSize="15dp" />
 
-                <TextView
-                    android:id="@+id/payment_bar_customer_id"
+                <LinearLayout
+                    android:id="@+id/payment_bar_customer_name_id_ll"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_below="@+id/payment_bar_customer_name"
-                    android:layout_marginLeft="10dp"
-                    android:layout_marginTop="5dp"
-                    android:layout_toRightOf="@+id/payment_bar_customer_image"
-                    android:text="#999999"
-                    android:textColor="@color/darkGrey"
-                    android:textSize="15dp" />
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginEnd="20dp"
+                    android:layout_toLeftOf="@id/payment_bar_remove_customer_btn"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/payment_bar_customer_name"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_toLeftOf="@+id/payment_bar_remove_customer_btn"
+                        android:text="Vincent Lobo"
+                        android:textSize="15dp" />
+
+                    <TextView
+                        android:id="@+id/payment_bar_customer_id"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/payment_bar_customer_name"
+                        android:layout_marginTop="5dp"
+                        android:layout_toLeftOf="@+id/payment_bar_remove_customer_btn"
+                        android:layout_toRightOf="@+id/payment_bar_customer_image"
+                        android:text="#999999"
+                        android:textColor="@color/darkGrey"
+                        android:textSize="15dp" />
+                </LinearLayout>
+
 
                 <ImageButton
                     android:id="@+id/payment_bar_remove_customer_btn"

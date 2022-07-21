@@ -8,25 +8,30 @@ import io.realm.annotations.PrimaryKey;
 public class Floor extends RealmObject {
 
     @PrimaryKey
-    private int floor_id;
+    private int id;
     private String name;
-    private int sequence;
-    private String active;
+    private int pos_config_id, sequence;
+    private boolean active;
+    private int floor_id;
     @LinkingObjects("floor")
     private final RealmResults<Table> tables = null;
 
-    public Floor(int floor_id, String name, int sequence, String active){
-        this.floor_id = floor_id;
+    public Floor(int id, String name, int pos_config_id, int sequence, boolean active, int floor_id){
+        this.id = id;
         this.name = name;
+        this.pos_config_id = pos_config_id;
         this.sequence = sequence;
         this.active = active;
+        this.floor_id = floor_id;
     }
 
     public Floor(){
-        floor_id = -1;
+        id = -1;
         name = null;
+        pos_config_id = -1;
         sequence = -1;
-        active = null;
+        active = false;
+        floor_id = -1;
     }
 
     public int getFloor_id() {
@@ -57,11 +62,27 @@ public class Floor extends RealmObject {
         this.sequence = sequence;
     }
 
-    public String getActive() {
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getPos_config_id() {
+        return pos_config_id;
+    }
+
+    public void setPos_config_id(int pos_config_id) {
+        this.pos_config_id = pos_config_id;
+    }
+
+    public boolean isActive() {
         return active;
     }
 
-    public void setActive(String active) {
+    public void setActive(boolean active) {
         this.active = active;
     }
 }

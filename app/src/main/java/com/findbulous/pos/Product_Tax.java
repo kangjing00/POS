@@ -7,13 +7,15 @@ public class Product_Tax extends RealmObject {
 
     @PrimaryKey
     private int product_tax_id;
+    private String name;
     private double amount;
     private String display_amount;
 
     private Product product;
 
-    public Product_Tax(int product_tax_id, double amount, String display_amount, Product product){
+    public Product_Tax(int product_tax_id, String name, double amount, String display_amount, Product product){
         this.product_tax_id = product_tax_id;
+        this.name = name;
         this.amount = amount;
         this.display_amount = display_amount;
         this.product = product;
@@ -21,6 +23,7 @@ public class Product_Tax extends RealmObject {
 
     public Product_Tax(){
         product_tax_id = -1;
+        name = null;
         amount = -1;
         display_amount = null;
         product = null;
@@ -56,5 +59,13 @@ public class Product_Tax extends RealmObject {
 
     public void setProduct(Product product) {
         this.product = product;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }

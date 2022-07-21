@@ -230,8 +230,9 @@ public class CheckConnection extends AppCompatActivity implements ConnectivityCh
 
                         for (int a = 0; a < jfloors.length(); a++) {
                             JSONObject jf = jfloors.getJSONObject(a);
-                            Floor floor = new Floor(jf.getInt("floor_id"), jf.getString("name"),
-                                    jf.getInt("sequence"), jf.getString("active"));
+                            Floor floor = new Floor(jf.getInt("id"), jf.getString("name"),
+                                    jf.getInt("pos_config_id"), jf.getInt("sequence"),
+                                    jf.getBoolean("active"), jf.getInt("floor_id"));
                             floors.add(floor);
 
                             JSONArray jtables = jf.getJSONArray("tables");
@@ -240,7 +241,7 @@ public class CheckConnection extends AppCompatActivity implements ConnectivityCh
                                 Table table = new Table(jt.getInt("table_id"), jt.getString("name"),
                                         jt.getDouble("position_h"), jt.getDouble("position_v"),
                                         jt.getDouble("width"), jt.getDouble("height"), jt.getInt("seats"),
-                                        jt.getString("active"), jt.getString("state"), floor);
+                                        jt.getBoolean("active"), jt.getString("state"), floor);
                                 tables.add(table);
                             }
                         }

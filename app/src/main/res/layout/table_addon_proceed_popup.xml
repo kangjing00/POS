@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
@@ -13,86 +14,62 @@
         android:elevation="2dp"
         android:padding="15dp">
 
-        <TextView
-            android:id="@+id/table_addon_proceed_popup_tv1"
+        <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Table"
-            android:textSize="20dp"
-            android:layout_marginRight="5dp"
-            app:layout_constraintBottom_toTopOf="@+id/table_addon_proceed_popup_tv2"
-            app:layout_constraintEnd_toStartOf="@+id/table_addon_proceed_popup_table_name"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:layout_marginRight="10dp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_chainStyle="packed" />
+            app:layout_constraintEnd_toStartOf="@id/table_swap_transfer_btn">
+            <TextView
+                android:id="@+id/table_addon_proceed_popup_table_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Table T42"
+                android:textAlignment="center"
+                android:textSize="20dp"/>
 
-        <TextView
-            android:id="@+id/table_addon_proceed_popup_table_name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="20dp"
-            android:text="T42"
-            android:textSize="20dp"
-            app:layout_constraintBottom_toTopOf="@+id/table_addon_proceed_popup_order_id"
-            app:layout_constraintEnd_toStartOf="@+id/table_swap_transfer_btn"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_chainStyle="packed" />
-
-        <TextView
-            android:id="@+id/table_addon_proceed_popup_tv2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Order"
-            android:layout_marginRight="5dp"
-            android:textColor="@color/darkGrey"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/table_addon_proceed_popup_order_id"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/table_addon_proceed_popup_tv1" />
-
-        <TextView
-            android:id="@+id/table_addon_proceed_popup_order_id"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="20dp"
-            android:text="#999999"
-            android:textColor="@color/darkGrey"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/table_swap_transfer_btn"
-            app:layout_constraintTop_toBottomOf="@+id/table_addon_proceed_popup_table_name" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/add_new_order_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@color/darkOrange"
+                android:text="New Order"
+                android:textAllCaps="false" />
+        </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/table_swap_transfer_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:backgroundTint="@color/white"
             android:layout_marginRight="10dp"
+            android:backgroundTint="@color/white"
             android:paddingStart="10dp"
-            android:paddingEnd="10dp"
             android:paddingTop="10dp"
+            android:paddingEnd="10dp"
             android:paddingBottom="10dp"
             android:text="Swap / Transfer"
             android:textAllCaps="false"
             android:textColor="@color/darkOrange"
             app:icon="@drawable/ic_swap"
             app:iconTint="@color/darkOrange"
-            app:strokeColor="@color/darkOrange"
-            app:rippleColor="@color/lightOrange"
-            app:strokeWidth="2dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/table_addon_btn"
-            app:layout_constraintTop_toTopOf="parent"/>
+            app:layout_constraintTop_toTopOf="parent"
+            app:rippleColor="@color/lightOrange"
+            app:strokeColor="@color/darkOrange"
+            app:strokeWidth="2dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/table_addon_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginRight="10dp"
-            android:paddingStart="10dp"
-            android:paddingEnd="10dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
             android:backgroundTint="@color/white"
+            android:paddingStart="10dp"
+            android:paddingTop="10dp"
+            android:paddingEnd="10dp"
+            android:paddingBottom="10dp"
             android:text="Add Products"
             android:textAllCaps="false"
             android:textColor="@color/darkOrange"
@@ -111,11 +88,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:backgroundTint="@color/green"
-            android:text="Proceed to Payment"
             android:paddingStart="10dp"
-            android:paddingEnd="10dp"
             android:paddingTop="10dp"
+            android:paddingEnd="10dp"
             android:paddingBottom="10dp"
+            android:text="Proceed to Payment"
             android:textAllCaps="false"
             android:textColor="@color/white"
             app:icon="@drawable/ic_payment"
