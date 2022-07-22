@@ -343,15 +343,26 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                             start_categ_id = jpos_config.getInt("iface_start_categ_id");
                         }
 
+                        boolean product_configurator = false, iface_tipproduct = false,
+                                iface_orderline_customer_notes = false;
+                        if(jpos_config.getString("product_configurator").length() > 0) {
+                            product_configurator = jpos_config.getBoolean("product_configurator");
+                        }
+                        if(jpos_config.getString("iface_tipproduct").length() > 0){
+                            iface_tipproduct = jpos_config.getBoolean("iface_tipproduct");
+                        }
+                        if(jpos_config.getString("iface_orderline_customer_notes").length() > 0){
+                            iface_orderline_customer_notes = jpos_config.getBoolean("iface_orderline_customer_notes");
+                        }
+
                         pos_config = new POS_Config(jpos_config.getInt("id"), jpos_config.getString("name"),
-                                jpos_config.getBoolean("is_table_management"), jpos_config.getBoolean("iface_tipproduct"),
-                                jpos_config.getBoolean("iface_orderline_customer_notes"), start_categ_id,
+                                jpos_config.getBoolean("is_table_management"), iface_tipproduct,
+                                iface_orderline_customer_notes, start_categ_id,
                                 jpos_config.getBoolean("iface_orderline_notes"), jpos_config.getBoolean("manual_discount"),
-                                jpos_config.getBoolean("product_configurator"));
+                                product_configurator);
 
                         pos_session = new POS_Session(jpos_session.getInt("id"), jpos_session.getString("name"),
                                 jpos_session.getString("start_at"), jpos_session.getString("state"), pos_config);
-
                     }
                 }catch (JSONException e) {
                     e.printStackTrace();
@@ -467,18 +478,26 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                                         if(jAttribute_values.length() > 0){
                                             for(int x = 0; x < jAttribute_values.length(); x++){
                                                 JSONObject joAttribute_value = jAttribute_values.getJSONObject(x);
+                                                boolean is_custom = false;
+                                                if(joAttribute_value.getString("is_custom").length() > 0){
+                                                    is_custom = joAttribute_value.getBoolean("is_custom");
+                                                }
                                                 Attribute_Value attribute_value = new Attribute_Value(joAttribute_value.getInt("id"),
                                                         joAttribute_value.getString("name"), joAttribute_value.getString("html_color"),
                                                         joAttribute_value.getInt("sequence"), joAttribute_value.getInt("attribute_id"),
                                                         joAttribute_value.getInt("color"), joAttribute_value.getInt("product_attribute_value_id"),
                                                         joAttribute_value.getInt("attribute_line_id"), joAttribute_value.getInt("product_tmpl_id"),
                                                         joAttribute_value.getInt("product_template_attribute_value_id"), joAttribute_value.getBoolean("ptav_active"),
-                                                        joAttribute_value.getDouble("price_extra"), joAttribute_value.getString("display_price_extra"));
+                                                        is_custom, joAttribute_value.getDouble("price_extra"), joAttribute_value.getString("display_price_extra"));
                                                 attribute_values.add(attribute_value);
+                                            }
+                                            int sequence = 0;
+                                            if(joAttribute.getString("sequence").length() > 0){
+                                                sequence = joAttribute.getInt("sequence");
                                             }
                                             Attribute attribute = new Attribute(joAttribute.getInt("id"), joAttribute.getString("name"),
                                                     joAttribute.getString("create_variant"), joAttribute.getString("display_type"),
-                                                    joAttribute.getString("visibility"), joAttribute.getInt("sequence"),
+                                                    joAttribute.getString("visibility"), sequence,
                                                     joAttribute.getInt("product_tmpl_id"), joAttribute.getInt("attribute_id"),
                                                     joAttribute.getInt("value_count"), joAttribute.getInt("attribute_line_id"),
                                                     joAttribute.getBoolean("active"));

@@ -200,13 +200,17 @@ public class LoginPage extends AppCompatActivity {
                                         if(jAttribute_values.length() > 0){
                                             for(int x = 0; x < jAttribute_values.length(); x++){
                                                 JSONObject joAttribute_value = jAttribute_values.getJSONObject(x);
+                                                boolean is_custom = false;
+                                                if(joAttribute_value.getString("is_custom").length() > 0){
+                                                    is_custom = joAttribute_value.getBoolean("is_custom");
+                                                }
                                                 Attribute_Value attribute_value = new Attribute_Value(joAttribute_value.getInt("id"),
                                                         joAttribute_value.getString("name"), joAttribute_value.getString("html_color"),
                                                         joAttribute_value.getInt("sequence"), joAttribute_value.getInt("attribute_id"),
                                                         joAttribute_value.getInt("color"), joAttribute_value.getInt("product_attribute_value_id"),
                                                         joAttribute_value.getInt("attribute_line_id"), joAttribute_value.getInt("product_tmpl_id"),
                                                         joAttribute_value.getInt("product_template_attribute_value_id"), joAttribute_value.getBoolean("ptav_active"),
-                                                        joAttribute_value.getDouble("price_extra"), joAttribute_value.getString("display_price_extra"));
+                                                        is_custom, joAttribute_value.getDouble("price_extra"), joAttribute_value.getString("display_price_extra"));
                                                 attribute_values.add(attribute_value);
                                             }
                                             Attribute attribute = new Attribute(joAttribute.getInt("id"), joAttribute.getString("name"),

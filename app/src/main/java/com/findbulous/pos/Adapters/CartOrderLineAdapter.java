@@ -8,6 +8,9 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.findbulous.pos.Attribute;
+import com.findbulous.pos.Attribute_Value;
 import com.findbulous.pos.Order_Line;
 import com.findbulous.pos.POS_Config;
 import com.findbulous.pos.R;
@@ -22,6 +25,9 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
     private OnItemClickListener listener;
     private Context context;
     private POS_Config pos_config;
+//    private ArrayList<Attribute> attributes;
+//    private ArrayList<Attribute_Value> attribute_values;
+    private Realm realm;
     private int cancelledIndex;
 
     public class OrderLineProductViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
@@ -51,11 +57,13 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
         this.context = c;
         this.cancelledIndex = -1;
         this.pos_config = null;
+//        this.attributes = new ArrayList<>();
+//        this.attribute_values = new ArrayList<>();
+        realm = Realm.getDefaultInstance();
         setPOSConfig();
     }
 
     private void setPOSConfig(){
-        Realm realm = Realm.getDefaultInstance();
         POS_Config temp = realm.where(POS_Config.class).findFirst();
         this.pos_config = realm.copyFromRealm(temp);
     }

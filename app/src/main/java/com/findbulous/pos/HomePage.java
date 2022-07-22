@@ -13,7 +13,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
 import android.util.Log;
@@ -21,10 +23,12 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.RadioButton;
@@ -71,6 +75,8 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         ProductAdapter.OnItemClickListener, CartOrderLineAdapter.OnItemClickListener{
 
     private HomePageBinding binding;
+    //Modifier popup color btn
+    private ImageButton lastClickedColorBtn;
     // Storing data into SharedPreferences
     private SharedPreferences cartSharedPreference, customerSharedPreference;
     // Creating an Editor object to edit(write to the file)
@@ -125,6 +131,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         refreshCartCurrentCustomer();
 
         //Body
+        lastClickedColorBtn = null;
         pos_config = realm.where(POS_Config.class).findFirst();
 //        pos_session = realm.where(POS_Session.class).findFirst();
         currentOrder = new Order();
@@ -1195,9 +1202,9 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
             RealmResults attribute_results = realm.where(Attribute.class).equalTo("product_tmpl_id", product.getProduct_tmpl_id())
                     .findAll();
             ArrayList<Attribute> attributes = (ArrayList<Attribute>) realm.copyFromRealm(attribute_results);
-//            if(attributes.size() == 0){
-//                popupBinding.productModifierLl.setVisibility(View.GONE);
-//            }
+            if(attributes.size() == 0){
+                popupBinding.productModifierLl.setVisibility(View.GONE);
+            }
 
             for(int i = 0; i < attributes.size(); i++){
                 Attribute attribute = attributes.get(i);
@@ -1213,10 +1220,15 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
 
                 if(attribute.getDisplay_type().equalsIgnoreCase("radio")){ //radio button
                     RadioGroup rg = new RadioGroup(contextpage);
+                    rg.setOrientation(LinearLayout.HORIZONTAL);
+                    RadioGroup.LayoutParams params = new RadioGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                    params.setMargins(15, 0, 15, 0);
                     for(int x = 0; x < attribute_values.size(); x++){
                         Attribute_Value attribute_value = attribute_values.get(x);
                         RadioButton rb = new RadioButton(contextpage);
                         rb.setId(attribute_value.getId());
+                        rb.setLayoutParams(params);
+                        rb.setButtonDrawable(getResources().getDrawable(R.drawable.custom_radio_btn));
                         if(attribute_value.getPrice_extra() > 0){
                             rb.setText(attribute_value.getName() + " (" + attribute_value.getDisplay_price_extra() + ")");
                         }else{
@@ -1225,10 +1237,33 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                         if(x == 0){
                             rb.setChecked(true);
                         }
+                        //IS_CUSTOM
+                        EditText custom_et = new EditText(contextpage);
+                        rb.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                if(attribute_value.isIs_custom() && rb.isChecked()){
+                                    custom_et.setVisibility(View.VISIBLE);
+                                }else{
+                                    custom_et.setVisibility(View.GONE);
+                                }
+                            }
+                        });
                         rg.addView(rb);
+                        if(attribute_value.isIs_custom()){
+                            custom_et.setVisibility(View.GONE);
+                            custom_et.setMaxWidth(500);
+                            custom_et.setMaxLines(3);
+                            custom_et.setTextSize(15);
+                            custom_et.setHint(attribute_value.getName());
+                            custom_et.setPadding(10, 0, 10, 10);
+                            rg.addView(custom_et);
+                        }
                     }
                     popupBinding.productModifierLl.addView(rg);
                 }else if(attribute.getDisplay_type().equalsIgnoreCase("select")){ // drop down list
+                    EditText custom_et = new EditText(contextpage);
+
                     Spinner spinner = new Spinner(contextpage);
                     String[] items = new String[attribute_values.size()];
                     int[] item_ids = new int[attribute_values.size()];
@@ -1274,44 +1309,129 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                             @Override
                             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long l) {
                                 int id = item_ids[position];
+                                Attribute_Value av = realm.where(Attribute_Value.class).equalTo("id", id).findFirst();
+                                if(av.isIs_custom()){
+                                    custom_et.setVisibility(View.VISIBLE);
+                                    custom_et.setHint(attribute_value.getName());
+                                }else{
+                                    custom_et.setVisibility(View.GONE);
+                                }
                             }
                             @Override
                             public void onNothingSelected(AdapterView<?> adapterView) {
                             }
                         });
                     }
+
                     popupBinding.productModifierLl.addView(spinner);
+                    //IS_CUSTOM
+                    custom_et.setVisibility(View.GONE);
+                    custom_et.setMaxWidth(500);
+                    custom_et.setMaxLines(3);
+                    custom_et.setTextSize(15);
+                    custom_et.setPadding(10, 0, 10, 10);
+                    popupBinding.productModifierLl.addView(custom_et);
                 }else if(attribute.getDisplay_type().equalsIgnoreCase("color")){
+                    LinearLayout ll = new LinearLayout(contextpage);
+                    ll.setOrientation(LinearLayout.HORIZONTAL);
+//                    RadioGroup rg = new RadioGroup(contextpage);
+//                    rg.setOrientation(LinearLayout.HORIZONTAL);
+                    for(int x = 0; x < attribute_values.size(); x++){
+                        Attribute_Value attribute_value = attribute_values.get(x);
+
+                        ImageButton btn = new ImageButton(contextpage);
+                        btn.setId(attribute_value.getId());
+                        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT);
+                        params.setMargins(5, 0, 5, 0);
+                        btn.setLayoutParams(params);
+                        btn.setBackground(unselect(btn.getId()));
+                        btn.setClickable(true);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            btn.setTooltipText(attribute_value.getName());
+                        }
+                        if(x == 0){
+                            btn.setBackground(select(btn.getId()));
+                            lastClickedColorBtn = btn;
+                        }
+                        btn.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+//                                if(lastClickedColor){
+//                                    lastClickedColor = false;
+//                                }else{
+//                                    lastClickedColor = true;
+//                                    lastClickedColorBtn = btn;
+//                                }
+                                if(btn != lastClickedColorBtn) {
+                                    btn.startAnimation(AnimationUtils.loadAnimation(getBaseContext(), android.R.anim.fade_in));
+                                    lastClickedColorBtn.setBackground(unselect(lastClickedColorBtn.getId()));
+                                    btn.setBackground(select(lastClickedColorBtn.getId()));
+                                }
+                                lastClickedColorBtn = btn;
+                            }
+                        });
+
+//                        RadioButton rb = new RadioButton(contextpage);
+//                        rb.setId(attribute_value.getId());
+//                        rb.setWidth(50);
+//                        rb.setHeight(50);
+////                        rb.setBackgroundColor(Color.parseColor(attribute_value.getHtml_color()));
+//                        rb.setButtonDrawable(null);
+//                        if(x == 0){
+//                            rb.setChecked(true);
+//                        }
+//                        rb.setOnClickListener(new View.OnClickListener() {
+//                            @Override
+//                            public void onClick(View view) {
+//                                if(rb.isChecked()){
+//                                    rb.setBackground(unselected);
+//                                }else{
+//                                    rb.setBackground(selected);
+//                                }
+//                            }
+//                        });
+//                        rg.addView(rb);
+                        ll.addView(btn);
+                    }
+                    popupBinding.productModifierLl.addView(ll);
+                }else if(attribute.getDisplay_type().equalsIgnoreCase("pills")){
                     RadioGroup rg = new RadioGroup(contextpage);
                     rg.setOrientation(LinearLayout.HORIZONTAL);
+                    RadioGroup.LayoutParams params = new RadioGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                    params.setMargins(15, 0, 15, 0);
                     for(int x = 0; x < attribute_values.size(); x++){
                         Attribute_Value attribute_value = attribute_values.get(x);
                         RadioButton rb = new RadioButton(contextpage);
                         rb.setId(attribute_value.getId());
-                        rb.setWidth(50);
-                        rb.setHeight(50);
-                        rb.setBackgroundColor(Color.parseColor(attribute_value.getHtml_color()));
+                        rb.setLayoutParams(params);
+                        rb.setText(attribute_value.getName());
+                        rb.setPadding(15, 0, 15, 0);
+                        rb.setTextColor(getResources().getColor(R.color.pills_text_color));
+                        rb.setBackground(getResources().getDrawable(R.drawable.pills_selector));
                         rb.setButtonDrawable(null);
                         if(x == 0){
                             rb.setChecked(true);
                         }
+                        //IS_CUSTOM
+                        EditText custom_et = new EditText(contextpage);
+                        rb.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                if(attribute_value.isIs_custom() && rb.isChecked()){
+                                    custom_et.setVisibility(View.VISIBLE);
+                                }else{
+                                    custom_et.setVisibility(View.GONE);
+                                }
+                            }
+                        });
                         rg.addView(rb);
-                    }
-                    popupBinding.productModifierLl.addView(rg);
-                }else if(attribute.getDisplay_type().equalsIgnoreCase("pills")){
-                    RadioGroup rg = new RadioGroup(contextpage);
-                    rg.setOrientation(LinearLayout.HORIZONTAL);
-                    for(int x = 0; x < attribute_values.size(); x++){
-                        Attribute_Value attribute_value = attribute_values.get(x);
-                        RadioButton rb = new RadioButton(contextpage);
-                        rb.setId(attribute_value.getId());
-                        rb.setText(attribute_value.getName());
-                        rb.setPadding(15, 15, 15, 15);
-                        rb.setButtonDrawable(getResources().getDrawable(R.drawable.pills_selector));
-                        if(x == 0){
-                            rb.setChecked(true);
+                        if(attribute_value.isIs_custom()){
+                            custom_et.setVisibility(View.GONE);
+                            custom_et.setTextSize(15);
+                            custom_et.setPadding(10, 10, 10, 10);
+                            rg.addView(custom_et);
                         }
-                        rg.addView(rb);
                     }
                     popupBinding.productModifierLl.addView(rg);
                 }
@@ -1350,6 +1470,28 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                 popup.dismiss();
             }
         });
+    }
+    private GradientDrawable unselect(int attribute_value_id){
+        Attribute_Value attribute_value = realm.where(Attribute_Value.class).equalTo("id", attribute_value_id).findFirst();
+
+        GradientDrawable unselected = new GradientDrawable();
+        unselected.setShape(GradientDrawable.OVAL);
+        unselected.setSize(85, 85);
+        unselected.setColor(Color.parseColor(attribute_value.getHtml_color()));
+        unselected.setStroke(5, getResources().getColor(R.color.lightGrey));
+
+        return unselected;
+    }
+    private GradientDrawable select(int attribute_value_id){
+        Attribute_Value attribute_value = realm.where(Attribute_Value.class).equalTo("id", attribute_value_id).findFirst();
+
+        GradientDrawable selected = new GradientDrawable();
+        selected.setShape(GradientDrawable.OVAL);
+        selected.setSize(90, 90);
+        selected.setColor(Color.parseColor(attribute_value.getHtml_color()));
+        selected.setStroke(10, getResources().getColor(R.color.darkOrange));
+
+        return selected;
     }
     //Add & Update product to order
     private void addProductToOrder(Product product){
@@ -1425,7 +1567,10 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
     @Override
     public void onOrderLineClick(int position) {
         //order_lines
-        showProductModifier(order_lines.get(position).getProduct(), false);
+        if(pos_config.isProduct_configurator() && pos_config.isIface_orderline_customer_notes()) {
+            showProductModifier(order_lines.get(position).getProduct(), false);
+        }
+
         Toast.makeText(contextpage, "" + order_lines.get(position).getOrder_line_id(), Toast.LENGTH_SHORT).show();
     }
     @Override
@@ -1685,7 +1830,11 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
     //Menu Product
     @Override
     public void onMenuProductClick(int position) {
-        showProductModifier(list.get(position), true);
+        if(pos_config.isProduct_configurator() && pos_config.isIface_orderline_customer_notes()) {
+            showProductModifier(list.get(position), true);
+        }else{
+            //add the product to order line directly //NOT DONE YET
+        }
         Toast.makeText(this, "" + list.get(position).getName(), Toast.LENGTH_SHORT).show();
     }
     @Override

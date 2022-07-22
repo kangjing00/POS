@@ -9,14 +9,14 @@ public class Attribute_Value extends RealmObject {
     private String name, html_color;
     private int sequence, attribute_id, color, product_attribute_value_id, attribute_line_id,
             product_tmpl_id, product_template_attribute_value_id;
-    private boolean ptav_active;
+    private boolean ptav_active, is_custom;
     private double price_extra;
     private String display_price_extra;
 
     public Attribute_Value(int id, String name, String html_color, int sequence, int attribute_id,
                            int color, int product_attribute_value_id, int attribute_line_id,
                            int product_tmpl_id, int product_template_attribute_value_id,
-                           boolean ptav_active, double price_extra, String display_price_extra){
+                           boolean ptav_active, boolean is_custom, double price_extra, String display_price_extra){
         this.id = id;
         this.name = name;
         this.html_color = html_color;
@@ -28,6 +28,7 @@ public class Attribute_Value extends RealmObject {
         this.product_tmpl_id = product_tmpl_id;
         this.product_template_attribute_value_id = product_template_attribute_value_id;
         this.ptav_active = ptav_active;
+        this.is_custom = is_custom;
         this.price_extra = price_extra;
         this.display_price_extra = display_price_extra;
     }
@@ -44,6 +45,7 @@ public class Attribute_Value extends RealmObject {
         product_tmpl_id = -1;
         product_template_attribute_value_id = -1;
         ptav_active = false;
+        is_custom = false;
         price_extra = -1;
         display_price_extra = null;
     }
@@ -150,5 +152,13 @@ public class Attribute_Value extends RealmObject {
 
     public void setDisplay_price_extra(String display_price_extra) {
         this.display_price_extra = display_price_extra;
+    }
+
+    public boolean isIs_custom() {
+        return is_custom;
+    }
+
+    public void setIs_custom(boolean is_custom) {
+        this.is_custom = is_custom;
     }
 }

@@ -34,6 +34,7 @@ import com.findbulous.pos.Adapters.TableAdapter;
 import com.findbulous.pos.Network.CheckConnection;
 import com.findbulous.pos.databinding.CashInOutPopupBinding;
 import com.findbulous.pos.databinding.TableAddonProceedPopupBinding;
+import com.findbulous.pos.databinding.TableOrderSelectionPopupBinding;
 import com.findbulous.pos.databinding.TablePageBinding;
 import com.findbulous.pos.databinding.ToolbarSyncPopupBinding;
 import com.google.android.material.button.MaterialButton;
@@ -163,25 +164,25 @@ public class TablePage extends CheckConnection implements
 
                             if (currentOrder.getTable() != null) {
                                 AlertDialog alert = builder.setMessage("Change table " + currentOrder.getTable().getName() +
-                                        " to " + vacantTableSelected.getName() + "?")
-                                        .setCancelable(false).setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialogInterface, int i) {
-                                                tableOccupiedToVacant(currentOrder.getTable());
-                                                currentOrder.setTable(vacantTableSelected);
-                                                //update table status
-                                                updateTableOccupied(vacantTableSelected);
-                                                realm.executeTransaction(new Realm.Transaction() {
-                                                    @Override
-                                                    public void execute(Realm realm) {
-                                                        realm.insertOrUpdate(currentOrder);
-                                                    }
-                                                });
-                                                Intent intent = new Intent(contextpage, HomePage.class);
-                                                startActivity(intent);
-                                                finish();
-                                            }
-                                        }).setNegativeButton("No", null).create();
+                                    " to " + vacantTableSelected.getName() + "?")
+                                    .setCancelable(false).setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialogInterface, int i) {
+                                            tableOccupiedToVacant(currentOrder.getTable());
+                                            currentOrder.setTable(vacantTableSelected);
+                                            //update table status
+                                            updateTableOccupied(vacantTableSelected);
+                                            realm.executeTransaction(new Realm.Transaction() {
+                                                @Override
+                                                public void execute(Realm realm) {
+                                                    realm.insertOrUpdate(currentOrder);
+                                                }
+                                            });
+                                            Intent intent = new Intent(contextpage, HomePage.class);
+                                            startActivity(intent);
+                                            finish();
+                                        }
+                                    }).setNegativeButton("No", null).create();
                                 alert.show();
                             } else {
                                 currentOrder.setTable(vacantTableSelected);
@@ -529,6 +530,12 @@ public class TablePage extends CheckConnection implements
 //            popupBinding.tableAddonProceedPopupOrderId.setVisibility(View.GONE);
         }
 
+        popupBinding.addMoreOrderBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+            }
+        });
         popupBinding.tableSwapTransferBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -614,6 +621,38 @@ public class TablePage extends CheckConnection implements
             }
         });
 
+    }
+    private void showOrderSelection(View view, Table clickedTable){
+        PopupWindow popup = new PopupWindow(contextpage);
+        TableOrderSelectionPopupBinding popupBinding = TableOrderSelectionPopupBinding.inflate(getLayoutInflater());
+        popup.setContentView(popupBinding.getRoot());
+        // Set content width and height
+        popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
+        popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
+        // Closes the popup window when touch outside of it - when looses focus
+        popup.setOutsideTouchable(true);
+        popup.setFocusable(true);
+        // Show anchored to button
+        popup.setElevation(8);
+        popup.setBackgroundDrawable(null);
+        popup.showAsDropDown(view);
+        //blur background
+        View container = (View) popup.getContentView().getParent();
+        WindowManager wm = (WindowManager) TablePage.this.getSystemService(Context.WINDOW_SERVICE);
+        WindowManager.LayoutParams p = (WindowManager.LayoutParams) container.getLayoutParams();
+        p.flags |= WindowManager.LayoutParams.FLAG_DIM_BEHIND;
+        p.dimAmount = 0.3f;
+        wm.updateViewLayout(container, p);
+
+        popupBinding.title.setText(popupBinding.title.getText().toString() + " (" + clickedTable.getFloor().getName() + "/"
+                            + clickedTable.getName() + ")");
+
+        popupBinding.closeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                popup.dismiss();
+            }
+        });
     }
     private void turnOnSwapCancelBtn(){
         binding.tableInformationBtn.setVisibility(View.GONE);

@@ -24,17 +24,22 @@
             <TextView
                 android:id="@+id/table_addon_proceed_popup_table_name"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:text="Table T42"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:layout_gravity="center"
                 android:textAlignment="center"
                 android:textSize="20dp"/>
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/add_new_order_btn"
+                android:id="@+id/add_more_order_btn"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
                 android:backgroundTint="@color/darkOrange"
-                android:text="New Order"
+                android:text="More Order"
+                android:padding="10dp"
                 android:textAllCaps="false" />
         </LinearLayout>
 
