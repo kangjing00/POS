@@ -1186,17 +1186,19 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         // Show anchored to button
         popup.setElevation(8);
         popup.setBackgroundDrawable(null);
-        popup.showAtLocation(binding.getRoot(), Gravity.CENTER, 0, 0);
-        //blur background
-        View container = (View) popup.getContentView().getParent();
-        WindowManager wm = (WindowManager) HomePage.this.getSystemService(Context.WINDOW_SERVICE);
-        WindowManager.LayoutParams p = (WindowManager.LayoutParams) container.getLayoutParams();
-        p.flags |= WindowManager.LayoutParams.FLAG_DIM_BEHIND;
-        p.dimAmount = 0.3f;
-        wm.updateViewLayout(container, p);
-
+        if(pos_config.isProduct_configurator() || pos_config.isIface_orderline_customer_notes()) {
+            popup.showAtLocation(binding.getRoot(), Gravity.CENTER, 0, 0);
+            //blur background
+            View container = (View) popup.getContentView().getParent();
+            WindowManager wm = (WindowManager) HomePage.this.getSystemService(Context.WINDOW_SERVICE);
+            WindowManager.LayoutParams p = (WindowManager.LayoutParams) container.getLayoutParams();
+            p.flags |= WindowManager.LayoutParams.FLAG_DIM_BEHIND;
+            p.dimAmount = 0.3f;
+            wm.updateViewLayout(container, p);
+        }
 
         popupBinding.productNameModifierPopup.setText(product.getName());
+
         // Add view for extra attributes
         if(pos_config.isProduct_configurator()){
             RealmResults attribute_results = realm.where(Attribute.class).equalTo("product_tmpl_id", product.getProduct_tmpl_id())
@@ -1217,8 +1219,8 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                 RealmResults attribute_values_results = realm.where(Attribute_Value.class).equalTo("attribute_id", attribute.getAttribute_id())
                         .and().equalTo("product_tmpl_id", product.getProduct_tmpl_id()).findAll();
                 ArrayList<Attribute_Value> attribute_values = (ArrayList<Attribute_Value>) realm.copyFromRealm(attribute_values_results);
-
-                if(attribute.getDisplay_type().equalsIgnoreCase("radio")){ //radio button
+                //Radio Button
+                if(attribute.getDisplay_type().equalsIgnoreCase("radio")){
                     RadioGroup rg = new RadioGroup(contextpage);
                     rg.setOrientation(LinearLayout.HORIZONTAL);
                     RadioGroup.LayoutParams params = new RadioGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -1249,9 +1251,14 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                                 }
                             }
                         });
+                        // Add Radio Button into RadioGroup
                         rg.addView(rb);
                         if(attribute_value.isIs_custom()){
-                            custom_et.setVisibility(View.GONE);
+                            if(rb.isChecked()){
+                                custom_et.setVisibility(View.VISIBLE);
+                            }else {
+                                custom_et.setVisibility(View.GONE);
+                            }
                             custom_et.setMaxWidth(500);
                             custom_et.setMaxLines(3);
                             custom_et.setTextSize(15);
@@ -1261,7 +1268,9 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                         }
                     }
                     popupBinding.productModifierLl.addView(rg);
-                }else if(attribute.getDisplay_type().equalsIgnoreCase("select")){ // drop down list
+                }
+                // Drop Down List / Select
+                else if(attribute.getDisplay_type().equalsIgnoreCase("select")){
                     EditText custom_et = new EditText(contextpage);
 
                     Spinner spinner = new Spinner(contextpage);
@@ -1309,10 +1318,10 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                             @Override
                             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long l) {
                                 int id = item_ids[position];
+                                //IS_CUSTOM
                                 Attribute_Value av = realm.where(Attribute_Value.class).equalTo("id", id).findFirst();
                                 if(av.isIs_custom()){
                                     custom_et.setVisibility(View.VISIBLE);
-                                    custom_et.setHint(attribute_value.getName());
                                 }else{
                                     custom_et.setVisibility(View.GONE);
                                 }
@@ -1321,21 +1330,30 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                             public void onNothingSelected(AdapterView<?> adapterView) {
                             }
                         });
+                        custom_et.setHint(attribute_value.getName());
                     }
 
                     popupBinding.productModifierLl.addView(spinner);
                     //IS_CUSTOM
-                    custom_et.setVisibility(View.GONE);
+                    //First Selection if it IS_CUSTOM
+                    Attribute_Value av = realm.where(Attribute_Value.class)
+                            .equalTo("id", attribute_values.get(0).getId())
+                            .findFirst();
+                    if(av.isIs_custom()){
+                        custom_et.setVisibility(View.VISIBLE);
+                    }else{
+                        custom_et.setVisibility(View.GONE);
+                    }
                     custom_et.setMaxWidth(500);
                     custom_et.setMaxLines(3);
                     custom_et.setTextSize(15);
                     custom_et.setPadding(10, 0, 10, 10);
                     popupBinding.productModifierLl.addView(custom_et);
-                }else if(attribute.getDisplay_type().equalsIgnoreCase("color")){
+                }
+                // Color Selection
+                else if(attribute.getDisplay_type().equalsIgnoreCase("color")){
                     LinearLayout ll = new LinearLayout(contextpage);
                     ll.setOrientation(LinearLayout.HORIZONTAL);
-//                    RadioGroup rg = new RadioGroup(contextpage);
-//                    rg.setOrientation(LinearLayout.HORIZONTAL);
                     for(int x = 0; x < attribute_values.size(); x++){
                         Attribute_Value attribute_value = attribute_values.get(x);
 
@@ -1357,45 +1375,20 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                         btn.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
-//                                if(lastClickedColor){
-//                                    lastClickedColor = false;
-//                                }else{
-//                                    lastClickedColor = true;
-//                                    lastClickedColorBtn = btn;
-//                                }
                                 if(btn != lastClickedColorBtn) {
                                     btn.startAnimation(AnimationUtils.loadAnimation(getBaseContext(), android.R.anim.fade_in));
                                     lastClickedColorBtn.setBackground(unselect(lastClickedColorBtn.getId()));
-                                    btn.setBackground(select(lastClickedColorBtn.getId()));
+                                    btn.setBackground(select(btn.getId()));
                                 }
                                 lastClickedColorBtn = btn;
                             }
                         });
-
-//                        RadioButton rb = new RadioButton(contextpage);
-//                        rb.setId(attribute_value.getId());
-//                        rb.setWidth(50);
-//                        rb.setHeight(50);
-////                        rb.setBackgroundColor(Color.parseColor(attribute_value.getHtml_color()));
-//                        rb.setButtonDrawable(null);
-//                        if(x == 0){
-//                            rb.setChecked(true);
-//                        }
-//                        rb.setOnClickListener(new View.OnClickListener() {
-//                            @Override
-//                            public void onClick(View view) {
-//                                if(rb.isChecked()){
-//                                    rb.setBackground(unselected);
-//                                }else{
-//                                    rb.setBackground(selected);
-//                                }
-//                            }
-//                        });
-//                        rg.addView(rb);
                         ll.addView(btn);
                     }
                     popupBinding.productModifierLl.addView(ll);
-                }else if(attribute.getDisplay_type().equalsIgnoreCase("pills")){
+                }
+                // Pills Selection
+                else if(attribute.getDisplay_type().equalsIgnoreCase("pills")){
                     RadioGroup rg = new RadioGroup(contextpage);
                     rg.setOrientation(LinearLayout.HORIZONTAL);
                     RadioGroup.LayoutParams params = new RadioGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -1415,6 +1408,11 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                         }
                         //IS_CUSTOM
                         EditText custom_et = new EditText(contextpage);
+                        if(attribute_value.isIs_custom() && rb.isChecked()){
+                            custom_et.setVisibility(View.VISIBLE);
+                        }else{
+                            custom_et.setVisibility(View.GONE);
+                        }
                         rb.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
@@ -1438,17 +1436,32 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
             }
         }
 
+        if(!pos_config.isIface_orderline_customer_notes()){
+            popupBinding.productModifierNote.setVisibility(View.GONE);
+            popupBinding.textView1.setVisibility(View.INVISIBLE);
+            popupBinding.textView1.setTextSize(0);
+        }
 
-//        if(pos_config.isIface_orderline_customer_notes()){
-//            popupBinding.textView1.setVisibility(View.VISIBLE);
-//            popupBinding.productModifierNote.setVisibility(View.VISIBLE);
-//        }else{
-//            popupBinding.textView1.setVisibility(View.GONE);
-//            popupBinding.productModifierNote.setVisibility(View.GONE);
-//        }
         if(fromMenu){
+            if(pos_config.isProduct_configurator() && !pos_config.isIface_orderline_customer_notes()) {
+                RealmResults attribute_results = realm.where(Attribute.class).equalTo("product_tmpl_id", product.getProduct_tmpl_id())
+                        .findAll();
+                ArrayList<Attribute> attributes = (ArrayList<Attribute>) realm.copyFromRealm(attribute_results);
+                if(attributes.size() == 0){
+                    addProductToOrder(product);
+                    popup.dismiss();
+                }
+            }
             popupBinding.productModifierPopupPositiveBtn.setText("Add to Cart");
         }else{
+            if(pos_config.isProduct_configurator() && !pos_config.isIface_orderline_customer_notes()) {
+                RealmResults attribute_results = realm.where(Attribute.class).equalTo("product_tmpl_id", product.getProduct_tmpl_id())
+                        .findAll();
+                ArrayList<Attribute> attributes = (ArrayList<Attribute>) realm.copyFromRealm(attribute_results);
+                if(attributes.size() == 0){
+                    popup.dismiss();
+                }
+            }
             popupBinding.productModifierPopupPositiveBtn.setText("Update");
         }
 
@@ -1478,7 +1491,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         unselected.setShape(GradientDrawable.OVAL);
         unselected.setSize(85, 85);
         unselected.setColor(Color.parseColor(attribute_value.getHtml_color()));
-        unselected.setStroke(5, getResources().getColor(R.color.lightGrey));
+        unselected.setStroke(5, getResources().getColor(R.color.darkGrey));
 
         return unselected;
     }
@@ -1567,7 +1580,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
     @Override
     public void onOrderLineClick(int position) {
         //order_lines
-        if(pos_config.isProduct_configurator() && pos_config.isIface_orderline_customer_notes()) {
+        if(pos_config.isProduct_configurator() || pos_config.isIface_orderline_customer_notes()) {
             showProductModifier(order_lines.get(position).getProduct(), false);
         }
 
@@ -1830,10 +1843,11 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
     //Menu Product
     @Override
     public void onMenuProductClick(int position) {
-        if(pos_config.isProduct_configurator() && pos_config.isIface_orderline_customer_notes()) {
+        if(pos_config.isProduct_configurator() || pos_config.isIface_orderline_customer_notes()) {
             showProductModifier(list.get(position), true);
         }else{
             //add the product to order line directly //NOT DONE YET
+            addProductToOrder(list.get(position));
         }
         Toast.makeText(this, "" + list.get(position).getName(), Toast.LENGTH_SHORT).show();
     }
