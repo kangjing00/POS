@@ -156,6 +156,7 @@
                 android:drawablePadding="5dp"
                 android:drawableTint="@color/blue"
                 android:gravity="center"
+                android:visibility="gone"
                 android:text="Order on hold" />
 
             <TextView
@@ -213,7 +214,7 @@
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true">
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/table_information_cancel_swap_btn"
+                    android:id="@+id/table_information_cancel_transfer_btn"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:backgroundTint="@color/white"
@@ -221,12 +222,12 @@
                     android:paddingTop="15dp"
                     android:paddingEnd="25dp"
                     android:paddingBottom="15dp"
-                    android:text="Cancel Swapping / Transferring"
+                    android:text="Cancel Transferring"
                     android:textColor="@color/darkOrange"
                     app:strokeColor="@color/darkOrange"
                     app:strokeWidth="2dp"
                     android:textAllCaps="false"
-                    app:icon="@drawable/ic_swap"
+                    app:icon="@drawable/ic_transfer"
                     app:iconTint="@color/darkOrange"
                     android:visibility="gone"/>
 

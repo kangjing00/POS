@@ -108,7 +108,13 @@ public class FragmentOrderOnHold extends Fragment implements OrderOnHoldAdapter.
         Table tableUpdate = null;
         if(orderRemove.getTable() != null){
             tableUpdate = realm.copyFromRealm(orderRemove.getTable());
-            tableUpdate.setState("V");
+
+            RealmResults<Order> results = realm.where(Order.class)
+                    .equalTo("table.table_id", orderRemove.getTable().getTable_id())
+                    .and().notEqualTo("state", "paid").and()
+                    .notEqualTo("order_id", orderRemove.getOrder_id()).findAll();
+            if(results.size() == 0)
+                tableUpdate.setState("V");
         }
 
         Table finalTableUpdate = tableUpdate;

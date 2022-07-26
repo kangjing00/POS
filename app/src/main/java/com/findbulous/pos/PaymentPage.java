@@ -32,6 +32,7 @@ import com.google.android.material.tabs.TabLayoutMediator;
 import java.util.ArrayList;
 
 import io.realm.Realm;
+import io.realm.RealmResults;
 
 public class PaymentPage extends CheckConnection {
 
@@ -236,7 +237,12 @@ public class PaymentPage extends CheckConnection {
                     updated_current_order.setAmount_paid(Double.valueOf(viewModel.getPayment_order_detail_credit().getValue()));
                     updated_current_order.setCustomer(currentCustomer);
                     if(current_order.getTable() != null){
-                        tableOccupiedToVacant(updated_current_order.getTable());
+                        RealmResults<Order> results = realm.where(Order.class)
+                                .equalTo("table.table_id", updated_current_order.getTable().getTable_id())
+                                .and().notEqualTo("state", "paid").and()
+                                .notEqualTo("order_id", updated_current_order.getOrder_id()).findAll();
+                        if(results.size() == 0)
+                            tableOccupiedToVacant(updated_current_order.getTable());
                     }
                     realm.executeTransaction(new Realm.Transaction() {
                         @Override

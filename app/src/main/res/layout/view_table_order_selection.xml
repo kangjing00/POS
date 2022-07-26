@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+        <variable
+            name="order"
+            type="com.findbulous.pos.Order" />
+    </data>
+
+    <LinearLayout
+        android:id="@+id/view_table_order_selection_ll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/box_corner_nopadding"
+        android:padding="10dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text='@{String.format("#%d", order.order_id)}'
+            android:layout_weight="1"/>
+
+        <TextView
+            android:id="@+id/order_date"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text='@{String.format("%s", order.date_order)}'
+            android:layout_weight="1"/>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text='@{String.format("%s", order.state)}'
+            android:layout_weight="1"/>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text='@{String.format("%s", order.customer.customer_name)}'
+            android:layout_weight="1"/>
+
+    </LinearLayout>
+</layout>

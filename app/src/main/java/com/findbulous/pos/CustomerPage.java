@@ -424,7 +424,12 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                 if((orderTypePosition == 0) && (currentOrder.getOrder_id() != -1)
                     && (currentOrder.getTable() != null)){//takeaway && order now && order has table
                     //update table
-                    tableOccupiedToVacant(currentOrder.getTable());
+                    RealmResults<Order> results = realm.where(Order.class)
+                            .equalTo("table.table_id", currentOrder.getTable().getTable_id())
+                            .and().notEqualTo("state", "paid").and()
+                            .notEqualTo("order_id", currentOrder.getOrder_id()).findAll();
+                    if(results.size() == 0)
+                        tableOccupiedToVacant(currentOrder.getTable());
 
                     RealmResults<Order_Line> order_lines = realm.where(Order_Line.class).equalTo("order.order_id", currentOrder.getOrder_id())
                             .findAll();
@@ -863,7 +868,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                         if (currentOrder.getTable() != null) {
                             Table result = realm.where(Table.class).equalTo("table_id", currentOrder.getTable().getTable_id()).findFirst();
                             updateTableOnHold = realm.copyFromRealm(result);
-                            updateTableOnHold.setState("H");
+                            updateTableOnHold.setState("O"); //before edit is H
                         }
                         //update
                         realm.executeTransaction(new Realm.Transaction() {
@@ -1137,7 +1142,12 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                         if (order_lines.isEmpty()) {
                             if(currentOrder.getTable() != null) {
                                 //Update table
-                                tableOccupiedToVacant(currentOrder.getTable());
+                                RealmResults<Order> results = realm.where(Order.class)
+                                        .equalTo("table.table_id", currentOrder.getTable().getTable_id())
+                                        .and().notEqualTo("state", "paid").and()
+                                        .notEqualTo("order_id", currentOrder.getOrder_id()).findAll();
+                                if(results.size() == 0)
+                                    tableOccupiedToVacant(currentOrder.getTable());
                             }
                             //delete order
                             cartSharedPreferenceEdit.putInt("orderingState", 0);

@@ -1,11 +1,9 @@
 package com.findbulous.pos;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.databinding.DataBindingUtil;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import android.content.Context;
@@ -19,27 +17,20 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.EditText;
 import android.widget.PopupWindow;
-import android.widget.RadioButton;
-import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.findbulous.pos.Adapters.CartOrderLineAdapter;
 import com.findbulous.pos.Adapters.FloorAdapter;
-import com.findbulous.pos.Adapters.TableAdapter;
+import com.findbulous.pos.Adapters.TableOrderAdapter;
 import com.findbulous.pos.Network.CheckConnection;
 import com.findbulous.pos.databinding.CashInOutPopupBinding;
 import com.findbulous.pos.databinding.TableAddonProceedPopupBinding;
 import com.findbulous.pos.databinding.TableOrderSelectionPopupBinding;
 import com.findbulous.pos.databinding.TablePageBinding;
 import com.findbulous.pos.databinding.ToolbarSyncPopupBinding;
-import com.google.android.material.button.MaterialButton;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -53,11 +44,8 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
-import java.util.Random;
 import java.util.TimeZone;
-import java.util.Timer;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -65,14 +53,20 @@ import io.realm.Realm;
 import io.realm.RealmResults;
 
 public class TablePage extends CheckConnection implements
-                        FloorAdapter.FloorClickInterface, View.OnClickListener, View.OnLongClickListener {
+                        FloorAdapter.FloorClickInterface, View.OnClickListener, View.OnLongClickListener,
+                        TableOrderAdapter.TableOrderClickInterface{
 
     private TablePageBinding binding;
     //Body
-    private boolean onlyVacantTable, tableSelecting, tableSwapping;
-    private Table vacantTableSelected, longClickOccupiedTable, tableSwapFrom, tableSwapTo;
-    private Order orderSwapTo, orderSwapFrom;
+    private boolean ordering, tableSelecting, tableTransferring;
+    private Table tableSelected, longClickOccupiedTable, tableTransferFrom, tableTransferTo;
+    private Order orderForTransfer, tableOrderSelected;
     private View lastClickedTableView;
+
+    //Order Recyclerview of the table
+    private ArrayList<Order> tableOrders;
+    private TableOrderAdapter tableOrderAdapter;
+
     private ArrayList<Table> table_list;
     private ArrayList<Floor> floor_list;
     private ArrayList<Table> update_table_state;
@@ -112,16 +106,16 @@ public class TablePage extends CheckConnection implements
         currentCustomerSharedPreferenceEdit = currentCustomerSharedPreference.edit();
 
         //insertDummyFloorData();
-        onlyVacantTable = false;
+        ordering = false;
         tableSelecting = false;
-        tableSwapping = false;
-        orderSwapTo = null;
-        orderSwapFrom = null;
-        vacantTableSelected = null;
-        tableSwapFrom = null;
-        tableSwapTo = null;
+        tableTransferring = false;
+        orderForTransfer = null;
+        tableOrderSelected = null;
+        tableSelected = null;
+        tableTransferFrom = null;
+        tableTransferTo = null;
         lastClickedTableView = null;
-        floor_list = new ArrayList<Floor>();
+        tableOrders = new ArrayList<>();
         table_list = new ArrayList<Table>();
         update_table_state = new ArrayList<Table>();
 
@@ -135,6 +129,10 @@ public class TablePage extends CheckConnection implements
 
         displayTables(floor_list.get(0));
 
+        //Order Recyclerview of the table
+        tableOrders = new ArrayList<>();
+        tableOrderAdapter = new TableOrderAdapter(tableOrders, this);
+
         if(currentOrderSharedPreference.getInt("orderingState", -1) == 1){ //ordering
             int orderId = currentOrderSharedPreference.getInt("orderId", -1);
             Order result = realm.where(Order.class).equalTo("order_id", orderId).findFirst();
@@ -143,7 +141,7 @@ public class TablePage extends CheckConnection implements
                         + " / " + result.getTable().getName());
                 binding.tableInformationOrderId.setText("#" + result.getOrder_id());
             }
-            onlyVacantTable = true;
+            ordering = true;
         }
 
         //OnClickListener
@@ -156,22 +154,27 @@ public class TablePage extends CheckConnection implements
             @Override
             public void onClick(View view) {
                 if (tableSelecting) {
-                    if (vacantTableSelected != null) {
-                        if (onlyVacantTable) { //only vacant table can be selected
+                    if (tableSelected != null) {
+                        if (ordering) { // ordering [only vacant table can be selected]
                             int orderId = currentOrderSharedPreference.getInt("orderId", -1);
                             Order result = realm.where(Order.class).equalTo("order_id", orderId).findFirst();
                             Order currentOrder = realm.copyFromRealm(result);
 
                             if (currentOrder.getTable() != null) {
-                                AlertDialog alert = builder.setMessage("Change table " + currentOrder.getTable().getName() +
-                                    " to " + vacantTableSelected.getName() + "?")
+                                AlertDialog alert = builder.setMessage("Order Transfer from " + currentOrder.getTable().getName() +
+                                    " to " + tableSelected.getName() + "?")
                                     .setCancelable(false).setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                                         @Override
                                         public void onClick(DialogInterface dialogInterface, int i) {
-                                            tableOccupiedToVacant(currentOrder.getTable());
-                                            currentOrder.setTable(vacantTableSelected);
+                                            RealmResults<Order> results = realm.where(Order.class)
+                                                    .equalTo("table.table_id", currentOrder.getTable().getTable_id())
+                                                    .and().notEqualTo("state", "paid").and()
+                                                    .notEqualTo("order_id", currentOrder.getOrder_id()).findAll();
+                                            if(results.size() == 0)
+                                                tableOccupiedToVacant(currentOrder.getTable());
+                                            currentOrder.setTable(tableSelected);
                                             //update table status
-                                            updateTableOccupied(vacantTableSelected);
+                                            updateTableOccupied(tableSelected);
                                             realm.executeTransaction(new Realm.Transaction() {
                                                 @Override
                                                 public void execute(Realm realm) {
@@ -185,9 +188,9 @@ public class TablePage extends CheckConnection implements
                                     }).setNegativeButton("No", null).create();
                                 alert.show();
                             } else {
-                                currentOrder.setTable(vacantTableSelected);
+                                currentOrder.setTable(tableSelected);
                                 //update table status
-                                updateTableOccupied(vacantTableSelected);
+                                updateTableOccupied(tableSelected);
                                 realm.executeTransaction(new Realm.Transaction() {
                                     @Override
                                     public void execute(Realm realm) {
@@ -201,12 +204,12 @@ public class TablePage extends CheckConnection implements
                         } else {
                             //select & place order
                             //add new order, update current orderingState and orderType
-                            addNewOrder(vacantTableSelected);
+                            addNewOrder(tableSelected);
                             currentOrderSharedPreferenceEdit.putInt("orderingState", 1);    //ordering
                             currentOrderSharedPreferenceEdit.putInt("orderTypePosition", 1); //dine-in
                             currentOrderSharedPreferenceEdit.commit();
                             //update table status
-                            updateTableOccupied(vacantTableSelected);
+                            updateTableOccupied(tableSelected);
                             Intent intent = new Intent(contextpage, HomePage.class);
                             startActivity(intent);
                             finish();
@@ -218,11 +221,12 @@ public class TablePage extends CheckConnection implements
                 }
             }
         });
-        binding.tableInformationCancelSwapBtn.setOnClickListener(new View.OnClickListener() {
+        binding.tableInformationCancelTransferBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                tableSwapping = false;
-                turnOffSwapCancelBtn();
+                tableTransferring = false;
+                tableOrderSelected = null;
+                turnOffTransferCancelBtn();
             }
         });
         }
@@ -523,9 +527,9 @@ public class TablePage extends CheckConnection implements
 //            popupBinding.tableAddonProceedPopupOrderId.setText("#" + order.getOrder_id());
 //            popupBinding.tableAddonProceedPopupOrderId.setVisibility(View.VISIBLE);
 //            popupBinding.tableAddonProceedPopupTv2.setVisibility(View.VISIBLE);
-            popupBinding.tableSwapTransferBtn.setVisibility(View.VISIBLE);
+            popupBinding.tableTransferBtn.setVisibility(View.VISIBLE);
         }else{
-            popupBinding.tableSwapTransferBtn.setVisibility(View.GONE);
+            popupBinding.tableTransferBtn.setVisibility(View.GONE);
 //            popupBinding.tableAddonProceedPopupTv2.setVisibility(View.GONE);
 //            popupBinding.tableAddonProceedPopupOrderId.setVisibility(View.GONE);
         }
@@ -536,14 +540,14 @@ public class TablePage extends CheckConnection implements
 
             }
         });
-        popupBinding.tableSwapTransferBtn.setOnClickListener(new View.OnClickListener() {
+        popupBinding.tableTransferBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                tableSwapping = true;
-                turnOnSwapCancelBtn();
-                tableSwapFrom = clickedTable;
+                tableTransferring = true;
+                turnOnTransferCancelBtn();
+                tableTransferFrom = clickedTable;
                 popup.dismiss();
-                Toast.makeText(TablePage.this, "Choose a table for swapping or transferring", Toast.LENGTH_SHORT).show();
+                Toast.makeText(TablePage.this, "Choose a table for transferring", Toast.LENGTH_SHORT).show();
             }
         });
         popupBinding.tableAddonBtn.setOnClickListener(new View.OnClickListener() {
@@ -622,7 +626,7 @@ public class TablePage extends CheckConnection implements
         });
 
     }
-    private void showOrderSelection(View view, Table clickedTable){
+    private void showOrderSelection(Table clickedTable){
         PopupWindow popup = new PopupWindow(contextpage);
         TableOrderSelectionPopupBinding popupBinding = TableOrderSelectionPopupBinding.inflate(getLayoutInflater());
         popup.setContentView(popupBinding.getRoot());
@@ -635,7 +639,7 @@ public class TablePage extends CheckConnection implements
         // Show anchored to button
         popup.setElevation(8);
         popup.setBackgroundDrawable(null);
-        popup.showAsDropDown(view);
+        popup.showAtLocation(binding.getRoot(), Gravity.CENTER, 0, 0);
         //blur background
         View container = (View) popup.getContentView().getParent();
         WindowManager wm = (WindowManager) TablePage.this.getSystemService(Context.WINDOW_SERVICE);
@@ -644,25 +648,170 @@ public class TablePage extends CheckConnection implements
         p.dimAmount = 0.3f;
         wm.updateViewLayout(container, p);
 
-        popupBinding.title.setText(popupBinding.title.getText().toString() + " (" + clickedTable.getFloor().getName() + "/"
+        tableOrderSelected = null;
+
+        popupBinding.title.setText(popupBinding.title.getText().toString() + " (" + clickedTable.getFloor().getName() + " / "
                             + clickedTable.getName() + ")");
 
-        popupBinding.closeBtn.setOnClickListener(new View.OnClickListener() {
+        //Recyclerview
+        popupBinding.orderListRv.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
+        popupBinding.orderListRv.setHasFixedSize(true);
+        RealmResults<Order> results = realm.where(Order.class).equalTo("table.table_id", clickedTable.getTable_id()).and()
+                .notEqualTo("state", "paid").findAll();
+        tableOrders.clear();
+        tableOrders.addAll(realm.copyFromRealm(results));
+        popupBinding.orderListRv.setAdapter(tableOrderAdapter);
+        tableOrderAdapter.notifyDataSetChanged();
+
+        popupBinding.noOfOrder.setText("(" + tableOrders.size() + " Orders)");
+
+        if(tableOrders.size() == 0){
+            popupBinding.tableOrderListLl.setVisibility(View.GONE);
+            popupBinding.orderListRv.setVisibility(View.GONE);
+            popupBinding.tableOrderSelectionActionLl.setVisibility(View.GONE);
+            popupBinding.line1.setVisibility(View.INVISIBLE);
+        }
+
+        popupBinding.addMoreOrderBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if (ordering) { // ordering
+                    int orderId = currentOrderSharedPreference.getInt("orderId", -1);
+                    Order result = realm.where(Order.class).equalTo("order_id", orderId).findFirst();
+                    Order currentOrder = realm.copyFromRealm(result);
+
+                    currentOrder.setTable(clickedTable);
+                    //update table status
+                    updateTableOccupied(clickedTable);
+                    realm.executeTransaction(new Realm.Transaction() {
+                        @Override
+                        public void execute(Realm realm) {
+                            realm.insertOrUpdate(currentOrder);
+                        }
+                    });
+                }else{
+                    //select & place order
+                    //add new order, update current orderingState and orderType
+                    addNewOrder(clickedTable);
+                    currentOrderSharedPreferenceEdit.putInt("orderingState", 1);    //ordering
+                    currentOrderSharedPreferenceEdit.putInt("orderTypePosition", 1); //dine-in
+                    currentOrderSharedPreferenceEdit.commit();
+                    //update table status
+                    updateTableOccupied(clickedTable);
+                }
+                Intent intent = new Intent(contextpage, HomePage.class);
+                startActivity(intent);
+                finish();
                 popup.dismiss();
             }
         });
-    }
-    private void turnOnSwapCancelBtn(){
-        binding.tableInformationBtn.setVisibility(View.GONE);
-        binding.tableInformationCancelSwapBtn.setVisibility(View.VISIBLE);
-    }
-    private void turnOffSwapCancelBtn(){
-        binding.tableInformationBtn.setVisibility(View.VISIBLE);
-        binding.tableInformationCancelSwapBtn.setVisibility(View.GONE);
-    }
+        popupBinding.transferOrderBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(tableOrderSelected != null) {
+                    tableTransferring = true;
+                    turnOnTransferCancelBtn();
+                    tableTransferFrom = clickedTable;
+                    popup.dismiss();
+                    Toast.makeText(TablePage.this, "Choose a table for transferring", Toast.LENGTH_SHORT).show();
+                }else{
+                    Toast.makeText(contextpage, "Please select an order for transferring", Toast.LENGTH_SHORT).show();
+                }                
+            }
+        });
 
+        popupBinding.addonBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(tableOrderSelected != null) {
+                    int current_order_id = currentOrderSharedPreference.getInt("orderId", -1);
+                    if (current_order_id == -1) { //no current order
+                        currentCustomerSharedPreferenceEdit.putInt("customerID", tableOrderSelected.getCustomer().getCustomer_id());
+                        currentCustomerSharedPreferenceEdit.putString("customerName", tableOrderSelected.getCustomer().getCustomer_name());
+                        currentCustomerSharedPreferenceEdit.putString("customerEmail", tableOrderSelected.getCustomer().getCustomer_email());
+                        currentCustomerSharedPreferenceEdit.putString("customerPhoneNo", tableOrderSelected.getCustomer().getCustomer_phoneNo());
+                        currentCustomerSharedPreferenceEdit.putString("customerIdentityNo", tableOrderSelected.getCustomer().getCustomer_identityNo());
+                        currentCustomerSharedPreferenceEdit.putString("customerBirthdate", tableOrderSelected.getCustomer().getCustomer_birthdate());
+                        currentCustomerSharedPreferenceEdit.commit();
+
+                        currentOrderSharedPreferenceEdit.putInt("orderingState", 1);
+                        currentOrderSharedPreferenceEdit.putInt("orderId", tableOrderSelected.getOrder_id());
+                        currentOrderSharedPreferenceEdit.putInt("orderTypePosition", 1);
+                        currentOrderSharedPreferenceEdit.commit();
+
+                        tableOrderSelected = null;
+                        popup.dismiss();
+                        Intent intent = new Intent(contextpage, HomePage.class);
+                        startActivity(intent);
+                        finish();
+                    } else {
+                        Toast.makeText(contextpage, "Can not resume, an order is in process", Toast.LENGTH_SHORT).show();
+                    }
+                }else{
+                    Toast.makeText(contextpage, "Please select an order for adding products", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        popupBinding.proceedBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(tableOrderSelected != null) {
+                    int current_order_id = currentOrderSharedPreference.getInt("orderId", -1);
+                    if (current_order_id == -1) { //no current order
+                        currentCustomerSharedPreferenceEdit.putInt("customerID", tableOrderSelected.getCustomer().getCustomer_id());
+                        currentCustomerSharedPreferenceEdit.putString("customerName", tableOrderSelected.getCustomer().getCustomer_name());
+                        currentCustomerSharedPreferenceEdit.putString("customerEmail", tableOrderSelected.getCustomer().getCustomer_email());
+                        currentCustomerSharedPreferenceEdit.putString("customerPhoneNo", tableOrderSelected.getCustomer().getCustomer_phoneNo());
+                        currentCustomerSharedPreferenceEdit.putString("customerIdentityNo", tableOrderSelected.getCustomer().getCustomer_identityNo());
+                        currentCustomerSharedPreferenceEdit.putString("customerBirthdate", tableOrderSelected.getCustomer().getCustomer_birthdate());
+                        currentCustomerSharedPreferenceEdit.commit();
+
+                        currentOrderSharedPreferenceEdit.putInt("orderingState", 1);
+                        currentOrderSharedPreferenceEdit.putInt("orderId", tableOrderSelected.getOrder_id());
+                        currentOrderSharedPreferenceEdit.putInt("orderTypePosition", 1);
+                        currentOrderSharedPreferenceEdit.commit();
+
+                        RealmResults<Order_Line> order_lines = realm.where(Order_Line.class)
+                                .equalTo("order.order_id", tableOrderSelected.getOrder_id()).findAll();
+
+                        if (order_lines.size() == 0) { //empty cart
+                            Toast.makeText(TablePage.this, "Please proceed payment with at least 1 product", Toast.LENGTH_SHORT).show();
+                            Intent intent = new Intent(contextpage, HomePage.class);
+                            startActivity(intent);
+                        } else { //ready to payment
+                            Intent intent = new Intent(contextpage, PaymentPage.class);
+                            startActivity(intent);
+                        }
+                        popup.dismiss();
+                        finish();
+                    } else {
+                        Toast.makeText(contextpage, "Can not resume, an order is in process", Toast.LENGTH_SHORT).show();
+                    }
+                }else{
+                    Toast.makeText(contextpage, "Please select an order for proceeding to payment", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        popupBinding.removeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+            }
+        });
+    }
+    private void turnOnTransferCancelBtn(){
+        binding.tableInformationBtn.setVisibility(View.GONE);
+        binding.tableInformationCancelTransferBtn.setVisibility(View.VISIBLE);
+    }
+    private void turnOffTransferCancelBtn(){
+        binding.tableInformationBtn.setVisibility(View.VISIBLE);
+        binding.tableInformationCancelTransferBtn.setVisibility(View.GONE);
+    }
+    @Override
+    public void onTableOrderSelect(int position) {
+        tableOrderSelected = tableOrders.get(position);
+    }
 
     //Get Floor data from local realm
     private void getFloorFromRealm(){
@@ -743,14 +892,14 @@ public class TablePage extends CheckConnection implements
                 tvDrawable = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
                 if(table.getState().equalsIgnoreCase("V")) {
                     DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.green));
-                }else if(table.getState().equalsIgnoreCase("H")){
-                    DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.blue));
-                }else{
+                }else if(table.getState().equalsIgnoreCase("O")){
                     DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.red));
+                }else{
+                    //DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.blue));
                 }
 
-                if(vacantTableSelected != null)
-                    if(table.getTable_id() == vacantTableSelected.getTable_id()) {
+                if(tableSelected != null)
+                    if(table.getTable_id() == tableSelected.getTable_id()) {
                         DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.darkOrange));
                         lastClickedTableView = tableTv;
                     }
@@ -797,141 +946,229 @@ public class TablePage extends CheckConnection implements
         Drawable tvDrawable;
         tvDrawable = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
 
-        if(!tableSwapping) {
-            if (clickedTable.getState().equalsIgnoreCase("V")) {
+        if(!tableTransferring) {
+            if(!ordering){  //Currently not ordering
+                if(clickedTable.getState().equalsIgnoreCase("V")){
+                    if(tableSelected != null){
+                        tableSelecting = true;
+                    }
 
-                if(vacantTableSelected != null){
-                    tableSelecting = true;
-                }
-
-                if (!tableSelecting) {
-                    //case: table is not selecting, operation: select a table
-                    DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.darkOrange));
-                    v.setBackground(tvDrawable);
-                    lastClickedTableView = v;
-                    tableSelecting = true;
-                    vacantTableSelected = clickedTable;
-                } else if (lastClickedTableView == v) {
-                    //case: table is selecting and click on the selecting table, operation: make it unselect on same table
-                    Drawable tvDrawable1;
-                    tvDrawable1 = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
-                    DrawableCompat.setTint(tvDrawable1, getResources().getColor(R.color.green));
-                    lastClickedTableView.setBackground(tvDrawable1);
-                    tableSelecting = false;
-                    vacantTableSelected = null;
-                } else { // operation on the same floor and the same floor while navigate from other floor.
-                    if(vacantTableSelected.getTable_id() == clickedTable.getTable_id()){
-                        //case: table is selecting and click on the selecting table, operation: make it unselect on same table
-                        DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.green));
-                        v.setBackground(tvDrawable);
-                        tableSelecting = false;
-                        vacantTableSelected = null;
-                        lastClickedTableView = null;
-                    }else {
-                        //case: selecting one table, and click to select another table, operation: unselect on last table & select table
+                    if (!tableSelecting) {
+                        //case: table is not selecting, operation: select a table
                         DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.darkOrange));
                         v.setBackground(tvDrawable);
+                        lastClickedTableView = v;
+                        tableSelecting = true;
+                        tableSelected = clickedTable;
+                    } else if (lastClickedTableView == v) {
+                        //case: table is selecting and click on the selecting table, operation: make it unselect on same table
                         Drawable tvDrawable1;
                         tvDrawable1 = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
                         DrawableCompat.setTint(tvDrawable1, getResources().getColor(R.color.green));
                         lastClickedTableView.setBackground(tvDrawable1);
-                        lastClickedTableView = v;
-                        tableSelecting = true;
-                        vacantTableSelected = clickedTable;
+                        tableSelecting = false;
+                        tableSelected = null;
+                    } else { // operation on the same floor and the same floor while navigate from other floor.
+                        if(tableSelected.getTable_id() == clickedTable.getTable_id()){
+                            //case: table is selecting and click on the selecting table, operation: make it unselect on same table
+                            DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.green));
+                            v.setBackground(tvDrawable);
+                            tableSelecting = false;
+                            tableSelected = null;
+                            lastClickedTableView = null;
+                        }else {
+                            //case: selecting one table, and click to select another table, operation: unselect on last table & select table
+                            DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.darkOrange));
+                            v.setBackground(tvDrawable);
+                            Drawable tvDrawable1;
+                            tvDrawable1 = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
+                            DrawableCompat.setTint(tvDrawable1, getResources().getColor(R.color.green));
+                            lastClickedTableView.setBackground(tvDrawable1);
+                            lastClickedTableView = v;
+                            tableSelecting = true;
+                            tableSelected = clickedTable;
+                        }
                     }
+                }else if(clickedTable.getState().equalsIgnoreCase("O")){
+                    showOrderSelection(clickedTable);
+                }else{//obsolete "table onHold"
+                    //showAddonAndProceed(v, clickedTable);
+                }
+            }else{      // Ordering rn
+                if(tableSelected != null){
+                    tableSelecting = true;
+                }
 
+                int currentOrderId = currentOrderSharedPreference.getInt("orderId", -1);
+                Order order = realm.where(Order.class).equalTo("order_id", currentOrderId).findFirst();
+                Order currentOrder = null;
+                if(order != null) {
+                    currentOrder = realm.copyFromRealm(order);
                 }
-            } else if (clickedTable.getState().equalsIgnoreCase("H")) {
-                if (!onlyVacantTable) {//not only vacant table can be selected
-                    showAddonAndProceed(v, clickedTable);
-                } else {  //only vacant table can be selected
-                    Toast.makeText(contextpage, "Only vacant table can be selected while ordering", Toast.LENGTH_SHORT).show();
-                }
-            } else { //occupied
-                if (!onlyVacantTable) {//not only vacant table can be selected
-                    showAddonAndProceed(v, clickedTable);
-                } else {
-                    Toast.makeText(contextpage, "Only vacant table can be selected while ordering", Toast.LENGTH_SHORT).show();
+                if(currentOrder != null){
+                    if(currentOrder.getTable() != null) {
+                        if (clickedTable.getTable_id() != currentOrder.getTable().getTable_id()) {
+                            if (!tableSelecting) {
+                                //case: table is not selecting, operation: select a table
+                                DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.darkOrange));
+                                v.setBackground(tvDrawable);
+                                lastClickedTableView = v;
+                                tableSelecting = true;
+                                tableSelected = clickedTable;
+                            } else if (lastClickedTableView == v) {
+                                //case: table is selecting and click on the selecting table, operation: make it unselect on same table
+                                Drawable tvDrawable1;
+                                tvDrawable1 = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
+                                if (tableSelected.getState().equalsIgnoreCase("V"))
+                                    DrawableCompat.setTint(tvDrawable1, getResources().getColor(R.color.green));
+                                else if (tableSelected.getState().equalsIgnoreCase("O"))
+                                    DrawableCompat.setTint(tvDrawable1, getResources().getColor(R.color.red));
+                                else
+                                    DrawableCompat.setTint(tvDrawable1, getResources().getColor(R.color.red));
+
+                                lastClickedTableView.setBackground(tvDrawable1);
+                                tableSelecting = false;
+                                tableSelected = null;
+                            } else { // operation on the same floor and the same floor while navigate from other floor.
+                                if (tableSelected.getTable_id() == clickedTable.getTable_id()) {
+                                    //case: table is selecting and click on the selecting table, operation: make it unselect on same table
+                                    if (tableSelected.getState().equalsIgnoreCase("V"))
+                                        DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.green));
+                                    else if (tableSelected.getState().equalsIgnoreCase("O"))
+                                        DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.red));
+                                    else
+                                        DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.red));
+
+                                    v.setBackground(tvDrawable);
+                                    tableSelecting = false;
+                                    tableSelected = null;
+                                    lastClickedTableView = null;
+                                } else {
+                                    //case: selecting one table, and click to select another table, operation: unselect on last table & select table
+                                    DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.darkOrange));
+                                    v.setBackground(tvDrawable);
+                                    Drawable tvDrawable1;
+                                    tvDrawable1 = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
+                                    if (tableSelected.getState().equalsIgnoreCase("V"))
+                                        DrawableCompat.setTint(tvDrawable1, getResources().getColor(R.color.green));
+                                    else if (tableSelected.getState().equalsIgnoreCase("O"))
+                                        DrawableCompat.setTint(tvDrawable1, getResources().getColor(R.color.red));
+                                    else
+                                        DrawableCompat.setTint(tvDrawable1, getResources().getColor(R.color.red));
+
+                                    lastClickedTableView.setBackground(tvDrawable1);
+                                    lastClickedTableView = v;
+                                    tableSelecting = true;
+                                    tableSelected = clickedTable;
+                                }
+                            }
+                        } else {
+                            Toast.makeText(contextpage, "It is same table, select other table if you want to transfer order to other table", Toast.LENGTH_SHORT).show();
+                        }
+                    }else{
+                        if(clickedTable.getState().equalsIgnoreCase("V")){
+                            if(tableSelected != null){
+                                tableSelecting = true;
+                            }
+
+                            if (!tableSelecting) {
+                                //case: table is not selecting, operation: select a table
+                                DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.darkOrange));
+                                v.setBackground(tvDrawable);
+                                lastClickedTableView = v;
+                                tableSelecting = true;
+                                tableSelected = clickedTable;
+                            } else if (lastClickedTableView == v) {
+                                //case: table is selecting and click on the selecting table, operation: make it unselect on same table
+                                Drawable tvDrawable1;
+                                tvDrawable1 = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
+                                DrawableCompat.setTint(tvDrawable1, getResources().getColor(R.color.green));
+                                lastClickedTableView.setBackground(tvDrawable1);
+                                tableSelecting = false;
+                                tableSelected = null;
+                            } else { // operation on the same floor and the same floor while navigate from other floor.
+                                if(tableSelected.getTable_id() == clickedTable.getTable_id()){
+                                    //case: table is selecting and click on the selecting table, operation: make it unselect on same table
+                                    DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.green));
+                                    v.setBackground(tvDrawable);
+                                    tableSelecting = false;
+                                    tableSelected = null;
+                                    lastClickedTableView = null;
+                                }else {
+                                    //case: selecting one table, and click to select another table, operation: unselect on last table & select table
+                                    DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.darkOrange));
+                                    v.setBackground(tvDrawable);
+                                    Drawable tvDrawable1;
+                                    tvDrawable1 = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
+                                    DrawableCompat.setTint(tvDrawable1, getResources().getColor(R.color.green));
+                                    lastClickedTableView.setBackground(tvDrawable1);
+                                    lastClickedTableView = v;
+                                    tableSelecting = true;
+                                    tableSelected = clickedTable;
+                                }
+                            }
+                        }else if(clickedTable.getState().equalsIgnoreCase("O")){
+                            showOrderSelection(clickedTable);
+                        }else{//obsolete "table onHold"
+                            //showAddonAndProceed(v, clickedTable);
+                        }
+                    }
                 }
             }
-        }else{// swap or transfer table
-            tableSwapTo = clickedTable;
-            Order orderOfTableSwapTo = realm.where(Order.class).equalTo("table.table_id", tableSwapTo.getTable_id()).
-                    and().notEqualTo("state", "paid").findFirst();
-            Order orderOfTableSwapFrom = realm.where(Order.class).equalTo("table.table_id", tableSwapFrom.getTable_id()).
-                    and().notEqualTo("state", "paid").findFirst();
-            orderSwapFrom = realm.copyFromRealm(orderOfTableSwapFrom);
+        }else{// Transfer table
+            tableTransferTo = clickedTable;
+            RealmResults<Order> ordersOfTableTransferFrom = realm.where(Order.class).equalTo("table.table_id", tableTransferFrom.getTable_id())
+                    .and().notEqualTo("state", "paid")
+                    .and().notEqualTo("order_id", tableOrderSelected.getOrder_id()).findAll();
+
+            Order orderOfTableTransferFrom = realm.where(Order.class).equalTo("table.table_id", tableTransferFrom.getTable_id())
+                    .and().notEqualTo("state", "paid").and()
+                    .equalTo("order_id", tableOrderSelected.getOrder_id()).findFirst();
+            orderForTransfer = realm.copyFromRealm(orderOfTableTransferFrom);
+
             //popup
             AlertDialog.Builder builder = new AlertDialog.Builder(TablePage.this);
-            builder.setMessage("Swap / transfer table " + tableSwapFrom.getName() +
-                    " to " + tableSwapTo.getName() + "?")
-                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            builder.setMessage("Order Transfer from " + tableTransferFrom.getName() +
+                " to " + tableTransferTo.getName() + "?")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        if(ordersOfTableTransferFrom.size() < 1){
+                            tableTransferFrom.setState("V");
+                        }
+                        tableTransferTo.setState("O");
+                        tableOrderSelected.setTable(tableTransferTo);
+
+                        realm.executeTransaction(new Realm.Transaction() {
+                             @Override
+                             public void execute(Realm realm) {
+                                 realm.insertOrUpdate(tableOrderSelected);
+                                 realm.insertOrUpdate(tableTransferTo);
+                                 realm.insertOrUpdate(tableTransferFrom);
+                             }
+                         });
+
+                        tableOrderSelected = null;
+                        tableTransferTo = null;
+                        tableTransferFrom = null;
+                        tableTransferring = false;
+                        turnOffTransferCancelBtn();
+                        //Temporarily
+                        displayTables(floor);
+                    }
+                }).setNegativeButton("No", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            if(orderOfTableSwapTo != null){  //table for swap or transfer is has an order
-                                orderSwapTo = realm.copyFromRealm(orderOfTableSwapTo);
-                                if (orderSwapFrom.getState().equalsIgnoreCase("draft")) {
-                                    tableSwapTo.setState("O");
-                                } else if (orderSwapFrom.getState().equalsIgnoreCase("onHold")) {
-                                    tableSwapTo.setState("H");
-                                }
-
-                                if(orderSwapTo.getState().equalsIgnoreCase("draft")){
-                                    tableSwapFrom.setState("O");
-                                }else if(orderSwapTo.getState().equalsIgnoreCase("onHold")){
-                                    tableSwapFrom.setState("H");
-                                }
-                                orderSwapFrom.setTable(tableSwapTo);
-                                orderSwapTo.setTable(tableSwapFrom);
-                            }else{  //table for swap or transfer has no order
-                                if(tableSwapTo.getState().equalsIgnoreCase("O")){
-                                    tableSwapFrom.setState("O");
-                                }else {
-                                    tableSwapFrom.setState("V");
-                                }
-
-                                if (orderSwapFrom.getState().equalsIgnoreCase("draft")) {
-                                    tableSwapTo.setState("O");
-                                } else if (orderSwapFrom.getState().equalsIgnoreCase("onHold")) {
-                                    tableSwapTo.setState("H");
-                                }
-                                orderSwapFrom.setTable(tableSwapTo);
-                            }
-                            realm.executeTransaction(new Realm.Transaction() {
-                                @Override
-                                public void execute(Realm realm) {
-                                    realm.insertOrUpdate(orderSwapFrom);
-                                    if(orderOfTableSwapTo != null) {
-                                        realm.insertOrUpdate(orderSwapTo);
-                                    }
-                                    realm.insertOrUpdate(tableSwapTo);
-                                    realm.insertOrUpdate(tableSwapFrom);
-                                }
-                            });
-                            orderSwapFrom = null;
-                            orderSwapTo = null;
-                            tableSwapTo = null;
-                            tableSwapFrom = null;
-                            tableSwapping = false;
-                            turnOffSwapCancelBtn();
-                            //Temporarily
-                            displayTables(floor);
+                            Toast.makeText(contextpage, "Choose a table for transferring", Toast.LENGTH_SHORT).show();
                         }
-                    }).setNegativeButton("No", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    Toast.makeText(contextpage, "Choose a table for swapping or transferring", Toast.LENGTH_SHORT).show();
-                }
-            }).setCancelable(false);
-
+                    }).setCancelable(false);
             AlertDialog alert = builder.create();
-            if(tableSwapTo.getTable_id() == tableSwapFrom.getTable_id()){
-                Toast.makeText(contextpage, "Not allow to swap / transfer to the same table.", Toast.LENGTH_SHORT).show();
+            if(tableTransferTo.getTable_id() == tableTransferFrom.getTable_id()){
+                Toast.makeText(contextpage, "Not allow to transfer to the same table.", Toast.LENGTH_SHORT).show();
             }else {
                 alert.show();
             }
         }
-        Toast.makeText(TablePage.this, "table clicked" + v.getId() + "'" + tv.getText().charAt(2) + "'", Toast.LENGTH_SHORT).show();
     }
     @Override
     public boolean onLongClick(View v) {
@@ -952,7 +1189,7 @@ public class TablePage extends CheckConnection implements
             if(lastClickedTableView != null) {
                 if (lastClickedTableView.getId() == clickedTable.getTable_id()) {
                     tableSelecting = false;
-                    vacantTableSelected = null;
+                    tableSelected = null;
                     lastClickedTableView = null;
                 }
             }
@@ -1061,160 +1298,4 @@ public class TablePage extends CheckConnection implements
             }
         });
     }
-
-    //Table clicked
-//    @Override
-//    public void onTableClick(int position, View v) {
-//        Table clickedTable = table_list.get(position);
-//
-//        TextView tv = (TextView) v.findViewById(v.getId());
-//        Drawable tvDrawable;
-//        tvDrawable = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
-//
-//        if(!tableSwapping) {
-//            if (clickedTable.getState().equalsIgnoreCase("V")) {
-//                if (!tableSelecting) {
-//                    //case: table is not selecting, operation: select a table
-//                    tableSelecting = true;
-//                    DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.darkOrange));
-//                    v.setBackground(tvDrawable);
-//                    lastClickedTableView = v;
-//                    vacantTableSelected = clickedTable;
-//                } else if (lastClickedTableView == v) {
-//                    //case: table is selecting and click on the selecting table, operation: make it unselect on same table
-//                    tableSelecting = false;
-//                    Drawable tvDrawable1;
-//                    tvDrawable1 = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
-//                    DrawableCompat.setTint(tvDrawable1, getResources().getColor(R.color.green));
-//                    lastClickedTableView.setBackground(tvDrawable1);
-//                    vacantTableSelected = null;
-//                } else {
-//                    //case: selecting one table, and click to select another table, operation: unselect on last table & select table
-//                    tableSelecting = true;
-//                    DrawableCompat.setTint(tvDrawable, getResources().getColor(R.color.darkOrange));
-//                    v.setBackground(tvDrawable);
-//                    Drawable tvDrawable1;
-//                    tvDrawable1 = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_square_table_4_modified));
-//                    DrawableCompat.setTint(tvDrawable1, getResources().getColor(R.color.green));
-//                    lastClickedTableView.setBackground(tvDrawable1);
-//                    lastClickedTableView = v;
-//                    vacantTableSelected = clickedTable;
-//                }
-//            } else if (clickedTable.getState().equalsIgnoreCase("H")) {
-//                if (!onlyVacantTable) {//not only vacant table can be selected
-//                    showAddonAndProceed(v, clickedTable);
-//                } else {  //only vacant table can be selected
-//                    Toast.makeText(contextpage, "Only vacant table can be selected while ordering", Toast.LENGTH_SHORT).show();
-//                }
-//            } else { //occupied
-//                if (!onlyVacantTable) {//not only vacant table can be selected
-//                    showAddonAndProceed(v, clickedTable);
-//                } else {
-//                    Toast.makeText(contextpage, "Only vacant table can be selected while ordering", Toast.LENGTH_SHORT).show();
-//                }
-//            }
-//        }else{// swap or transfer table
-//            tableSwapTo = clickedTable;
-//            Order orderOfTableSwapTo = realm.where(Order.class).equalTo("table.table_id", tableSwapTo.getTable_id()).
-//                    and().notEqualTo("state", "paid").findFirst();
-//            Order orderOfTableSwapFrom = realm.where(Order.class).equalTo("table.table_id", tableSwapFrom.getTable_id()).
-//                    and().notEqualTo("state", "paid").findFirst();
-//            orderSwapFrom = realm.copyFromRealm(orderOfTableSwapFrom);
-//            //popup
-//            AlertDialog.Builder builder = new AlertDialog.Builder(TablePage.this);
-//            builder.setMessage("Swap / transfer table " + tableSwapFrom.getName() +
-//                    " to " + tableSwapTo.getName() + "?")
-//                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-//                        @Override
-//                        public void onClick(DialogInterface dialogInterface, int i) {
-//                            if(orderOfTableSwapTo != null){  //table for swap or transfer is has an order
-//                                orderSwapTo = realm.copyFromRealm(orderOfTableSwapTo);
-//
-//                                if (orderSwapFrom.getState().equalsIgnoreCase("draft")) {
-//                                    tableSwapTo.setState("O");
-//                                } else if (orderSwapFrom.getState().equalsIgnoreCase("onHold")) {
-//                                    tableSwapTo.setState("H");
-//                                }
-//
-//                                if(orderSwapTo.getState().equalsIgnoreCase("draft")){
-//                                    tableSwapFrom.setState("O");
-//                                }else if(orderSwapTo.getState().equalsIgnoreCase("onHold")){
-//                                    tableSwapFrom.setState("H");
-//                                }
-//                                orderSwapFrom.setTable(tableSwapTo);
-//                                orderSwapTo.setTable(tableSwapFrom);
-//                            }else{  //table for swap or transfer has no order
-//                                if(tableSwapTo.getState().equalsIgnoreCase("O")){
-//                                    tableSwapFrom.setState("O");
-//                                }else {
-//                                    tableSwapFrom.setState("V");
-//                                }
-//
-//                                if (orderSwapFrom.getState().equalsIgnoreCase("draft")) {
-//                                    tableSwapTo.setState("O");
-//                                } else if (orderSwapFrom.getState().equalsIgnoreCase("onHold")) {
-//                                    tableSwapTo.setState("H");
-//                                }
-//                                orderSwapFrom.setTable(tableSwapTo);
-//                            }
-//                            realm.executeTransaction(new Realm.Transaction() {
-//                                @Override
-//                                public void execute(Realm realm) {
-//                                    realm.insertOrUpdate(orderSwapFrom);
-//                                    if(orderOfTableSwapTo != null) {
-//                                        realm.insertOrUpdate(orderSwapTo);
-//                                    }
-//                                    realm.insertOrUpdate(tableSwapTo);
-//                                    realm.insertOrUpdate(tableSwapFrom);
-//                                }
-//                            });
-//                            tableAdapter.notifyDataSetChanged();
-//                            orderSwapFrom = null;
-//                            orderSwapTo = null;
-//                            tableSwapTo = null;
-//                            tableSwapFrom = null;
-//                            tableSwapping = false;
-//                            turnOffSwapCancelBtn();
-//                        }
-//                    }).setNegativeButton("No", new DialogInterface.OnClickListener() {
-//                @Override
-//                public void onClick(DialogInterface dialogInterface, int i) {
-//                    Toast.makeText(contextpage, "Choose a table for swapping or transferring", Toast.LENGTH_SHORT).show();
-//                }
-//            }).setCancelable(false);
-//            AlertDialog alert = builder.create();
-//            if(tableSwapTo.getTable_id() == tableSwapFrom.getTable_id()){
-//                Toast.makeText(contextpage, "Not allow to swap / transfer to the same table.", Toast.LENGTH_SHORT).show();
-//            }else {
-//                alert.show();
-//            }
-//        }
-//    }
-//    @Override
-//    public void onTableLongClick(int position) {
-//        longClickOccupiedTable = table_list.get(position);
-//
-//        Order tableOrder = realm.where(Order.class).equalTo("table.table_id", longClickOccupiedTable.getTable_id()).findFirst();
-//        String tableName = longClickOccupiedTable.getName();
-//
-//        if(tableOrder == null) {       //Table has no order(occupied) or vacant
-//            if(longClickOccupiedTable.getState().equalsIgnoreCase("V")){  //vacant table
-//                longClickOccupiedTable.setState("O");
-//                Toast.makeText(TablePage.this, "" + tableName + " occupied successfully", Toast.LENGTH_SHORT).show();
-//            }else { //occupy table
-//                longClickOccupiedTable.setState("V");
-//                Toast.makeText(TablePage.this, "" + tableName + " occupy removed successfully", Toast.LENGTH_SHORT).show();
-//            }
-//
-//            realm.executeTransaction(new Realm.Transaction() {
-//                @Override
-//                public void execute(Realm realm) {
-//                    realm.insertOrUpdate(longClickOccupiedTable);
-//                }
-//            });
-//            tableAdapter.notifyDataSetChanged();
-//        }else{      //Table has an order
-//            Toast.makeText(TablePage.this, "This table has an order", Toast.LENGTH_SHORT).show();
-//        }
-//    }
 }

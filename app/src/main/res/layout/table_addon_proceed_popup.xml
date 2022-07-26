@@ -20,7 +20,7 @@
             android:orientation="vertical"
             android:layout_marginRight="10dp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/table_swap_transfer_btn">
+            app:layout_constraintEnd_toStartOf="@id/table_transfer_btn">
             <TextView
                 android:id="@+id/table_addon_proceed_popup_table_name"
                 android:layout_width="match_parent"
@@ -44,7 +44,7 @@
         </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/table_swap_transfer_btn"
+            android:id="@+id/table_transfer_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginRight="10dp"
@@ -53,10 +53,10 @@
             android:paddingTop="10dp"
             android:paddingEnd="10dp"
             android:paddingBottom="10dp"
-            android:text="Swap / Transfer"
+            android:text="Transfer"
             android:textAllCaps="false"
             android:textColor="@color/darkOrange"
-            app:icon="@drawable/ic_swap"
+            app:icon="@drawable/ic_transfer"
             app:iconTint="@color/darkOrange"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/table_addon_btn"
