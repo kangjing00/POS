@@ -863,6 +863,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                         onHoldCustomer = getCurrentCustomer();
                         currentOrder.setCustomer(onHoldCustomer);
                         currentOrder.setState("onHold");
+                        currentOrder.setState_name("Onhold");
                         currentOrder.setNote(note);
 
                         if (currentOrder.getTable() != null) {

@@ -51,6 +51,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:padding="5dp"
+            android:textAlignment="center"
             android:text='@{String.format("%s", order.state_name)}'
             android:layout_weight="1"/>
 

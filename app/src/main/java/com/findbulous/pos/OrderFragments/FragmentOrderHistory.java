@@ -1,9 +1,12 @@
 package com.findbulous.pos.OrderFragments;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -43,17 +46,24 @@ public class FragmentOrderHistory extends Fragment implements OrderHistoryAdapte
         getOrderHistoryFromRealm();
         binding.orderHistoryRv.setAdapter(orderHistoryAdapter);
 
+        if(orders.size() <= 0){
+            binding.emptyOrderImg.setVisibility(View.VISIBLE);
+        }else{
+            binding.emptyOrderImg.setVisibility(View.GONE);
+        }
+
         binding.orderHistorySearchBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 String searchValue = binding.orderHistoryEtSearch.getText().toString().trim();
                 RealmResults<Order> results = realm.where(Order.class).contains("customer.customer_name", searchValue, Case.INSENSITIVE)
-                        .findAll();
+                        .equalTo("state", "paid").findAll();
                 RealmResults<Order> allResults = realm.where(Order.class).equalTo("state", "paid").findAll();
                 try{
                     int orderId = Integer.valueOf(searchValue);
                     results = realm.where(Order.class).equalTo("customer.customer_name", searchValue)
-                            .or().equalTo("order_id", orderId).findAll();
+                            .or().equalTo("order_id", orderId)
+                            .and().equalTo("state", "paid").findAll();
                 }catch (Exception e){
                     System.out.println("Error Message: " + e);
                 }
@@ -64,6 +74,15 @@ public class FragmentOrderHistory extends Fragment implements OrderHistoryAdapte
                 }else{
                     orders.addAll(allResults);
                 }
+                if(orders.size() <= 0){
+                    binding.emptyOrderImg.setVisibility(View.VISIBLE);
+                }else{
+                    binding.emptyOrderImg.setVisibility(View.GONE);
+                }
+
+                binding.orderHistoryEtSearch.onEditorAction(EditorInfo.IME_ACTION_DONE);
+                binding.orderHistoryEtSearch.clearFocus();
+
                 orderHistoryAdapter.notifyDataSetChanged();
             }
 
@@ -71,6 +90,18 @@ public class FragmentOrderHistory extends Fragment implements OrderHistoryAdapte
 
         return view;
     }
+
+//    private static void hideSoftKeyboard(Activity activity) {
+//        InputMethodManager inputMethodManager =
+//                (InputMethodManager) activity.getSystemService(
+//                        Activity.INPUT_METHOD_SERVICE);
+//        if(inputMethodManager.isAcceptingText()){
+//            inputMethodManager.hideSoftInputFromWindow(
+//                    activity.getCurrentFocus().getWindowToken(),
+//                    0
+//            );
+//        }
+//    }
 
     private void getOrderHistoryFromRealm(){
         RealmResults<Order> results = realm.where(Order.class).equalTo("state", "paid").findAll();

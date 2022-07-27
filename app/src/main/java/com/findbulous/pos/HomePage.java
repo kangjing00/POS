@@ -24,6 +24,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.animation.AnimationUtils;
+import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -199,6 +200,8 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                    list.addAll(results);
                    categories_clicked_wo_child.clear();
                    productAdapter.notifyDataSetChanged();
+                   binding.toolbarLayoutIncl.toolbarEtSearch.onEditorAction(EditorInfo.IME_ACTION_DONE);
+                   binding.toolbarLayoutIncl.toolbarEtSearch.clearFocus();
                }
            }
         );
