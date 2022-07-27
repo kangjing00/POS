@@ -19,7 +19,6 @@ import android.widget.Toast;
 
 import com.findbulous.pos.Network.NetworkUtils;
 import com.findbulous.pos.databinding.LoginActivityBinding;
-import com.google.firebase.auth.FirebaseAuth;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -32,12 +31,10 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Iterator;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
 import io.realm.RealmList;
-import io.realm.RealmResults;
 
 public class LoginPage extends AppCompatActivity {
 
@@ -55,7 +52,7 @@ public class LoginPage extends AppCompatActivity {
     private ArrayList<Product_Tax> product_taxes;
 
     private ArrayList<Floor> floors;
-    private ArrayList<State> states;
+    private ArrayList<Table_State> tableStates;
     private ArrayList<Table> tables;
 
     @Override
@@ -80,7 +77,7 @@ public class LoginPage extends AppCompatActivity {
         product_taxes = new ArrayList<>();
 
         floors = new ArrayList<>();
-        states = new ArrayList<>();
+        tableStates = new ArrayList<>();
         tables = new ArrayList<>();
 
         binding.loginBtn.setOnClickListener(new View.OnClickListener() {
@@ -364,8 +361,8 @@ public class LoginPage extends AppCompatActivity {
 
                         for(int i = 0; i < jstates.length(); i++){
                             JSONObject js = jstates.getJSONObject(i);
-                            State state = new State((i+1), js.getString("code"), js.getString("name"));
-                            states.add(state);
+                            Table_State tableState = new Table_State((i+1), js.getString("code"), js.getString("name"));
+                            tableStates.add(tableState);
                         }
 
                         for (int a = 0; a < jfloors.length(); a++) {
@@ -406,7 +403,7 @@ public class LoginPage extends AppCompatActivity {
                     public void execute(Realm realm) {
                         realm.insertOrUpdate(floors);
                         realm.insertOrUpdate(tables);
-                        realm.insertOrUpdate(states);
+                        realm.insertOrUpdate(tableStates);
                     }
                 });
             }

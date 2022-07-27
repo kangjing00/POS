@@ -9,24 +9,29 @@ public class Order  extends RealmObject {
 
     @PrimaryKey
     private int order_id;
-    private String date_order, note, state; //State: "paid", "draft", "onHold"
-    private double amount_total, amount_paid, amount_tax, tip_amount, amount_order_discount;
+    private String name, date_order, pos_reference, note, state, state_name; //state: "paid", "draft" ("OnGoing"), "onHold"
+    private double amount_tax, amount_total, amount_paid, tip_amount, amount_order_discount;
     private boolean is_tipped, has_order_discount, is_percentage;
     private int customer_count, discount_percent;
-    @LinkingObjects("order")
-    private final RealmResults<Order_Line> order_lines = null;
 
     private Table table;
     private Customer customer;
 
+    @LinkingObjects("order")
+    private final RealmResults<Order_Line> order_lines = null;
+
     //Constructors
     //Dine-in
-    public Order(int order_id, String date_order, String state, double amount_total, double amount_paid, double amount_tax,
-                 double tip_amount, boolean is_tipped, Table table, Customer customer, String note, double amount_order_discount,
+    public Order(int order_id, String name, String date_order, String pos_reference, String state, String state_name,
+                 double amount_tax, double amount_total, double amount_paid, double tip_amount,
+                 boolean is_tipped, Table table, Customer customer, String note, double amount_order_discount,
                  boolean has_order_discount, boolean is_percentage, int customer_count, int discount_percent){
         this.order_id = order_id;
+        this.name = name;
         this.date_order = date_order;
+        this.pos_reference = pos_reference;
         this.state = state;
+        this.state_name = state_name;
         this.amount_total = amount_total;
         this.amount_paid = amount_paid;
         this.amount_tax = amount_tax;
@@ -44,8 +49,11 @@ public class Order  extends RealmObject {
 
     public Order(){
         order_id = -1;
+        name = null;
         date_order = null;
+        pos_reference = null;
         state = null;
+        state_name = null;
         amount_total = 0.0;
         amount_paid = 0.0;
         amount_tax = 0.0;
@@ -189,5 +197,29 @@ public class Order  extends RealmObject {
 
     public void setDiscount_percent(int discount_percent) {
         this.discount_percent = discount_percent;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getPos_reference() {
+        return pos_reference;
+    }
+
+    public void setPos_reference(String pos_reference) {
+        this.pos_reference = pos_reference;
+    }
+
+    public String getState_name() {
+        return state_name;
+    }
+
+    public void setState_name(String state_name) {
+        this.state_name = state_name;
     }
 }

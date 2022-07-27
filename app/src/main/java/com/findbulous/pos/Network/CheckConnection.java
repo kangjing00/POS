@@ -5,12 +5,10 @@ import android.content.IntentFilter;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.findbulous.pos.Floor;
-import com.findbulous.pos.State;
 import com.findbulous.pos.Table;
 
 import org.json.JSONArray;
@@ -26,7 +24,6 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.TimerTask;
 
 import javax.net.ssl.HttpsURLConnection;
 

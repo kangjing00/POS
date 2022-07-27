@@ -234,6 +234,7 @@ public class PaymentPage extends CheckConnection {
                         updated_current_order.setTip_amount(tip_amount);
                     }
                     updated_current_order.setState("paid");
+                    updated_current_order.setState_name("Paid");
                     updated_current_order.setAmount_paid(Double.valueOf(viewModel.getPayment_order_detail_credit().getValue()));
                     updated_current_order.setCustomer(currentCustomer);
                     if(current_order.getTable() != null){

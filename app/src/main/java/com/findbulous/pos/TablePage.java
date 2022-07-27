@@ -171,7 +171,7 @@ public class TablePage extends CheckConnection implements
                                                     .and().notEqualTo("state", "paid").and()
                                                     .notEqualTo("order_id", currentOrder.getOrder_id()).findAll();
                                             if(results.size() == 0)
-                                                tableOccupiedToVacant(currentOrder.getTable());
+                                                updateTableVacant(currentOrder.getTable());
                                             currentOrder.setTable(tableSelected);
                                             //update table status
                                             updateTableOccupied(tableSelected);
@@ -450,7 +450,7 @@ public class TablePage extends CheckConnection implements
 
     //Create new order
     private void addNewOrder(Table vacantTableSelected){
-        DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         df.setTimeZone(TimeZone.getTimeZone("Asia/Kuala_Lumpur"));
         Date today = new Date();
         Order order = new Order();
@@ -467,6 +467,7 @@ public class TablePage extends CheckConnection implements
         order.setOrder_id(nextID);
         order.setDate_order(df.format(today));
         order.setState("draft");
+        order.setState_name("Ongoing");
         order.setTable(vacantTableSelected);
         order.setCustomer_count(1);
 
@@ -490,7 +491,7 @@ public class TablePage extends CheckConnection implements
         });
     }
     //Update table occupied to vacant
-    private void tableOccupiedToVacant(Table table){
+    private void updateTableVacant(Table table){
         table.setState("V");
         realm.executeTransaction(new Realm.Transaction() {
             @Override
@@ -796,7 +797,43 @@ public class TablePage extends CheckConnection implements
         popupBinding.removeBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(tableOrderSelected != null) {
+                    Order orderRemove = realm.where(Order.class)
+                            .equalTo("order_id", tableOrderSelected.getOrder_id()).findFirst();
+                    RealmResults<Order_Line> orderLineRemove = realm.where(Order_Line.class)
+                            .equalTo("order.order_id", tableOrderSelected.getOrder_id()).findAll();
 
+                    RealmResults<Order> ordersInTable = realm.where(Order.class)
+                            .equalTo("table.table_id", tableOrderSelected.getTable().getTable_id())
+                            .and().notEqualTo("state", "paid")
+                            .and().notEqualTo("order_id", tableOrderSelected.getOrder_id()).findAll();
+
+
+                    tableOrders.remove(tableOrderSelected);
+                    if(ordersInTable.size() > 0){
+                        tableOrderAdapter.notifyDataSetChanged();
+                    }else{
+                        Table tableFromRealm = realm.where(Table.class)
+                                .equalTo("table_id", tableOrderSelected.getTable().getTable_id()).findFirst();
+                        Table updateTableVacant = realm.copyFromRealm(tableFromRealm);
+                        updateTableVacant(updateTableVacant);
+                        popup.dismiss();
+                        //Temporarily
+                        displayTables(tableOrderSelected.getTable().getFloor());
+                    }
+
+                    realm.executeTransaction(new Realm.Transaction() {
+                        @Override
+                        public void execute(Realm realm) {
+                            orderRemove.deleteFromRealm();
+                            orderLineRemove.deleteAllFromRealm();
+                        }
+                    });
+
+                    tableOrderSelected = null;
+                }else{
+                    Toast.makeText(contextpage, "Please select an order for removing", Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }

@@ -5,18 +5,14 @@ import androidx.databinding.DataBindingUtil;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.text.InputType;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.PopupWindow;
-import android.widget.RadioButton;
 import android.widget.Toast;
 
 import com.findbulous.pos.Network.NetworkUtils;
@@ -43,6 +39,7 @@ import javax.net.ssl.HttpsURLConnection;
 
 import io.realm.Realm;
 import io.realm.RealmList;
+import io.realm.RealmResults;
 
 public class ChoosePOSPermissionPage extends AppCompatActivity {
 
@@ -50,20 +47,26 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
 //    private SharedPreferences posSharedPreference;
 //    // Creating an Editor object to edit(write to the file)
 //    private SharedPreferences.Editor posSharedPreferenceEdit;
+    //Session Existence
     private boolean openedSessionExist;
-
+    //POS Session and POS Configuration
     private POS_Config pos_config;
     private POS_Session pos_session;
-
+    //Products (including product tax) and Categories
     private ArrayList<POS_Category> product_categories;
     private ArrayList<Product> products;
     private ArrayList<Attribute> attributes;
     private ArrayList<Attribute_Value> attribute_values;
     private ArrayList<Product_Tax> product_taxes;
-
+    //Tables (including table states) and Floors
     private ArrayList<Floor> floors;
-    private ArrayList<State> states;
+    private ArrayList<Table_State> tableStates;
     private ArrayList<Table> tables;
+    //Order (including order states)
+    private ArrayList<Order> orders;
+    private ArrayList<Order_State> orderStates;
+    //Order Customer from cloud
+    private ArrayList<Customer> customers;
 
     private Realm realm;
     private Context contextpage;
@@ -79,7 +82,6 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
 //        //Cart Settings
 //        posSharedPreference = getSharedPreferences("CurrentPOS",MODE_MULTI_PROCESS);
 //        posSharedPreferenceEdit = posSharedPreference.edit();
-
         openedSessionExist = false;
         pos_config = null;
         pos_session = null;
@@ -89,15 +91,18 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         attribute_values = new ArrayList<>();
         product_taxes = new ArrayList<>();
         floors = new ArrayList<>();
-        states = new ArrayList<>();
+        tableStates = new ArrayList<>();
         tables = new ArrayList<>();
+        orders = new ArrayList<>();
+        orderStates = new ArrayList<>();
+        customers = new ArrayList<>();
 
         new getCheckOpenedSession().execute();
-        new loadProduct().execute();//<<<<<<<<<<<<<<<<<<<<<<<
-        new loadFloorAndTable().execute();//<<<<<<<<<<<<<<<<<<<
+        //new loadProduct().execute();//<<<<<<<<<<<<<<<<<<<<<<<
+        //new loadFloorAndTable().execute();//<<<<<<<<<<<<<<<<<<<
 
 
-        SimpleDateFormat dateFormatter = new SimpleDateFormat("dd/MM/yyyy");
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
         Date todayDate = new Date();
         binding.todayDate.setText(dateFormatter.format(todayDate));
 
@@ -635,7 +640,6 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                 String inputLine;
 
                 StringBuilder response = new StringBuilder();
-
                 while ((inputLine = in.readLine()) != null) {
                     response.append(inputLine);
                 }
@@ -654,8 +658,8 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
 
                         for(int i = 0; i < jstates.length(); i++){
                             JSONObject js = jstates.getJSONObject(i);
-                            State state = new State((i+1), js.getString("code"), js.getString("name"));
-                            states.add(state);
+                            Table_State tableState = new Table_State((i+1), js.getString("code"), js.getString("name"));
+                            tableStates.add(tableState);
                         }
 
                         for (int a = 0; a < jfloors.length(); a++) {
@@ -696,9 +700,270 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                     public void execute(Realm realm) {
                         realm.insertOrUpdate(floors);
                         realm.insertOrUpdate(tables);
-                        realm.insertOrUpdate(states);
+                        realm.insertOrUpdate(tableStates);
                     }
                 });
+
+                new loadOrder().execute();
+            }
+        }
+    }
+//    public class getCustomer extends AsyncTask<String, String, String> {
+//        private int customer_id;
+//        private Customer customer;
+//
+//        public getCustomer(int customer_id){
+//            this.customer_id = customer_id;
+//        }
+//
+//        public Customer getCustomer(){
+//            return customer;
+//        }
+//
+//        @Override
+//        protected String doInBackground(String... strings) {
+//            String url = "https://www.c3rewards.com/api/merchant/?module=customers";
+//            String agent = "c092dc89b7aac085a210824fb57625db";
+//            String jsonUrl =url + "&agent=" + agent;
+//            jsonUrl = jsonUrl + "&customer_id=" + customer_id;
+//            System.out.println(jsonUrl);
+//
+//            URL obj;
+//            try {
+//                obj = new URL(jsonUrl);
+//                HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+//                // optional default is GET
+//                con.setRequestMethod("GET");
+//                //add request header
+//                int responseCode = con.getResponseCode();
+//                System.out.println("\nSending 'GET' request to URL : " + jsonUrl);
+//                System.out.println("Response Code : " + responseCode);
+//
+//                BufferedReader in = new BufferedReader(
+//                        new InputStreamReader(con.getInputStream()));
+//                String inputLine;
+//
+//                StringBuilder response = new StringBuilder();
+//
+//                while ((inputLine = in.readLine()) != null) {
+//                    response.append(inputLine);
+//                }
+//                in.close();
+//
+//                System.out.println(response);
+//                String data = response.toString();
+//                try {
+//                    JSONObject json = new JSONObject(data);
+//                    String status = json.getString("status");
+//
+//                    if (status.equals("OK")) {
+//                        JSONObject jresult = json.getJSONObject("result");
+//                        JSONObject jcustomer = jresult.getJSONObject("customer");
+//
+//                        customer = new Customer(Integer.valueOf(jcustomer.getString("customer_id")),
+//                                jcustomer.getString("full_name"), jcustomer.getString("email"),
+//                                jcustomer.getString("tel_no"), jcustomer.getString("ic_no"), jcustomer.getString("date_birth"));
+//
+//                    }
+//                } catch (JSONException e) {
+//                    e.printStackTrace();
+//                }
+//            } catch (IOException e) {
+//                Log.e("error", "cannot fetch data");
+//            }
+//
+//            return null;
+//        }
+//
+//        @Override
+//        protected void onPostExecute(String s) {
+//            if(!NetworkUtils.isNetworkAvailable(contextpage)){
+//                Toast.makeText(contextpage, "Internet Connection Lost", Toast.LENGTH_SHORT).show();
+//            }else{
+//                realm.executeTransaction(new Realm.Transaction() {
+//                    @Override
+//                    public void execute(Realm realm) {
+//                        realm.insertOrUpdate(customer);
+//                    }
+//                });
+//            }
+//        }
+//    }
+    public class loadOrder extends AsyncTask<String, String, String>{
+        @Override
+        protected String doInBackground(String... strings) {
+            long timeBefore = Calendar.getInstance().getTimeInMillis();
+
+            String url = "https://www.c3rewards.com/api/merchant/?module=pos&action=orders";
+            String agent = "c092dc89b7aac085a210824fb57625db";
+            String jsonUrl = url + "&agent=" + agent;
+            System.out.println(jsonUrl);
+
+            int page = 1, orderCounter = 0;
+            while(page > 0) {
+                String jsonUrlPage = jsonUrl + "&page=" + page;
+                URL obj;
+                try {
+                    obj = new URL(jsonUrlPage);
+                    HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+                    // optional default is GET
+                    con.setRequestMethod("GET");
+                    //add request header
+                    int responseCode = con.getResponseCode();
+                    System.out.println("\nSending 'GET' request to URL : " + jsonUrlPage);
+                    System.out.println("Response Code : " + responseCode);
+
+                    BufferedReader in = new BufferedReader(
+                            new InputStreamReader(con.getInputStream()));
+                    String inputLine;
+
+                    StringBuilder response = new StringBuilder();
+                    while ((inputLine = in.readLine()) != null) {
+                        response.append(inputLine);
+                    }
+                    in.close();
+
+                    System.out.println(response);
+                    String data = response.toString();
+
+                    try {
+                        JSONObject json = new JSONObject(data);
+                        String status = json.getString("status");
+
+                        if (status.equals("OK")) {
+                            JSONObject jresult = json.getJSONObject("result");
+                            JSONArray jstates = jresult.getJSONArray("states");
+                            JSONArray jorders = jresult.getJSONArray("orders");
+
+                            if((jorders.length() != 0)){ //|| (jcategories.length() != 0)
+                                page++;
+                            }else{
+                                page = -1;
+                            }
+
+                            //Order States
+                            if(page == 2) {
+                                for (int i = 0; i < jstates.length(); i++) {
+                                    JSONObject jo = jstates.getJSONObject(i);
+                                    Order_State orderState = new Order_State((i + 1), jo.getString("code"), jo.getString("name"));
+                                    orderStates.add(orderState);
+                                }
+                            }
+
+                            //Orders
+                            for (int i = 0; i < jorders.length(); i++) {
+                                JSONObject jo = jorders.getJSONObject(i);
+                                Table table = null;
+                                Customer customer = null;
+                                if(jo.getString("table_id").length() > 0){
+                                    for(int x = 0; x < tables.size(); x++){
+                                        if(tables.get(x).getTable_id() == jo.getInt("table_id")){
+                                            table = tables.get(x);
+                                        }
+                                    }
+                                }
+                                if(jo.getString("partner_id").length() > 0){
+                                    customer = getCustomer(jo.getInt("partner_id"));
+                                }
+
+
+                                Order order = new Order(jo.getInt("order_id"), jo.getString("name"), jo.getString("date_order"),
+                                        jo.getString("pos_reference"), jo.getString("state"), jo.getString("state_name"),
+                                        jo.getDouble("amount_tax"), jo.getDouble("amount_total"), jo.getDouble("amount_paid"),
+                                        jo.getDouble("tip_amount"), jo.getBoolean("is_tipped"), table, customer, jo.getString("note"),
+                                        0.0, false, true, jo.getInt("customer_count"), 0);
+
+                                if(customer != null)
+                                    customers.add(customer);
+                                orders.add(order);
+                                orderCounter++;
+                            }
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                } catch (IOException e) {
+                    Log.e("error", "cannot fetch data");
+                }
+            }
+            System.out.println("Order Counter: " + orderCounter);
+            long timeAfter = Calendar.getInstance().getTimeInMillis();
+            System.out.println("Load order time: " + (timeAfter - timeBefore) + "ms");
+
+            return null;
+        }
+
+        private Customer getCustomer(int customer_id){
+            Customer customer = null;
+            String url = "https://www.c3rewards.com/api/merchant/?module=customers";
+            String agent = "c092dc89b7aac085a210824fb57625db";
+            String jsonUrl =url + "&agent=" + agent;
+            jsonUrl = jsonUrl + "&customer_id=" + customer_id;
+            System.out.println(jsonUrl);
+
+            URL obj;
+            try {
+                obj = new URL(jsonUrl);
+                HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+                // optional default is GET
+                con.setRequestMethod("GET");
+                //add request header
+                int responseCode = con.getResponseCode();
+                System.out.println("\nSending 'GET' request to URL : " + jsonUrl);
+                System.out.println("Response Code : " + responseCode);
+
+                BufferedReader in = new BufferedReader(
+                        new InputStreamReader(con.getInputStream()));
+                String inputLine;
+
+                StringBuilder response = new StringBuilder();
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                System.out.println(response);
+                String data = response.toString();
+                try {
+                    JSONObject json = new JSONObject(data);
+                    String status = json.getString("status");
+
+                    if (status.equals("OK")) {
+                        JSONObject jresult = json.getJSONObject("result");
+                        JSONObject jcustomer = jresult.getJSONObject("customer");
+
+                        customer = new Customer(Integer.valueOf(jcustomer.getString("customer_id")),
+                                jcustomer.getString("full_name"), jcustomer.getString("email"),
+                                jcustomer.getString("tel_no"), jcustomer.getString("ic_no"), jcustomer.getString("date_birth"));
+
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            } catch (IOException e) {
+                Log.e("error", "cannot fetch data");
+            }
+
+            return customer;
+        }
+
+        @Override
+        protected void onPostExecute(String s){
+            if(!NetworkUtils.isNetworkAvailable(contextpage)){
+                Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
+            }else {
+                long timeBefore = Calendar.getInstance().getTimeInMillis();
+                realm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        realm.insertOrUpdate(orderStates);
+                        realm.insertOrUpdate(customers);
+                        realm.insertOrUpdate(orders);
+                    }
+                });
+                long timeAfter = Calendar.getInstance().getTimeInMillis();
+                System.out.println("Update orders to realm time: " + (timeAfter - timeBefore) + "ms");
             }
         }
     }

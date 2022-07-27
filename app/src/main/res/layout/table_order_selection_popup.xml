@@ -67,10 +67,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_margin="10dp"
-            android:paddingStart="10dp"
-            android:paddingEnd="10dp"
-            android:paddingTop="5dp"
-            android:paddingBottom="5dp"
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp"
             android:background="@drawable/box_corner_nopadding"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -79,21 +77,16 @@
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Order ID"
-                android:layout_weight="1"
-                android:textStyle="bold"/>
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
                 android:text="Date"
+                android:padding="5dp"
                 android:layout_weight="1"
                 android:textStyle="bold"/>
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="State"
+                android:text="Order ID"
+                android:padding="5dp"
                 android:layout_weight="1"
                 android:textStyle="bold"/>
 
@@ -101,6 +94,24 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:text="Customer"
+                android:padding="5dp"
+                android:layout_weight="1"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Total"
+                android:padding="5dp"
+                android:textAlignment="viewEnd"
+                android:layout_weight="1"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Status"
+                android:padding="5dp"
                 android:layout_weight="1"
                 android:textStyle="bold"/>
 

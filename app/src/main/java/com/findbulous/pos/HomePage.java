@@ -972,6 +972,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                         onHoldCustomer = getCurrentCustomer();
                         currentOrder.setCustomer(onHoldCustomer);
                         currentOrder.setState("onHold");
+                        currentOrder.setState_name("Onhold");
                         currentOrder.setNote(note);
 
                         if (currentOrder.getTable() != null) {
@@ -1554,7 +1555,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
 
     }
     private void addNewOrder(){
-        DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         df.setTimeZone(TimeZone.getTimeZone("Asia/Kuala_Lumpur"));
         Date today = new Date();
         Order order = new Order();
@@ -1571,6 +1572,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         order.setOrder_id(nextID);
         order.setDate_order(df.format(today));
         order.setState("draft");
+        order.setState_name("Ongoing");
         order.setCustomer_count(1);
 
         currentOrder = order;
