@@ -34,6 +34,7 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.Space;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -1238,6 +1239,9 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                 attribute_name_tv.setText(attribute.getName());
                 attribute_name_tv.setTextSize(20);
                 popupBinding.productModifierLl.addView(attribute_name_tv);
+                Space blankSpace = new Space(contextpage);
+                blankSpace.setMinimumHeight(5);
+                popupBinding.productModifierLl.addView(blankSpace);
                 //Attribute Type
                 RealmResults attribute_values_results = realm.where(Attribute_Value.class).equalTo("attribute_id", attribute.getAttribute_id())
                         .and().equalTo("product_tmpl_id", product.getProduct_tmpl_id()).findAll();
@@ -1460,6 +1464,10 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                     }
                     popupBinding.productModifierLl.addView(rg);
                 }
+
+                Space blankSpace1 = new Space(contextpage);
+                blankSpace1.setMinimumHeight(20);
+                popupBinding.productModifierLl.addView(blankSpace1);
             }
         }
 

@@ -60,6 +60,7 @@
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/ic_hide.xml" value="0.2655" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/ic_hold_cart.xml" value="0.3105" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/ic_home.xml" value="0.3105" />
+        <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/ic_invoice.xml" value="0.321" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/ic_left.xml" value="0.2655" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/ic_lock.xml" value="0.2655" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/ic_logout.xml" value="0.2255" />
@@ -124,7 +125,7 @@
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/payment_detail_popup.xml" value="0.18333333333333332" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/payment_order_detail_popup.xml" value="0.25" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/payment_order_line_popup.xml" value="0.25" />
-        <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/payment_page.xml" value="0.3256830601092896" />
+        <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/payment_page.xml" value="0.25" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/product_details_popup.xml" value="0.22" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/product_modifier_popup.xml" value="0.33" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/register_page.xml" value="0.3244920993227991" />

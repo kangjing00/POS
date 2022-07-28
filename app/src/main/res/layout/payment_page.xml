@@ -293,7 +293,7 @@
                 android:id="@+id/payment_order_detail_creditBalance_rl"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_above="@+id/payment_order_detail_confirm_btn"
+                android:layout_above="@+id/payment_order_detail_btn_ll"
                 android:layout_marginLeft="15dp"
                 android:layout_marginRight="15dp"
                 android:background="@drawable/box_corner_nopadding_white"
@@ -335,21 +335,47 @@
                     android:textSize="18dp" />
             </RelativeLayout>
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/payment_order_detail_confirm_btn"
+            <LinearLayout
+                android:id="@+id/payment_order_detail_btn_ll"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:layout_marginLeft="15dp"
                 android:layout_marginTop="5dp"
-                android:layout_marginRight="15dp"
                 android:layout_marginBottom="15dp"
-                android:backgroundTint="@color/green"
-                android:padding="15dp"
-                android:text="Confirm Payment"
-                android:textAllCaps="false"
-                app:icon="@drawable/ic_payment"
-                app:iconGravity="textStart" />
+                android:orientation="horizontal"
+                android:layout_alignParentBottom="true">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/payment_order_detail_invoice_btn"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="@color/white"
+                    app:strokeWidth="2dp"
+                    app:strokeColor="@color/darkOrange"
+                    android:text="Invoice"
+                    android:layout_marginLeft="15dp"
+                    android:layout_marginRight="15dp"
+                    android:textAllCaps="false"
+                    app:rippleColor="@color/lightOrange"
+                    android:textColor="@color/darkOrange"
+                    app:icon="@drawable/ic_invoice"
+                    app:iconTint="@color/darkOrange"
+                    android:padding="15dp"
+                    android:layout_weight="1"
+                    app:iconGravity="textStart"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/payment_order_detail_confirm_btn"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="@color/green"
+                    android:padding="15dp"
+                    android:text="Confirm Payment"
+                    android:layout_marginRight="15dp"
+                    android:textAllCaps="false"
+                    app:icon="@drawable/ic_payment"
+                    android:layout_weight="1"
+                    app:iconGravity="textStart" />
+            </LinearLayout>
         </RelativeLayout>
 
         <RelativeLayout
