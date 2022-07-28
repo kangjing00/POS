@@ -870,8 +870,9 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                                 Order order = new Order(jo.getInt("order_id"), jo.getString("name"), jo.getString("date_order"),
                                         jo.getString("pos_reference"), jo.getString("state"), jo.getString("state_name"),
                                         jo.getDouble("amount_tax"), jo.getDouble("amount_total"), jo.getDouble("amount_paid"),
-                                        jo.getDouble("tip_amount"), jo.getBoolean("is_tipped"), table, customer, jo.getString("note"),
-                                        0.0, false, true, jo.getInt("customer_count"), 0);
+                                        jo.getDouble("amount_return"), jo.getDouble("tip_amount"), jo.getBoolean("is_tipped"),
+                                        table, customer, jo.getString("note"), 0.0, false, true,
+                                        jo.getInt("customer_count"), 0);
 
                                 if(customer != null)
                                     customers.add(customer);

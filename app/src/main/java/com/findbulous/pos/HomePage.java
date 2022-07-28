@@ -454,7 +454,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         };
         orderTypes.setDropDownViewResource(R.layout.textview_spinner_item);
         binding.cartInclude.cartBtnPosType.setAdapter(orderTypes);
-        binding.cartInclude.cartBtnPosType.setDropDownVerticalOffset(70);
+        binding.cartInclude.cartBtnPosType.setDropDownVerticalOffset(65);
         binding.cartInclude.cartBtnPosType.setSelection(cartSharedPreference.getInt("orderTypePosition", 1));
 
         if(currentOrder.getTable() != null){

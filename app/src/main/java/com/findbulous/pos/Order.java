@@ -10,7 +10,7 @@ public class Order  extends RealmObject {
     @PrimaryKey
     private int order_id;
     private String name, date_order, pos_reference, note, state, state_name; //state: "paid", "draft" ("OnGoing"), "onHold"
-    private double amount_tax, amount_total, amount_paid, tip_amount, amount_order_discount;
+    private double amount_tax, amount_total, amount_paid, amount_return, tip_amount, amount_order_discount;
     private boolean is_tipped, has_order_discount, is_percentage;
     private int customer_count, discount_percent;
 
@@ -23,7 +23,7 @@ public class Order  extends RealmObject {
     //Constructors
     //Dine-in
     public Order(int order_id, String name, String date_order, String pos_reference, String state, String state_name,
-                 double amount_tax, double amount_total, double amount_paid, double tip_amount,
+                 double amount_tax, double amount_total, double amount_paid, double amount_return, double tip_amount,
                  boolean is_tipped, Table table, Customer customer, String note, double amount_order_discount,
                  boolean has_order_discount, boolean is_percentage, int customer_count, int discount_percent){
         this.order_id = order_id;
@@ -32,9 +32,10 @@ public class Order  extends RealmObject {
         this.pos_reference = pos_reference;
         this.state = state;
         this.state_name = state_name;
+        this.amount_tax = amount_tax;
         this.amount_total = amount_total;
         this.amount_paid = amount_paid;
-        this.amount_tax = amount_tax;
+        this.amount_return = amount_return;
         this.tip_amount = tip_amount;
         this.is_tipped = is_tipped;
         this.table = table;
@@ -54,9 +55,10 @@ public class Order  extends RealmObject {
         pos_reference = null;
         state = null;
         state_name = null;
+        amount_tax = 0.0;
         amount_total = 0.0;
         amount_paid = 0.0;
-        amount_tax = 0.0;
+        amount_return = 0.0;
         tip_amount = 0.0;
         is_tipped = false;
         table = null;
@@ -221,5 +223,13 @@ public class Order  extends RealmObject {
 
     public void setState_name(String state_name) {
         this.state_name = state_name;
+    }
+
+    public double getAmount_return() {
+        return amount_return;
+    }
+
+    public void setAmount_return(double amount_return) {
+        this.amount_return = amount_return;
     }
 }

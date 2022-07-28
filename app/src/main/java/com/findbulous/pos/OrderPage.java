@@ -313,8 +313,8 @@ public class OrderPage extends CheckConnection {
         double tax = orderSelected.getAmount_tax();
         double tip = orderSelected.getTip_amount();
         double amount_total = orderSelected.getAmount_total();
-        double amount_paid = orderSelected.getAmount_paid();
-        double balance = amount_paid - amount_total;
+        double balance = orderSelected.getAmount_return();
+        double amount_paid = orderSelected.getAmount_paid() + balance;
         double subtotal = 0.0, product_discount = 0.0, order_discount = 0.0;
         for(int i = 0; i < order_lines.size(); i++){
             subtotal += order_lines.get(i).getPrice_total();

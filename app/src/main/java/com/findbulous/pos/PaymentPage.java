@@ -213,7 +213,7 @@ public class PaymentPage extends CheckConnection {
         binding.paymentOrderDetailConfirmBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(is_balanceZero()) {
+                if(is_balanceLargerOrEqualToZero()) {
                     int current_customer_id = currentCustomerSharePreference.getInt("customerID", -1);
                     currentCustomerSharePreferenceEdit.putInt("customerID", -1);
                     currentCustomerSharePreferenceEdit.putString("customerName", null);
@@ -240,7 +240,8 @@ public class PaymentPage extends CheckConnection {
                     }
                     updated_current_order.setState("paid");
                     updated_current_order.setState_name("Paid");
-                    updated_current_order.setAmount_paid(Double.valueOf(viewModel.getPayment_order_detail_credit().getValue()));
+                    updated_current_order.setAmount_paid(amount_total);
+                    updated_current_order.setAmount_return(Double.valueOf(viewModel.getPayment_order_detail_balance().getValue()));
                     updated_current_order.setCustomer(currentCustomer);
                     if(current_order.getTable() != null){
                         RealmResults<Order> results = realm.where(Order.class)
@@ -469,9 +470,9 @@ public class PaymentPage extends CheckConnection {
         });
     }
 
-    private boolean is_balanceZero(){
+    private boolean is_balanceLargerOrEqualToZero(){
         double balance_amount = Double.valueOf(binding.getPaymentPageViewModel().getPayment_order_detail_balance().getValue());
-        if(balance_amount == 0){
+        if(balance_amount >= 0){
             return true;
         }
         return false;
