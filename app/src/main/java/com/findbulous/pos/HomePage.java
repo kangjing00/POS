@@ -104,6 +104,11 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
     //Number of Customer Popup
     private EditText number_customer_et;
 
+    //POS Type
+    private ArrayAdapter<String> orderTypes;
+    private List<String> posOrderType = new ArrayList<String>();
+    private String takeaway_posType = "Takeaway", dine_in_posType = "Dine-in";
+
     private String statuslogin;
     private Context contextpage;
 
@@ -417,14 +422,12 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                 Toast.makeText(contextpage, "Scan Button Clicked", Toast.LENGTH_SHORT).show();
             }
         });
-//        binding.cartInclude.cartBtnPosType.setOnClickListener(new View.OnClickListener(){
-//            @Override
-//            public void onClick(View view) {
-//                //showOrderTypeChoicePopup(view);
-//                Toast.makeText(contextpage, "Order Type Button Clicked", Toast.LENGTH_SHORT).show();
-//            }
-//        });
-        ArrayAdapter<String> orderTypes = new ArrayAdapter<String>(contextpage, R.layout.textview_spinner_item, getResources().getStringArray(R.array.order_types)){
+
+
+        posOrderType.add(takeaway_posType);
+        posOrderType.add(dine_in_posType);
+        //getResources().getStringArray(R.array.order_types)
+        orderTypes = new ArrayAdapter<String>(contextpage, R.layout.textview_spinner_item, posOrderType){
             @Override
             public View getDropDownView(int position, View convertView, ViewGroup parent){
                 View v = null;
@@ -451,8 +454,16 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         };
         orderTypes.setDropDownViewResource(R.layout.textview_spinner_item);
         binding.cartInclude.cartBtnPosType.setAdapter(orderTypes);
-        binding.cartInclude.cartBtnPosType.setDropDownVerticalOffset(80);
+        binding.cartInclude.cartBtnPosType.setDropDownVerticalOffset(70);
         binding.cartInclude.cartBtnPosType.setSelection(cartSharedPreference.getInt("orderTypePosition", 1));
+
+        if(currentOrder.getTable() != null){
+            posOrderType.remove(dine_in_posType);
+            dine_in_posType = currentOrder.getTable().getFloor().getName() + " / " + currentOrder.getTable().getName();
+            posOrderType.add(dine_in_posType);
+            orderTypes.notifyDataSetChanged();
+        }
+
         binding.cartInclude.cartBtnPosType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
@@ -479,6 +490,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                         cartSharedPreferenceEdit.putInt("orderId", -1);
                         cartSharedPreferenceEdit.commit();
                         currentOrder = new Order();
+                        binding.cartInclude.cartBtnNumberCustomer.setText("Guest(s)");
                         realm.executeTransaction(new Realm.Transaction() {
                             @Override
                             public void execute(Realm realm) {
@@ -494,6 +506,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                             }
                         });
                     }
+                    resetPosType();
                 }
                 //binding.cartInclude.cartBtnPosType.getSelectedItem().toString();
                 cartSharedPreferenceEdit.putInt("orderTypePosition", binding.cartInclude.cartBtnPosType.getSelectedItemPosition());
@@ -1012,6 +1025,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                         orderLineAdapter.notifyDataSetChanged();
                         refreshNote();
                         refreshCustomerNumber();
+                        resetPosType();
                         Toast.makeText(contextpage, "Proceed", Toast.LENGTH_SHORT).show();
                     }
                 }else{//Add Note or Update
@@ -1647,6 +1661,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                         });
                         Toast.makeText(contextpage, "Cancelled the current order", Toast.LENGTH_SHORT).show();
                         updateOrderTotalAmount();
+                        resetPosType();
                     }
                 }).setNegativeButton("No", new DialogInterface.OnClickListener() {
                     @Override
@@ -1810,6 +1825,14 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
             binding.cartInclude.cartBtnNumberCustomer.setText("Guest(s)");
         }else{
             binding.cartInclude.cartBtnNumberCustomer.setText(currentOrder.getCustomer_count() + " Guest(s)");
+        }
+    }
+    private void resetPosType(){
+        if(currentOrder.getTable() == null){
+            posOrderType.remove(dine_in_posType);
+            dine_in_posType = "Dine-in";
+            posOrderType.add(dine_in_posType);
+            orderTypes.notifyDataSetChanged();
         }
     }
 

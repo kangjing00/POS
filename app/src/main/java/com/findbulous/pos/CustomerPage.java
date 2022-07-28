@@ -57,6 +57,7 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -88,6 +89,11 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
     private EditText number_customer_et;
 
     private POS_Config pos_config;
+
+    //POS Type
+    private ArrayAdapter<String> orderTypes;
+    private List<String> posOrderType = new ArrayList<String>();
+    private String takeaway_posType = "Takeaway", dine_in_posType = "Dine-in";
 
     private String statuslogin;
     private Context contextpage;
@@ -383,8 +389,11 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                 Toast.makeText(contextpage, "Scan Button Clicked", Toast.LENGTH_SHORT).show();
             }
         });
-        ArrayAdapter<String> orderTypes =
-                new ArrayAdapter<String>(contextpage, R.layout.textview_spinner_item, getResources().getStringArray(R.array.order_types)){
+
+        posOrderType.add(takeaway_posType);
+        posOrderType.add(dine_in_posType);
+        //getResources().getStringArray(R.array.order_types
+        orderTypes = new ArrayAdapter<String>(contextpage, R.layout.textview_spinner_item, posOrderType){
             @Override
             public View getDropDownView(int position, View convertView, ViewGroup parent){
                 View v = null;
@@ -409,13 +418,19 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                 return v;
             }
         };
-//        orderTypes.remove("Dine-In");
-//        orderTypes.add("Main Floor-t0");
         orderTypes.setDropDownViewResource(R.layout.textview_spinner_item);
         binding.cartInclude.cartBtnPosType.setAdapter(orderTypes);
 //        binding.cartInclude.cartBtnPosType.getAdapter().notifyAll();
         binding.cartInclude.cartBtnPosType.setDropDownVerticalOffset(80);
         binding.cartInclude.cartBtnPosType.setSelection(cartSharedPreference.getInt("orderTypePosition", 1));
+
+        if(currentOrder.getTable() != null){
+            posOrderType.remove(dine_in_posType);
+            dine_in_posType = currentOrder.getTable().getFloor().getName() + " / " + currentOrder.getTable().getName();
+            posOrderType.add(dine_in_posType);
+            orderTypes.notifyDataSetChanged();
+        }
+
         binding.cartInclude.cartBtnPosType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
@@ -442,6 +457,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                         cartSharedPreferenceEdit.putInt("orderId", -1);
                         cartSharedPreferenceEdit.commit();
                         currentOrder = new Order();
+                        binding.cartInclude.cartBtnNumberCustomer.setText("Guest(s)");
                         realm.executeTransaction(new Realm.Transaction() {
                             @Override
                             public void execute(Realm realm) {
@@ -457,6 +473,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                             }
                         });
                     }
+                    resetPosType();
                 }
 
                 cartSharedPreferenceEdit.putInt("orderTypePosition", binding.cartInclude.cartBtnPosType.getSelectedItemPosition());
@@ -900,6 +917,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                         orderLineAdapter.notifyDataSetChanged();
                         refreshNote();
                         refreshCustomerNumber();
+                        resetPosType();
                         FragmentCustomer fragmentCustomer = (FragmentCustomer)getSupportFragmentManager().findFragmentByTag("Customers");
                         if(fragmentCustomer != null){
                             fragmentCustomer.updateCurrentCustomer();
@@ -1169,6 +1187,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                         });
                         Toast.makeText(contextpage, "Cancelled the current order", Toast.LENGTH_SHORT).show();
                         updateOrderTotalAmount();
+                        resetPosType();
                     }
                 }).setNegativeButton("No", new DialogInterface.OnClickListener() {
             @Override
@@ -1331,6 +1350,14 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
             binding.cartInclude.cartBtnNumberCustomer.setText("Guest(s)");
         }else{
             binding.cartInclude.cartBtnNumberCustomer.setText(currentOrder.getCustomer_count() + " Guest(s)");
+        }
+    }
+    private void resetPosType(){
+        if(currentOrder.getTable() == null){
+            posOrderType.remove(dine_in_posType);
+            dine_in_posType = "Dine-in";
+            posOrderType.add(dine_in_posType);
+            orderTypes.notifyDataSetChanged();
         }
     }
 

@@ -24,6 +24,7 @@ import com.findbulous.pos.Network.CheckConnection;
 import com.findbulous.pos.PaymentTab.PaymentMethodPagerAdapter;
 import com.findbulous.pos.databinding.CashInOutPopupBinding;
 import com.findbulous.pos.databinding.PaymentAddTipPopupBinding;
+import com.findbulous.pos.databinding.PaymentOrderLinePopupBinding;
 import com.findbulous.pos.databinding.PaymentPageBinding;
 import com.findbulous.pos.databinding.ToolbarSyncPopupBinding;
 import com.google.android.material.button.MaterialButton;
@@ -109,9 +110,10 @@ public class PaymentPage extends CheckConnection {
             binding.paymentBarCustomerId.setText("#" + current_customer_id);
             binding.paymentBarCustomerRl.setVisibility(View.VISIBLE);
             binding.paymentOrderDetailCustomerName.setText(customer_name);
+            binding.paymentOrderDetailCustomerName.setVisibility(View.VISIBLE);
         }else{
             binding.paymentBarCustomerRl.setVisibility(View.GONE);
-            binding.paymentOrderDetailCustomerName.setText("[Customer Name]");
+            binding.paymentOrderDetailCustomerName.setVisibility(View.GONE);
         }
         //Recycler View
         binding.paymentOrderDetailProductRv.setLayoutManager(new LinearLayoutManager(contextpage, LinearLayoutManager.VERTICAL, false));
@@ -137,8 +139,10 @@ public class PaymentPage extends CheckConnection {
         if(currentOrder.getTable() == null) { //Takeaway
             binding.paymentOrderDetailType.setText("Takeaway");
         }else{ //Dine-in
-            binding.paymentOrderDetailType.setText("Dine-in - " + currentOrder.getTable().getName());
+            binding.paymentOrderDetailType.setText("Dine-in - " + currentOrder.getTable().getFloor().getName() + " / " + currentOrder.getTable().getName());
         }
+
+        binding.customerCount.setText("" + currentOrder.getCustomer_count());
         //Tabs
         {binding.paymentMethodViewPager.setAdapter(paymentMethodPagerAdapter);
         new TabLayoutMediator(binding.paymentMethodTl, binding.paymentMethodViewPager,
@@ -203,6 +207,7 @@ public class PaymentPage extends CheckConnection {
                 currentCustomer = null;
                 binding.paymentOrderDetailCustomerName.setText("[Customer Name]");
                 Toast.makeText(contextpage, "Current Customer Removed", Toast.LENGTH_SHORT).show();
+                binding.paymentOrderDetailCustomerName.setVisibility(View.GONE);
             }
         });
         binding.paymentOrderDetailConfirmBtn.setOnClickListener(new View.OnClickListener() {
@@ -292,8 +297,9 @@ public class PaymentPage extends CheckConnection {
 
     private void showOrderProducts() {
         PopupWindow popup = new PopupWindow(contextpage);
-        View layout = getLayoutInflater().inflate(R.layout.payment_order_line_popup, null);
-        popup.setContentView(layout);
+        PaymentOrderLinePopupBinding popupBinding = PaymentOrderLinePopupBinding.inflate(getLayoutInflater());
+//        View layout = getLayoutInflater().inflate(R.layout.payment_order_line_popup, null);
+        popup.setContentView(popupBinding.getRoot());
         // Set content width and height
         popup.setHeight(1350);
         popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
@@ -304,11 +310,25 @@ public class PaymentPage extends CheckConnection {
         popup.setElevation(8);
         popup.setBackgroundDrawable(null);
         //RecyclerView
-        RecyclerView products_rv = (RecyclerView)layout.findViewById(R.id.payment_order_products_rv);
-        products_rv.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
-        products_rv.setHasFixedSize(true);
-        products_rv.setAdapter(orderLineAdapter);
+        popupBinding.paymentOrderProductsRv.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
+        popupBinding.paymentOrderProductsRv.setHasFixedSize(true);
+        popupBinding.paymentOrderProductsRv.setAdapter(orderLineAdapter);
 
+        //other setting
+        popupBinding.paymentOrderPopupOrderId.setText("#" + currentOrder.getOrder_id());
+        if(currentCustomer != null) {
+            popupBinding.paymentOrderPopupCustomerName.setText(currentCustomer.getCustomer_name());
+            popupBinding.paymentOrderPopupCustomerName.setVisibility(View.VISIBLE);
+        }else{
+            popupBinding.paymentOrderPopupCustomerName.setVisibility(View.GONE);
+        }
+        if(currentOrder.getTable() != null){
+            popupBinding.paymentOrderPopupType.setText("Dine-in - " + currentOrder.getTable().getFloor().getName() +
+                                                    " / " + currentOrder.getTable().getName());
+        }else{
+            popupBinding.paymentOrderPopupType.setText("Takeaway");
+        }
+        popupBinding.customerCount.setText("" + currentOrder.getCustomer_count());
 
         popup.showAtLocation(binding.getRoot(), Gravity.CENTER, 0, 0);
         //blur background
