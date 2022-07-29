@@ -83,6 +83,13 @@
             app:layout_constraintTop_toBottomOf="@+id/horizontalScrollView"
             tools:listitem="@layout/view_product_menu" />
 
+<!--        <androidx.constraintlayout.widget.Guideline-->
+<!--            android:id="@+id/guideline1"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:orientation="vertical"-->
+<!--            app:layout_constraintGuide_percent="0.65" />-->
+
         <RelativeLayout
             android:id="@+id/cart_relativeLayout"
             android:layout_width="450dp"
