@@ -106,13 +106,19 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         //Temporarily
         finishApiLoad = false;
 
-//        Customer guestAcc = new Customer(1, "Guest", "guestEmail", null, null, null);
-//        realm.executeTransaction(new Realm.Transaction() {
-//            @Override
-//            public void execute(Realm realm) {
-//                realm.insertOrUpdate(guestAcc);
-//            }
-//        });
+        Customer guestAccInRealm = realm.where(Customer.class).equalTo("customer_id", 1).findFirst();
+        if(guestAccInRealm == null) {
+            Customer guestAcc = new Customer(1, "Guest", "guestEmail", null, null, null);
+            realm.executeTransaction(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+                    realm.insertOrUpdate(guestAcc);
+                }
+            });
+
+        }else{
+            System.out.println("guestAccInRealm: " + guestAccInRealm);
+        }
 
 
 
