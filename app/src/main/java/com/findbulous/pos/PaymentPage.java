@@ -242,6 +242,9 @@ public class PaymentPage extends CheckConnection {
                     updated_current_order.setState_name("Paid");
                     updated_current_order.setAmount_paid(amount_total);
                     updated_current_order.setAmount_return(Double.valueOf(viewModel.getPayment_order_detail_balance().getValue()));
+                    if(currentCustomer == null){
+                        currentCustomer = realm.where(Customer.class).equalTo("customer_id", 1).findFirst();
+                    }
                     updated_current_order.setCustomer(currentCustomer);
                     if(current_order.getTable() != null){
                         RealmResults<Order> results = realm.where(Order.class)

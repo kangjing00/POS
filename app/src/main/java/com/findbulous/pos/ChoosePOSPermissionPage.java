@@ -67,6 +67,8 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
     private ArrayList<Order_State> orderStates;
     //Order Customer from cloud
     private ArrayList<Customer> customers;
+    //Temporarily
+    private boolean finishApiLoad;
 
     private Realm realm;
     private Context contextpage;
@@ -101,6 +103,18 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         new loadProduct().execute();//<<<<<<<<<<<<<<<<<<<<<<<
         new loadFloorAndTable().execute();//<<<<<<<<<<<<<<<<<<<
 
+        //Temporarily
+        finishApiLoad = false;
+
+//        Customer guestAcc = new Customer(1, "Guest", "guestEmail", null, null, null);
+//        realm.executeTransaction(new Realm.Transaction() {
+//            @Override
+//            public void execute(Realm realm) {
+//                realm.insertOrUpdate(guestAcc);
+//            }
+//        });
+
+
 
         SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
         Date todayDate = new Date();
@@ -109,13 +123,21 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         binding.orderOnlyBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                goToHomePage();
+                //Temporarily
+                if(finishApiLoad)
+                    goToHomePage();
+                else
+                    Toast.makeText(contextpage, "Please click again later, API is loading", Toast.LENGTH_SHORT).show();
             }
         });
         binding.cashierBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                goToHomePage();
+                //Temporarily
+                if(finishApiLoad)
+                    goToHomePage();
+                else
+                    Toast.makeText(contextpage, "Please click again later, API is loading", Toast.LENGTH_SHORT).show();
             }
         });
         binding.kdsBtn.setOnClickListener(new View.OnClickListener() {
@@ -790,6 +812,12 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
 //        }
 //    }
     public class loadOrder extends AsyncTask<String, String, String>{
+        private Customer guestAcc;
+        @Override
+        protected void onPreExecute(){
+            guestAcc = realm.where(Customer.class).equalTo("customer_id", 1).findFirst();
+        }
+
         @Override
         protected String doInBackground(String... strings) {
             long timeBefore = Calendar.getInstance().getTimeInMillis();
@@ -938,6 +966,8 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                                 jcustomer.getString("full_name"), jcustomer.getString("email"),
                                 jcustomer.getString("tel_no"), jcustomer.getString("ic_no"), jcustomer.getString("date_birth"));
 
+                    }else if (status.equals("ERR")){
+                        customer = guestAcc;
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -965,6 +995,9 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                 });
                 long timeAfter = Calendar.getInstance().getTimeInMillis();
                 System.out.println("Update orders to realm time: " + (timeAfter - timeBefore) + "ms");
+
+                //Temporarily
+                finishApiLoad = true;
             }
         }
     }

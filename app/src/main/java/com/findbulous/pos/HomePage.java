@@ -350,11 +350,11 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         binding.cartInclude.cartOrderNoteBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                if(customerSharedPreference.getInt("customerID", -1) == -1){
-                    Toast.makeText(contextpage, "Please add a customer to this order before adding note", Toast.LENGTH_SHORT).show();
-                }else {
+//                if(customerSharedPreference.getInt("customerID", -1) == -1){
+//                    Toast.makeText(contextpage, "Please add a customer to this order before adding note", Toast.LENGTH_SHORT).show();
+//                }else {
                     showCartOrderAddNotePopup(binding.cartInclude.cartOrderNoteBtn.getId());
-                }
+//                }
             }
         });
         binding.cartInclude.cartAddCustomer.setOnClickListener(new View.OnClickListener(){
@@ -370,9 +370,11 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
             public void onClick(View view) {
                 if(currentOrder.getOrder_id() == -1){
                     Toast.makeText(contextpage, "No order to hold", Toast.LENGTH_SHORT).show();
-                }else if(customerSharedPreference.getInt("customerID", -1) == -1){
-                    Toast.makeText(contextpage, "Please add a customer to this order before hold", Toast.LENGTH_SHORT).show();
-                }else {
+                }
+//                else if(customerSharedPreference.getInt("customerID", -1) == -1){
+//                    Toast.makeText(contextpage, "Please add a customer to this order before hold", Toast.LENGTH_SHORT).show();
+//                }
+                else {
                     showCartOrderAddNotePopup(binding.cartInclude.cartOrderSummaryHoldBtn.getId());
                 }
             }
@@ -632,7 +634,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         if(current_customer_id != -1){
             customer = new Customer(current_customer_id, customer_name, customerEmail, customerPhoneNo, customerIdentityNo, customerBirthdate);
         }else{
-            customer = null;
+            customer = realm.where(Customer.class).equalTo("customer_id", 1).findFirst();
         }
 
         return customer;
@@ -1240,7 +1242,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                 attribute_name_tv.setTextSize(20);
                 popupBinding.productModifierLl.addView(attribute_name_tv);
                 Space blankSpace = new Space(contextpage);
-                blankSpace.setMinimumHeight(5);
+                blankSpace.setMinimumHeight(10);
                 popupBinding.productModifierLl.addView(blankSpace);
                 //Attribute Type
                 RealmResults attribute_values_results = realm.where(Attribute_Value.class).equalTo("attribute_id", attribute.getAttribute_id())
@@ -1319,19 +1321,11 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
 
                                 // If this is the selected item position
                                 if (position == spinner.getSelectedItemPosition()) {
-                                    if(position == (spinner.getCount() - 1)){ //last one
-                                        v.setBackground(getResources().getDrawable(R.drawable.box_btm_corner_dark_orange));
-                                    }else { //not the last one
                                         v.setBackgroundColor(getResources().getColor(R.color.darkOrange));
-                                    }
                                 }
                                 else {
                                     // for other views
-                                    if(position != (spinner.getCount() - 1)) { // not the last one
-                                        v.setBackgroundColor(getResources().getColor(R.color.lightGrey));
-                                    }else{  //last one
-                                        v.setBackground(getResources().getDrawable(R.drawable.box_btm_corner_light_grey));
-                                    }
+                                    v.setBackgroundColor(getResources().getColor(R.color.lightGrey));
                                 }
                                 return v;
                             }
@@ -1388,7 +1382,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                         btn.setId(attribute_value.getId());
                         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
                                 ViewGroup.LayoutParams.WRAP_CONTENT);
-                        params.setMargins(5, 0, 5, 0);
+                        params.setMargins(5, 0, 15, 0);
                         btn.setLayoutParams(params);
                         btn.setBackground(unselect(btn.getId()));
                         btn.setClickable(true);
@@ -1466,7 +1460,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                 }
 
                 Space blankSpace1 = new Space(contextpage);
-                blankSpace1.setMinimumHeight(20);
+                blankSpace1.setMinimumHeight(30);
                 popupBinding.productModifierLl.addView(blankSpace1);
             }
         }
