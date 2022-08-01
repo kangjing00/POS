@@ -397,7 +397,9 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                                 product_configurator);
 
                         pos_session = new POS_Session(jpos_session.getInt("id"), jpos_session.getString("name"),
-                                jpos_session.getString("start_at"), jpos_session.getString("state"), pos_config);
+                                jpos_session.getString("start_at"), jpos_session.getString("stop_at"),
+                                jpos_session.getString("state"), jpos_session.getString("opening_notes"),
+                                jpos_session.getInt("login_number"), pos_config);
                     }
                 }catch (JSONException e) {
                     e.printStackTrace();
