@@ -193,23 +193,23 @@ public class PaymentPage extends CheckConnection {
                 binding.paymentTipCancelBtn.setVisibility(View.GONE);
             }
         });
-        binding.paymentBarRemoveCustomerBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                currentCustomerSharePreferenceEdit.putInt("customerID", -1);
-                currentCustomerSharePreferenceEdit.putString("customerName", null);
-                currentCustomerSharePreferenceEdit.putString("customerEmail", null);
-                currentCustomerSharePreferenceEdit.putString("customerPhoneNo", null);
-                currentCustomerSharePreferenceEdit.putString("customerIdentityNo", null);
-                currentCustomerSharePreferenceEdit.putString("customerBirthdate", null);
-                currentCustomerSharePreferenceEdit.commit();
-                binding.paymentBarCustomerRl.setVisibility(View.GONE);
-                currentCustomer = null;
-                binding.paymentOrderDetailCustomerName.setText("[Customer Name]");
-                Toast.makeText(contextpage, "Current Customer Removed", Toast.LENGTH_SHORT).show();
-                binding.paymentOrderDetailCustomerName.setVisibility(View.GONE);
-            }
-        });
+//        binding.paymentBarRemoveCustomerBtn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                currentCustomerSharePreferenceEdit.putInt("customerID", -1);
+//                currentCustomerSharePreferenceEdit.putString("customerName", null);
+//                currentCustomerSharePreferenceEdit.putString("customerEmail", null);
+//                currentCustomerSharePreferenceEdit.putString("customerPhoneNo", null);
+//                currentCustomerSharePreferenceEdit.putString("customerIdentityNo", null);
+//                currentCustomerSharePreferenceEdit.putString("customerBirthdate", null);
+//                currentCustomerSharePreferenceEdit.commit();
+//                binding.paymentBarCustomerRl.setVisibility(View.GONE);
+//                currentCustomer = null;
+//                binding.paymentOrderDetailCustomerName.setText("[Customer Name]");
+//                Toast.makeText(contextpage, "Current Customer Removed", Toast.LENGTH_SHORT).show();
+//                binding.paymentOrderDetailCustomerName.setVisibility(View.GONE);
+//            }
+//        });
         binding.paymentOrderDetailConfirmBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
