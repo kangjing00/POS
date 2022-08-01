@@ -318,12 +318,14 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
     //Retrieve pos session and pos config
     //Y(es) = Continue Session N(o) = Start New Session
     public class getCheckOpenedSession extends AsyncTask<String, String, String> {
-        private boolean sessionExist;
+        private boolean sessionExist, error;
+        private String error_msg;
 
         @Override
         protected String doInBackground(String... strings) {
             long timeBefore = Calendar.getInstance().getTimeInMillis();
 
+            error = false;
             sessionExist = false;
 
             String connection_error = "";
@@ -399,10 +401,14 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                     }
                 }catch (JSONException e) {
                     e.printStackTrace();
+                    error = true;
+                    error_msg = e.toString();
                 }
             }catch (IOException e){
                 Log.e("error", "cannot fetch data");
                 connection_error = e + "";
+                error = true;
+                error_msg += " " + e;
                 System.out.println(connection_error);
             }
 
@@ -416,14 +422,18 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
             if(!NetworkUtils.isNetworkAvailable(contextpage)){
                 Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
             }else{
-                openedSessionExist = sessionExist;
-                realm.executeTransaction(new Realm.Transaction() {
-                    @Override
-                    public void execute(Realm realm) {
-                        realm.insertOrUpdate(pos_config);
-                        realm.insertOrUpdate(pos_session);
-                    }
-                });
+                if(error){
+                  System.out.println("Error Message: " + error_msg);
+                }else {
+                    openedSessionExist = sessionExist;
+                    realm.executeTransaction(new Realm.Transaction() {
+                        @Override
+                        public void execute(Realm realm) {
+                            realm.insertOrUpdate(pos_config);
+                            realm.insertOrUpdate(pos_session);
+                        }
+                    });
+                }
 //                long timeBefore = Calendar.getInstance().getTimeInMillis();
 //
 //

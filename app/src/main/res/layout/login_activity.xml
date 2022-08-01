@@ -10,8 +10,17 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/login_background"
         tools:context=".LoginPage">
+
+
+        <View
+            android:id="@+id/background"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:background="@drawable/login_background"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/login_btn"/>
+
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guideline1"

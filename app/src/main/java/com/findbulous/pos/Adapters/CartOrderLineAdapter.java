@@ -182,12 +182,20 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
 
                     if(p > -1) {
                         double price_total = qty * order_lines.get(p).getProduct_price();
-                        double discount_amount = order_lines.get(p).getAmount_discount();
+                        double discount_amount = 0;
+                        if(order_lines.get(p).isHas_discount()){
+                            if(order_lines.get(p).isIs_percentage()){
+                                discount_amount = (price_total * order_lines.get(p).getDiscount_percent()) / 100;
+                            }else{
+                                discount_amount = order_lines.get(p).getAmount_discount();
+                            }
+                        }
                         double subtotal = price_total - discount_amount;
                         price_total = Double.valueOf(String.format("%.2f", price_total));
                         subtotal = Double.valueOf(String.format("%.2f", subtotal));
 
                         order_lines.get(p).setPrice_subtotal(subtotal);
+                        order_lines.get(p).setAmount_discount(discount_amount);
                         order_lines.get(p).setQty(qty);
                         order_lines.get(p).setPrice_total(price_total);
                         Order_Line updateOrderLine = order_lines.get(p);
@@ -227,7 +235,9 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
                             has_discount = true;
                             holder.binding.productOrderProductTotalPrice.setVisibility(View.VISIBLE);
                         } else {
-                            if((Double.valueOf(holder.binding.productOrderDiscountEt.getText().toString()) > 100.0)) {
+                            if(holder.binding.productOrderDiscountEt.getText().toString().equalsIgnoreCase("")){
+                                discount_percentage = 0;
+                            }else if((Double.valueOf(holder.binding.productOrderDiscountEt.getText().toString()) > 100.0)) {
                                 Toast.makeText(context, "Discount over 100% is impossible", Toast.LENGTH_SHORT).show();
                             }
                             has_discount = false;

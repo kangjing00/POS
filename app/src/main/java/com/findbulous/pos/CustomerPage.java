@@ -13,7 +13,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
 import android.util.Log;
@@ -21,14 +24,18 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.Space;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -89,6 +96,8 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
     private EditText number_customer_et;
 
     private POS_Config pos_config;
+    //Modifier popup color btn
+    private ImageButton lastClickedColorBtn;
 
     //POS Type
     private ArrayAdapter<String> orderTypes;
@@ -123,6 +132,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
         refreshCartCurrentCustomer();
 
         //Body Settings
+        lastClickedColorBtn = null;
         pos_config = realm.where(POS_Config.class).findFirst();
         currentOrder = new Order();
         updateTableOnHold = new Table();
@@ -316,8 +326,8 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
         binding.cartInclude.cartOrderNoteBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                if(customerSharedPreference.getInt("customerID", -1) == -1){
-                    Toast.makeText(contextpage, "Please add a customer to this order before adding note", Toast.LENGTH_SHORT).show();
+                if(cartSharedPreference.getInt("orderId", -1) == -1){
+                    Toast.makeText(contextpage, "Please create an order before adding note", Toast.LENGTH_SHORT).show();
                 }else {
                     showCartOrderAddNotePopup(binding.cartInclude.cartOrderNoteBtn.getId());
                 }
@@ -336,9 +346,11 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
             public void onClick(View view) {
                 if(currentOrder.getOrder_id() == -1){
                     Toast.makeText(contextpage, "No order to hold", Toast.LENGTH_SHORT).show();
-                }else if(customerSharedPreference.getInt("customerID", -1) == -1){
-                    Toast.makeText(contextpage, "Please add a customer to this order before hold", Toast.LENGTH_SHORT).show();
-                }else {
+                }
+//                else if(customerSharedPreference.getInt("customerID", -1) == -1){
+//                    Toast.makeText(contextpage, "Please add a customer to this order before hold", Toast.LENGTH_SHORT).show();
+//                }
+                else {
                     showCartOrderAddNotePopup(binding.cartInclude.cartOrderSummaryHoldBtn.getId());
                 }
             }
@@ -1089,21 +1101,272 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
         // Show anchored to button
         popup.setElevation(8);
         popup.setBackgroundDrawable(null);
-        popup.showAtLocation(binding.getRoot(), Gravity.CENTER, 0, 0);
-        //blur background
-        View container = (View) popup.getContentView().getParent();
-        WindowManager wm = (WindowManager) CustomerPage.this.getSystemService(Context.WINDOW_SERVICE);
-        WindowManager.LayoutParams p = (WindowManager.LayoutParams) container.getLayoutParams();
-        p.flags |= WindowManager.LayoutParams.FLAG_DIM_BEHIND;
-        p.dimAmount = 0.3f;
-        wm.updateViewLayout(container, p);
+        if(pos_config.isProduct_configurator() || pos_config.isIface_orderline_customer_notes()) {
+            popup.showAtLocation(binding.getRoot(), Gravity.CENTER, 0, 0);
+            //blur background
+            View container = (View) popup.getContentView().getParent();
+            WindowManager wm = (WindowManager) CustomerPage.this.getSystemService(Context.WINDOW_SERVICE);
+            WindowManager.LayoutParams p = (WindowManager.LayoutParams) container.getLayoutParams();
+            p.flags |= WindowManager.LayoutParams.FLAG_DIM_BEHIND;
+            p.dimAmount = 0.3f;
+            wm.updateViewLayout(container, p);
+        }
 
         popupBinding.productNameModifierPopup.setText(product.getName());
-        // Add view for extra modifier
-        TextView size_tv = new TextView(contextpage);
-        size_tv.setText("Size");
-        size_tv.setTextSize(20);
-        popupBinding.productModifierLl.addView(size_tv);
+        // Add view for extra attributes
+        if(pos_config.isProduct_configurator()){
+            RealmResults attribute_results = realm.where(Attribute.class).equalTo("product_tmpl_id", product.getProduct_tmpl_id())
+                    .findAll();
+            ArrayList<Attribute> attributes = (ArrayList<Attribute>) realm.copyFromRealm(attribute_results);
+            if(attributes.size() == 0){
+                popupBinding.productModifierLl.setVisibility(View.GONE);
+            }
+
+            for(int i = 0; i < attributes.size(); i++){
+                Attribute attribute = attributes.get(i);
+                //Attribute Name
+                TextView attribute_name_tv = new TextView(contextpage);
+                attribute_name_tv.setText(attribute.getName());
+                attribute_name_tv.setTextSize(20);
+                popupBinding.productModifierLl.addView(attribute_name_tv);
+                Space blankSpace = new Space(contextpage);
+                blankSpace.setMinimumHeight(10);
+                popupBinding.productModifierLl.addView(blankSpace);
+                //Attribute Type
+                RealmResults attribute_values_results = realm.where(Attribute_Value.class).equalTo("attribute_id", attribute.getAttribute_id())
+                        .and().equalTo("product_tmpl_id", product.getProduct_tmpl_id()).findAll();
+                ArrayList<Attribute_Value> attribute_values = (ArrayList<Attribute_Value>) realm.copyFromRealm(attribute_values_results);
+                //Radio Button
+                if(attribute.getDisplay_type().equalsIgnoreCase("radio")){
+                    RadioGroup rg = new RadioGroup(contextpage);
+                    rg.setOrientation(LinearLayout.HORIZONTAL);
+                    RadioGroup.LayoutParams params = new RadioGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                    params.setMargins(15, 0, 15, 0);
+                    for(int x = 0; x < attribute_values.size(); x++){
+                        Attribute_Value attribute_value = attribute_values.get(x);
+                        RadioButton rb = new RadioButton(contextpage);
+                        rb.setId(attribute_value.getId());
+                        rb.setLayoutParams(params);
+                        rb.setButtonDrawable(getResources().getDrawable(R.drawable.custom_radio_btn));
+                        if(attribute_value.getPrice_extra() > 0){
+                            rb.setText(attribute_value.getName() + " (+" + attribute_value.getDisplay_price_extra() + ")");
+                        }else{
+                            rb.setText(attribute_value.getName());
+                        }
+                        if(x == 0){
+                            rb.setChecked(true);
+                        }
+                        //IS_CUSTOM
+                        EditText custom_et = new EditText(contextpage);
+                        rb.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                if(attribute_value.isIs_custom() && rb.isChecked()){
+                                    custom_et.setVisibility(View.VISIBLE);
+                                }else{
+                                    custom_et.setVisibility(View.GONE);
+                                }
+                            }
+                        });
+                        // Add Radio Button into RadioGroup
+                        rg.addView(rb);
+                        if(attribute_value.isIs_custom()){
+                            if(rb.isChecked()){
+                                custom_et.setVisibility(View.VISIBLE);
+                            }else {
+                                custom_et.setVisibility(View.GONE);
+                            }
+                            custom_et.setMaxWidth(500);
+                            custom_et.setMaxLines(3);
+                            custom_et.setTextSize(15);
+                            custom_et.setHint(attribute_value.getName());
+                            custom_et.setPadding(10, 0, 10, 10);
+                            rg.addView(custom_et);
+                        }
+                    }
+                    popupBinding.productModifierLl.addView(rg);
+                }
+                // Drop Down List / Select
+                else if(attribute.getDisplay_type().equalsIgnoreCase("select")){
+                    EditText custom_et = new EditText(contextpage);
+
+                    Spinner spinner = new Spinner(contextpage);
+                    String[] items = new String[attribute_values.size()];
+                    int[] item_ids = new int[attribute_values.size()];
+                    for(int x = 0; x < attribute_values.size(); x++){
+                        Attribute_Value attribute_value = attribute_values.get(x);
+                        item_ids[x] = attribute_value.getId();
+                        if(attribute_value.getPrice_extra() > 0){
+                            items[x] = attribute_value.getName() + " (" + attribute_value.getDisplay_price_extra() + ")";
+                        }else{
+                            items[x] = attribute_value.getName();
+                        }
+                        ArrayAdapter<String> itemAdapter = new ArrayAdapter<String>(contextpage, R.layout.textview_spinner_item, items){
+                            @Override
+                            public View getDropDownView(int position, View convertView, ViewGroup parent){
+                                View v = null;
+                                v = super.getDropDownView(position, null, parent);
+
+                                // If this is the selected item position
+                                if (position == spinner.getSelectedItemPosition()) {
+                                    v.setBackgroundColor(getResources().getColor(R.color.darkOrange));
+                                }
+                                else {
+                                    // for other views
+                                    v.setBackgroundColor(getResources().getColor(R.color.lightGrey));
+                                }
+                                return v;
+                            }
+                        };
+                        itemAdapter.setDropDownViewResource(R.layout.textview_spinner_item);
+                        spinner.setAdapter(itemAdapter);
+                        spinner.setDropDownVerticalOffset(80);
+                        spinner.setSelection(0);
+                        spinner.setPopupBackgroundDrawable(getResources().getDrawable(R.drawable.box_btm_corner_light_grey));
+                        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                            @Override
+                            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long l) {
+                                int id = item_ids[position];
+                                //IS_CUSTOM
+                                Attribute_Value av = realm.where(Attribute_Value.class).equalTo("id", id).findFirst();
+                                if(av.isIs_custom()){
+                                    custom_et.setVisibility(View.VISIBLE);
+                                }else{
+                                    custom_et.setVisibility(View.GONE);
+                                }
+                            }
+                            @Override
+                            public void onNothingSelected(AdapterView<?> adapterView) {
+                            }
+                        });
+                        custom_et.setHint(attribute_value.getName());
+                    }
+
+                    popupBinding.productModifierLl.addView(spinner);
+                    //IS_CUSTOM
+                    //First Selection if it IS_CUSTOM
+                    Attribute_Value av = realm.where(Attribute_Value.class)
+                            .equalTo("id", attribute_values.get(0).getId())
+                            .findFirst();
+                    if(av.isIs_custom()){
+                        custom_et.setVisibility(View.VISIBLE);
+                    }else{
+                        custom_et.setVisibility(View.GONE);
+                    }
+                    custom_et.setMaxWidth(500);
+                    custom_et.setMaxLines(3);
+                    custom_et.setTextSize(15);
+                    custom_et.setPadding(10, 0, 10, 10);
+                    popupBinding.productModifierLl.addView(custom_et);
+                }
+                // Color Selection
+                else if(attribute.getDisplay_type().equalsIgnoreCase("color")){
+                    LinearLayout ll = new LinearLayout(contextpage);
+                    ll.setOrientation(LinearLayout.HORIZONTAL);
+                    for(int x = 0; x < attribute_values.size(); x++){
+                        Attribute_Value attribute_value = attribute_values.get(x);
+
+                        ImageButton btn = new ImageButton(contextpage);
+                        btn.setId(attribute_value.getId());
+                        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT);
+                        params.setMargins(5, 0, 15, 0);
+                        btn.setLayoutParams(params);
+                        btn.setBackground(unselect(btn.getId()));
+                        btn.setClickable(true);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            btn.setTooltipText(attribute_value.getName());
+                        }
+                        if(x == 0){
+                            btn.setBackground(select(btn.getId()));
+                            lastClickedColorBtn = btn;
+                        }
+                        btn.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                if(btn != lastClickedColorBtn) {
+                                    btn.startAnimation(AnimationUtils.loadAnimation(getBaseContext(), android.R.anim.fade_in));
+                                    lastClickedColorBtn.setBackground(unselect(lastClickedColorBtn.getId()));
+                                    btn.setBackground(select(btn.getId()));
+                                }
+                                lastClickedColorBtn = btn;
+                            }
+                        });
+                        ll.addView(btn);
+                    }
+                    popupBinding.productModifierLl.addView(ll);
+                }
+                // Pills Selection
+                else if(attribute.getDisplay_type().equalsIgnoreCase("pills")){
+                    RadioGroup rg = new RadioGroup(contextpage);
+                    rg.setOrientation(LinearLayout.HORIZONTAL);
+                    RadioGroup.LayoutParams params = new RadioGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                    params.setMargins(15, 0, 15, 0);
+                    for(int x = 0; x < attribute_values.size(); x++){
+                        Attribute_Value attribute_value = attribute_values.get(x);
+                        RadioButton rb = new RadioButton(contextpage);
+                        rb.setId(attribute_value.getId());
+                        rb.setLayoutParams(params);
+                        if(attribute_value.getPrice_extra() > 0){
+                            rb.setText(attribute_value.getName() + " (+" + attribute_value.getDisplay_price_extra() + ")");
+                        }else {
+                            rb.setText(attribute_value.getName());
+                        }
+                        rb.setPadding(15, 0, 15, 0);
+                        rb.setTextColor(getResources().getColor(R.color.pills_text_color));
+                        rb.setBackground(getResources().getDrawable(R.drawable.pills_selector));
+                        rb.setButtonDrawable(null);
+                        if(x == 0){
+                            rb.setChecked(true);
+                        }
+                        //IS_CUSTOM
+                        EditText custom_et = new EditText(contextpage);
+                        if(attribute_value.isIs_custom() && rb.isChecked()){
+                            custom_et.setVisibility(View.VISIBLE);
+                        }else{
+                            custom_et.setVisibility(View.GONE);
+                        }
+                        rb.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                if(attribute_value.isIs_custom() && rb.isChecked()){
+                                    custom_et.setVisibility(View.VISIBLE);
+                                }else{
+                                    custom_et.setVisibility(View.GONE);
+                                }
+                            }
+                        });
+                        rg.addView(rb);
+                        if(attribute_value.isIs_custom()){
+                            custom_et.setVisibility(View.GONE);
+                            custom_et.setTextSize(15);
+                            custom_et.setPadding(10, 10, 10, 10);
+                            rg.addView(custom_et);
+                        }
+                    }
+                    popupBinding.productModifierLl.addView(rg);
+                }
+
+                Space blankSpace1 = new Space(contextpage);
+                blankSpace1.setMinimumHeight(30);
+                popupBinding.productModifierLl.addView(blankSpace1);
+            }
+        }
+
+        if(!pos_config.isIface_orderline_customer_notes()){
+            popupBinding.productModifierNote.setVisibility(View.GONE);
+            popupBinding.textView1.setVisibility(View.INVISIBLE);
+            popupBinding.textView1.setTextSize(0);
+        }
+
+        if(pos_config.isProduct_configurator() && !pos_config.isIface_orderline_customer_notes()) {
+            RealmResults attribute_results = realm.where(Attribute.class).equalTo("product_tmpl_id", product.getProduct_tmpl_id())
+                    .findAll();
+            ArrayList<Attribute> attributes = (ArrayList<Attribute>) realm.copyFromRealm(attribute_results);
+            if(attributes.size() == 0){
+                popup.dismiss();
+            }
+        }
         popupBinding.productModifierPopupPositiveBtn.setText("Update");
 //        if(pos_config.isIface_orderline_customer_notes()){
 //            popupBinding.textView1.setVisibility(View.VISIBLE);
@@ -1127,6 +1390,28 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                 popup.dismiss();
             }
         });
+    }
+    private GradientDrawable unselect(int attribute_value_id){
+        Attribute_Value attribute_value = realm.where(Attribute_Value.class).equalTo("id", attribute_value_id).findFirst();
+
+        GradientDrawable unselected = new GradientDrawable();
+        unselected.setShape(GradientDrawable.OVAL);
+        unselected.setSize(85, 85);
+        unselected.setColor(Color.parseColor(attribute_value.getHtml_color()));
+        unselected.setStroke(5, getResources().getColor(R.color.darkGrey));
+
+        return unselected;
+    }
+    private GradientDrawable select(int attribute_value_id){
+        Attribute_Value attribute_value = realm.where(Attribute_Value.class).equalTo("id", attribute_value_id).findFirst();
+
+        GradientDrawable selected = new GradientDrawable();
+        selected.setShape(GradientDrawable.OVAL);
+        selected.setSize(90, 90);
+        selected.setColor(Color.parseColor(attribute_value.getHtml_color()));
+        selected.setStroke(10, getResources().getColor(R.color.darkOrange));
+
+        return selected;
     }
     //NOT YET DONE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!MODIFIER related
     private void addOrUpdateProductToOrder(Product product){

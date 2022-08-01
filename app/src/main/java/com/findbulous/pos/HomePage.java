@@ -350,11 +350,11 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         binding.cartInclude.cartOrderNoteBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-//                if(customerSharedPreference.getInt("customerID", -1) == -1){
-//                    Toast.makeText(contextpage, "Please add a customer to this order before adding note", Toast.LENGTH_SHORT).show();
-//                }else {
+                if(cartSharedPreference.getInt("orderId", -1) == -1){
+                    Toast.makeText(contextpage, "Please create an order before adding note", Toast.LENGTH_SHORT).show();
+                }else {
                     showCartOrderAddNotePopup(binding.cartInclude.cartOrderNoteBtn.getId());
-//                }
+                }
             }
         });
         binding.cartInclude.cartAddCustomer.setOnClickListener(new View.OnClickListener(){
@@ -1729,6 +1729,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
 //        order_lines.get(position).setPrice_total(price_total);
 //        Order_Line updateOrderLine = order_lines.get(position);
         order_lines.get(position).setPrice_subtotal(updateOrderLine.getPrice_subtotal());
+        order_lines.get(position).setAmount_discount(updateOrderLine.getAmount_discount());
         order_lines.get(position).setQty(updateOrderLine.getQty());
         order_lines.get(position).setPrice_total(updateOrderLine.getPrice_total());
 
