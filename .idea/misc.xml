@@ -84,6 +84,7 @@
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/pills_selected.xml" value="0.25" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/pills_selector.xml" value="0.321" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/pills_text_color.xml" value="0.321" />
+        <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/progress.xml" value="0.255" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/square_white.xml" value="0.3105" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/drawable/textview_with_padding.xml" value="0.3105" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/activity_outlet_page.xml" value="0.16" />
@@ -128,6 +129,7 @@
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/payment_page.xml" value="0.22" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/product_details_popup.xml" value="0.22" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/product_modifier_popup.xml" value="0.1" />
+        <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/progress_dialog.xml" value="0.18333333333333332" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/register_page.xml" value="0.3244920993227991" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/setting_page.xml" value="0.18" />
         <entry key="..\:/Users/kangjing/AndroidStudioProjects/POS/app/src/main/res/layout/table_addon_proceed_popup.xml" value="0.25" />

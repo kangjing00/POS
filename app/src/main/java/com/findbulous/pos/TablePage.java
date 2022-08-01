@@ -6,11 +6,13 @@ import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -343,10 +345,14 @@ public class TablePage extends CheckConnection implements
     public class updateTable extends AsyncTask<String, String, String> {
         boolean no_connection = false;
         String connection_error = "";
+        ProgressDialog pd = null;
 
         @Override
         protected void onPreExecute() {
-
+            if(pd == null) {
+                pd = createProgressDialog(contextpage);
+                pd.show();
+            }
         }
 
         @Override
@@ -445,9 +451,23 @@ public class TablePage extends CheckConnection implements
             if(no_connection){
                 System.out.println("Connection Error Message: " + connection_error);
             }
+            if (pd != null)
+                pd.dismiss();
         }
     }
+    private ProgressDialog createProgressDialog(Context mContext) {
+        ProgressDialog dialog = new ProgressDialog(mContext);
+        try {
+            dialog.show();
+        } catch (WindowManager.BadTokenException e) {
 
+        }
+        dialog.setCancelable(false);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dialog.setContentView(R.layout.progress_dialog);
+        // dialog.setMessage(Message);
+        return dialog;
+    }
     //Create new order
     private void addNewOrder(Table vacantTableSelected){
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");

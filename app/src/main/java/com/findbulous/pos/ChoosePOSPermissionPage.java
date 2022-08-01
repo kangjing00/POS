@@ -3,8 +3,11 @@ package com.findbulous.pos;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -68,7 +71,8 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
     //Order Customer from cloud
     private ArrayList<Customer> customers;
     //Temporarily
-    private boolean finishApiLoad;
+//    private boolean finishApiLoad;
+    private ProgressDialog pd;
 
     private Realm realm;
     private Context contextpage;
@@ -99,12 +103,13 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         orderStates = new ArrayList<>();
         customers = new ArrayList<>();
 
+        //Temporarily
+//        finishApiLoad = false;
+        pd = null;
+
         new getCheckOpenedSession().execute();
         new loadProduct().execute();//<<<<<<<<<<<<<<<<<<<<<<<
         new loadFloorAndTable().execute();//<<<<<<<<<<<<<<<<<<<
-
-        //Temporarily
-        finishApiLoad = false;
 
         Customer guestAccInRealm = realm.where(Customer.class).equalTo("customer_id", 1).findFirst();
         if(guestAccInRealm == null) {
@@ -130,20 +135,20 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 //Temporarily
-                if(finishApiLoad)
+//                if(finishApiLoad)
                     goToHomePage();
-                else
-                    Toast.makeText(contextpage, "Please click again later, API is loading", Toast.LENGTH_SHORT).show();
+//                else
+//                    Toast.makeText(contextpage, "Please click again later, API is loading", Toast.LENGTH_SHORT).show();
             }
         });
         binding.cashierBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 //Temporarily
-                if(finishApiLoad)
+//                if(finishApiLoad)
                     goToHomePage();
-                else
-                    Toast.makeText(contextpage, "Please click again later, API is loading", Toast.LENGTH_SHORT).show();
+//                else
+//                    Toast.makeText(contextpage, "Please click again later, API is loading", Toast.LENGTH_SHORT).show();
             }
         });
         binding.kdsBtn.setOnClickListener(new View.OnClickListener() {
@@ -322,6 +327,14 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         private String error_msg;
 
         @Override
+        protected void onPreExecute() {
+            if(pd == null) {
+                pd = createProgressDialog(contextpage);
+                pd.show();
+            }
+        }
+
+        @Override
         protected String doInBackground(String... strings) {
             long timeBefore = Calendar.getInstance().getTimeInMillis();
 
@@ -448,6 +461,15 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
 
 
     public class loadProduct extends AsyncTask<String, String, String>{
+
+        @Override
+        protected void onPreExecute() {
+            if(pd == null) {
+                pd = createProgressDialog(contextpage);
+                pd.show();
+            }
+        }
+
         @Override
         protected String doInBackground(String... strings) {
             long timeBefore = Calendar.getInstance().getTimeInMillis();
@@ -656,6 +678,15 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         return categories_list;
     }
     public class loadFloorAndTable extends AsyncTask<String, String, String> {
+
+        @Override
+        protected void onPreExecute() {
+            if(pd == null) {
+                pd = createProgressDialog(contextpage);
+                pd.show();
+            }
+        }
+
         @Override
         protected String doInBackground(String... strings) {
             String url = "https://www.c3rewards.com/api/merchant/?module=pos&action=restaurant_floors";
@@ -1015,8 +1046,26 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                 System.out.println("Update orders to realm time: " + (timeAfter - timeBefore) + "ms");
 
                 //Temporarily
-                finishApiLoad = true;
+//                finishApiLoad = true;
+                if (pd != null)
+                {
+                    pd.dismiss();
+                }
             }
         }
+    }
+
+    public static ProgressDialog createProgressDialog(Context mContext) {
+        ProgressDialog dialog = new ProgressDialog(mContext);
+        try {
+            dialog.show();
+        } catch (WindowManager.BadTokenException e) {
+
+        }
+        dialog.setCancelable(false);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dialog.setContentView(R.layout.progress_dialog);
+        // dialog.setMessage(Message);
+        return dialog;
     }
 }
