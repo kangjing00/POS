@@ -41,10 +41,10 @@ public class PaymentOrderLineAdapter extends RecyclerView.Adapter<PaymentOrderLi
 
         if(!order_line.isHas_discount()){
             holder.binding.paymentProductProductDiscount.setVisibility(View.INVISIBLE);
-            holder.binding.paymentProductProductPrice.setVisibility(View.INVISIBLE);
+            holder.binding.paymentProductProductPriceBeforeDiscount.setVisibility(View.INVISIBLE);
         }else{
             holder.binding.paymentProductProductDiscount.setVisibility(View.VISIBLE);
-            holder.binding.paymentProductProductPrice.setVisibility(View.VISIBLE);
+            holder.binding.paymentProductProductPriceBeforeDiscount.setVisibility(View.VISIBLE);
         }
     }
 

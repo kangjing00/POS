@@ -1,34 +1,44 @@
 package com.findbulous.pos;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.EditText;
 import android.widget.PopupWindow;
-import android.widget.RadioButton;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.findbulous.pos.Adapters.OrderOrderLineAdapter;
 import com.findbulous.pos.Network.CheckConnection;
+import com.findbulous.pos.Network.NetworkUtils;
 import com.findbulous.pos.OrderFragments.FragmentOfflineOrder;
 import com.findbulous.pos.OrderFragments.FragmentOrderHistory;
 import com.findbulous.pos.OrderFragments.FragmentOrderOnHold;
 import com.findbulous.pos.databinding.CashInOutPopupBinding;
 import com.findbulous.pos.databinding.OrderPageBinding;
 import com.findbulous.pos.databinding.ToolbarSyncPopupBinding;
-import com.google.android.material.button.MaterialButton;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 
 import io.realm.Realm;
@@ -303,11 +313,134 @@ public class OrderPage extends CheckConnection {
         });
     }
 
+    public class apiSearchOrder extends AsyncTask<String, String, String> {
+        ProgressDialog pd = null;
+        Order order = null;
+        ArrayList<Product> products = new ArrayList<>();
+
+        public apiSearchOrder(Order order){
+            this.order = order;
+        }
+
+        @Override
+        protected void onPreExecute(){
+            if(pd == null) {
+                pd = createProgressDialog(contextpage);
+                pd.show();
+            }
+            RealmResults<Product> results = realm.where(Product.class).findAll();
+            products.clear();
+            if(results.size() > 0)
+                products.addAll(realm.copyFromRealm(results));
+            else
+                System.out.println("Database Product = null");
+        }
+
+        @Override
+        protected String doInBackground(String... strings) {
+            String url = "https://www.c3rewards.com/api/merchant/?module=pos&action=orders";
+            String agent = "c092dc89b7aac085a210824fb57625db";
+            String jsonUrl = url + "&agent=" + agent + "&order_id=" + order.getOrder_id();
+            System.out.println(jsonUrl);
+
+            URL obj;
+            try {
+                obj = new URL(jsonUrl);
+                HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+                // optional default is GET
+                con.setRequestMethod("GET");
+                //add request header
+                int responseCode = con.getResponseCode();
+                System.out.println("\nSending 'GET' request to URL : " + jsonUrl);
+                System.out.println("Response Code : " + responseCode);
+
+                BufferedReader in = new BufferedReader(
+                        new InputStreamReader(con.getInputStream()));
+                String inputLine;
+
+                StringBuilder response = new StringBuilder();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                System.out.println(response);
+                String data = response.toString();
+
+                try {
+                    JSONObject json = new JSONObject(data);
+                    String status = json.getString("status");
+
+                    if (status.equals("OK")) {
+                        JSONObject jresult = json.getJSONObject("result");
+                        JSONObject jorders = jresult.getJSONObject("order");
+                        JSONArray jOrderLines = jorders.getJSONArray("order_lines");
+
+                        for(int i = 0; i < jOrderLines.length(); i++){
+                            JSONObject jo = jOrderLines.getJSONObject(i);
+                            double price_before_discount = jo.getDouble("price_unit") * jo.getInt("qty");
+                            int product_id = jo.getInt("product_id");
+                            Product product = null;
+                            for(int x = 0; x < products.size(); x++){
+                                if(product_id == products.get(x).getProduct_id()){
+                                    product = products.get(x);
+                                }
+                            }
+                            Order_Line orderLine = new Order_Line(
+                                jo.getInt("order_line_id"), jo.getString("name"), jo.getInt("qty"),
+                                jo.getDouble("price_unit"), jo.getDouble("price_subtotal"), jo.getDouble("price_subtotal_incl"),
+                                price_before_discount, 0, jo.getString("display_price_unit"), jo.getString("display_price_subtotal"),
+                                jo.getString("display_price_subtotal_incl"), String.format("RM %.2f", price_before_discount),
+                                jo.getString("full_product_name"), jo.getString("customer_note"), false,
+                                true, 0.0, order, product);
+
+                            order_lines.add(orderLine);
+                        }
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            } catch (IOException e) {
+                Log.e("error", "cannot fetch data");
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String s){
+            if(!NetworkUtils.isNetworkAvailable(contextpage)){
+                Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
+            }else {
+                if (pd != null) {
+                    pd.dismiss();
+                }
+                orderOrderLineAdapter.notifyDataSetChanged();
+            }
+        }
+    }
+    public static ProgressDialog createProgressDialog(Context mContext) {
+        ProgressDialog dialog = new ProgressDialog(mContext);
+        try {
+            dialog.show();
+        } catch (WindowManager.BadTokenException e) {
+
+        }
+        dialog.setCancelable(false);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dialog.setContentView(R.layout.progress_dialog);
+        // dialog.setMessage(Message);
+        return dialog;
+    }
     public void setOrderSelected(Order order){
         orderSelected = order;
         RealmResults<Order_Line> results = realm.where(Order_Line.class).equalTo("order.order_id", orderSelected.getOrder_id()).findAll();
         order_lines.clear();
-        order_lines.addAll(realm.copyFromRealm(results));
+        if(results.size() > 0) {
+            order_lines.addAll(realm.copyFromRealm(results));
+        }else{
+            new apiSearchOrder(orderSelected).execute();
+        }
         orderOrderLineAdapter.notifyDataSetChanged();
 
         double tax = orderSelected.getAmount_tax();
@@ -317,7 +450,7 @@ public class OrderPage extends CheckConnection {
         double amount_paid = orderSelected.getAmount_paid() + balance;
         double subtotal = 0.0, product_discount = 0.0, order_discount = 0.0;
         for(int i = 0; i < order_lines.size(); i++){
-            subtotal += order_lines.get(i).getPrice_total();
+            subtotal += order_lines.get(i).getPrice_before_discount();
             product_discount += order_lines.get(i).getAmount_discount();
         }
         if(product_discount != 0.0){

@@ -1,25 +1,21 @@
 package com.findbulous.pos;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,7 +23,6 @@ import android.view.WindowManager;
 import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -53,20 +48,8 @@ import com.findbulous.pos.databinding.ProductModifierPopupBinding;
 import com.findbulous.pos.databinding.ToolbarSyncPopupBinding;
 import com.google.android.material.button.MaterialButton;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
-
-import javax.net.ssl.HttpsURLConnection;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -433,7 +416,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
         orderTypes.setDropDownViewResource(R.layout.textview_spinner_item);
         binding.cartInclude.cartBtnPosType.setAdapter(orderTypes);
 //        binding.cartInclude.cartBtnPosType.getAdapter().notifyAll();
-        binding.cartInclude.cartBtnPosType.setDropDownVerticalOffset(80);
+        binding.cartInclude.cartBtnPosType.setDropDownVerticalOffset(65);
         binding.cartInclude.cartBtnPosType.setSelection(cartSharedPreference.getInt("orderTypePosition", 1));
 
         if(currentOrder.getTable() != null){
@@ -1538,7 +1521,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
 //        Order_Line updateOrderLine = order_lines.get(position);
         order_lines.get(position).setPrice_subtotal(updateOrderLine.getPrice_subtotal());
         order_lines.get(position).setQty(updateOrderLine.getQty());
-        order_lines.get(position).setPrice_total(updateOrderLine.getPrice_total());
+        order_lines.get(position).setPrice_before_discount(updateOrderLine.getPrice_before_discount());
 
         realm.executeTransaction(new Realm.Transaction() {
             @Override

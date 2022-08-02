@@ -6,46 +6,68 @@ import io.realm.annotations.PrimaryKey;
 public class Order_Line extends RealmObject {
     @PrimaryKey
     private int order_line_id;
-    private String order_line_name;
+    private String name;
     private int qty, discount_percent;
-    //price subtotal = the final price of all qty of this product after discount
-    //price total = the final price of all qty of this product before discount;
-    private double product_price, price_subtotal, price_total, amount_discount;
+    /*
+    price subtotal = the final price of all qty of this product after discount
+    price subtotal incl = include tax
+    price total = the final price of all qty of this product before discount
+    */
+    private double price_unit, price_subtotal, price_subtotal_incl, price_before_discount, amount_discount;
     private boolean has_discount, is_percentage;
+
+    private String display_price_unit, display_price_subtotal, display_price_subtotal_incl, display_price_before_discount;
+    private String full_product_name, customer_note;
 
     private Order order;
     private Product product;
 
     //Constructor
-    public Order_Line(int order_line_id, String order_line_name, int qty, double product_price, double price_subtotal,
-                      double price_total, int discount_percent, Order order, Product product,
-                      boolean has_discount, boolean is_percentage, double amount_discount){
+    public Order_Line(int order_line_id, String name, int qty, double price_unit, double price_subtotal,
+                      double price_subtotal_incl, double price_before_discount, int discount_percent,
+                      String display_price_unit, String display_price_subtotal, String display_price_subtotal_incl,
+                      String display_price_before_discount, String full_product_name, String customer_note,
+                      boolean has_discount, boolean is_percentage, double amount_discount, Order order, Product product){
         this.order_line_id = order_line_id;
-        this.order_line_name = order_line_name;
+        this.name = name;
         this.qty = qty;
-        this.product_price = product_price;
+        this.price_unit = price_unit;
         this.price_subtotal = price_subtotal;
-        this.price_total = price_total;
+        this.price_subtotal_incl = price_subtotal_incl;
+        this.price_before_discount = price_before_discount;
         this.discount_percent = discount_percent;
-        this.order = order;
-        this.product = product;
+        this.display_price_unit = display_price_unit;
+        this.display_price_subtotal = display_price_subtotal;
+        this.display_price_subtotal_incl = display_price_subtotal_incl;
+        this.display_price_before_discount = display_price_before_discount;
+        this.full_product_name = full_product_name;
+        this.customer_note = customer_note;
         this.has_discount = has_discount;
         this.is_percentage = is_percentage;
         this.amount_discount = amount_discount;
+        this.order = order;
+        this.product = product;
     }
     public Order_Line(){
         order_line_id = -1;
-        order_line_name = null;
+        name = null;
         qty = 0;
-        product_price = 0.0;
+        price_unit = 0.0;
         price_subtotal = 0.0;
-        price_total = 0.0;
+        price_subtotal_incl = 0.0;
+        price_before_discount = 0.0;
         discount_percent = 0;
-        order = null;
-        product = null;
+        display_price_unit = null;
+        display_price_subtotal = null;
+        display_price_subtotal_incl = null;
+        display_price_before_discount = null;
+        full_product_name = null;
+        customer_note = null;
         has_discount = false;
         is_percentage = true;
         amount_discount = 0.0;
+        order = null;
+        product = null;
     }
 
     public int getOrder_line_id() {
@@ -56,12 +78,12 @@ public class Order_Line extends RealmObject {
         this.order_line_id = order_line_id;
     }
 
-    public String getOrder_line_name() {
-        return order_line_name;
+    public String getName() {
+        return name;
     }
 
-    public void setOrder_line_name(String order_line_name) {
-        this.order_line_name = order_line_name;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public int getQty() {
@@ -78,14 +100,6 @@ public class Order_Line extends RealmObject {
 
     public void setPrice_subtotal(double price_subtotal) {
         this.price_subtotal = price_subtotal;
-    }
-
-    public double getPrice_total() {
-        return price_total;
-    }
-
-    public void setPrice_total(double price_total) {
-        this.price_total = price_total;
     }
 
     public Order getOrder() {
@@ -136,11 +150,75 @@ public class Order_Line extends RealmObject {
         this.amount_discount = amount_discount;
     }
 
-    public double getProduct_price() {
-        return product_price;
+    public double getPrice_unit() {
+        return price_unit;
     }
 
-    public void setProduct_price(double product_price) {
-        this.product_price = product_price;
+    public void setPrice_unit(double price_unit) {
+        this.price_unit = price_unit;
+    }
+
+    public double getPrice_before_discount() {
+        return price_before_discount;
+    }
+
+    public void setPrice_before_discount(double price_before_discount) {
+        this.price_before_discount = price_before_discount;
+    }
+
+    public double getPrice_subtotal_incl() {
+        return price_subtotal_incl;
+    }
+
+    public void setPrice_subtotal_incl(double price_subtotal_incl) {
+        this.price_subtotal_incl = price_subtotal_incl;
+    }
+
+    public String getDisplay_price_unit() {
+        return display_price_unit;
+    }
+
+    public void setDisplay_price_unit(String display_price_unit) {
+        this.display_price_unit = display_price_unit;
+    }
+
+    public String getDisplay_price_subtotal() {
+        return display_price_subtotal;
+    }
+
+    public void setDisplay_price_subtotal(String display_price_subtotal) {
+        this.display_price_subtotal = display_price_subtotal;
+    }
+
+    public String getDisplay_price_subtotal_incl() {
+        return display_price_subtotal_incl;
+    }
+
+    public void setDisplay_price_subtotal_incl(String display_price_subtotal_incl) {
+        this.display_price_subtotal_incl = display_price_subtotal_incl;
+    }
+
+    public String getDisplay_price_before_discount() {
+        return display_price_before_discount;
+    }
+
+    public void setDisplay_price_before_discount(String display_price_before_discount) {
+        this.display_price_before_discount = display_price_before_discount;
+    }
+
+    public String getFull_product_name() {
+        return full_product_name;
+    }
+
+    public void setFull_product_name(String full_product_name) {
+        this.full_product_name = full_product_name;
+    }
+
+    public String getCustomer_note() {
+        return customer_note;
+    }
+
+    public void setCustomer_note(String customer_note) {
+        this.customer_note = customer_note;
     }
 }

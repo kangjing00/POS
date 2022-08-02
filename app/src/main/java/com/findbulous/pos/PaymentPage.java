@@ -1,10 +1,8 @@
 package com.findbulous.pos;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Context;
 import android.content.Intent;
@@ -13,21 +11,18 @@ import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.PopupWindow;
-import android.widget.RadioButton;
-import android.widget.TextView;
 import android.widget.Toast;
 import com.findbulous.pos.Adapters.PaymentOrderLineAdapter;
+import com.findbulous.pos.Adapters.SplitBillOrderAdapter;
 import com.findbulous.pos.Network.CheckConnection;
 import com.findbulous.pos.PaymentTab.PaymentMethodPagerAdapter;
 import com.findbulous.pos.databinding.CashInOutPopupBinding;
 import com.findbulous.pos.databinding.PaymentAddTipPopupBinding;
 import com.findbulous.pos.databinding.PaymentOrderLinePopupBinding;
 import com.findbulous.pos.databinding.PaymentPageBinding;
+import com.findbulous.pos.databinding.SplitOrderPopupBinding;
 import com.findbulous.pos.databinding.ToolbarSyncPopupBinding;
-import com.google.android.material.button.MaterialButton;
 import com.google.android.material.tabs.TabLayoutMediator;
 
 import java.util.ArrayList;
@@ -35,15 +30,17 @@ import java.util.ArrayList;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
-public class PaymentPage extends CheckConnection {
+public class PaymentPage extends CheckConnection implements SplitBillOrderAdapter.SplitOrderLineInterface {
 
     private PaymentPageBinding binding;
     private PaymentMethodPagerAdapter paymentMethodPagerAdapter;
     private String[] titles = new String[]{"Cash", "Other Modes"};
     private PaymentPageViewModel viewModel;
     //RecyclerView
-    private ArrayList<Order_Line> order_lines;
-    private PaymentOrderLineAdapter orderLineAdapter;
+    private ArrayList<Order_Line> payment_order_lines;
+    private PaymentOrderLineAdapter paymentOrderLineAdapter;
+    private ArrayList<Order_Line> splitting_order_lines;
+    private SplitBillOrderAdapter splittingOrderLineAdapter;
     //Current order
     private Order currentOrder;
     //Current customer
@@ -111,22 +108,24 @@ public class PaymentPage extends CheckConnection {
             binding.paymentBarCustomerRl.setVisibility(View.VISIBLE);
             binding.paymentOrderDetailCustomerName.setText(customer_name);
             binding.paymentOrderDetailCustomerName.setVisibility(View.VISIBLE);
+            binding.paymentBarApplyCustomerBtn.setVisibility(View.GONE);
         }else{
             binding.paymentBarCustomerRl.setVisibility(View.GONE);
             binding.paymentOrderDetailCustomerName.setVisibility(View.GONE);
+            binding.paymentBarApplyCustomerBtn.setVisibility(View.VISIBLE);
         }
         //Recycler View
         binding.paymentOrderDetailProductRv.setLayoutManager(new LinearLayoutManager(contextpage, LinearLayoutManager.VERTICAL, false));
         binding.paymentOrderDetailProductRv.setHasFixedSize(true);
-        order_lines = new ArrayList<>();
-        orderLineAdapter = new PaymentOrderLineAdapter(order_lines);
-        order_lines.addAll(order.getOrder_lines());
-        binding.paymentOrderDetailProductRv.setAdapter(orderLineAdapter);
+        payment_order_lines = new ArrayList<>();
+        paymentOrderLineAdapter = new PaymentOrderLineAdapter(payment_order_lines);
+        payment_order_lines.addAll(order.getOrder_lines());
+        binding.paymentOrderDetailProductRv.setAdapter(paymentOrderLineAdapter);
         paymentMethodPagerAdapter = new PaymentMethodPagerAdapter(this);
 
         double order_subtotal = 0.0;
-        for(int i = 0; i < order_lines.size(); i++){
-            order_subtotal += order_lines.get(i).getPrice_subtotal();
+        for(int i = 0; i < payment_order_lines.size(); i++){
+            order_subtotal += payment_order_lines.get(i).getPrice_subtotal();
         }
         binding.paymentSubtotal.setText(String.format("%.2f", order_subtotal));
         binding.paymentTax.setText(String.format("%.2f", currentOrder.getAmount_tax()));
@@ -156,6 +155,12 @@ public class PaymentPage extends CheckConnection {
         //OnClickListener
         //Body
         {
+        binding.paymentSplitBillBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showSplitBill();
+            }
+        });
         binding.paymentBackBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -193,23 +198,34 @@ public class PaymentPage extends CheckConnection {
                 binding.paymentTipCancelBtn.setVisibility(View.GONE);
             }
         });
-//        binding.paymentBarRemoveCustomerBtn.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                currentCustomerSharePreferenceEdit.putInt("customerID", -1);
-//                currentCustomerSharePreferenceEdit.putString("customerName", null);
-//                currentCustomerSharePreferenceEdit.putString("customerEmail", null);
-//                currentCustomerSharePreferenceEdit.putString("customerPhoneNo", null);
-//                currentCustomerSharePreferenceEdit.putString("customerIdentityNo", null);
-//                currentCustomerSharePreferenceEdit.putString("customerBirthdate", null);
-//                currentCustomerSharePreferenceEdit.commit();
-//                binding.paymentBarCustomerRl.setVisibility(View.GONE);
-//                currentCustomer = null;
-//                binding.paymentOrderDetailCustomerName.setText("[Customer Name]");
-//                Toast.makeText(contextpage, "Current Customer Removed", Toast.LENGTH_SHORT).show();
-//                binding.paymentOrderDetailCustomerName.setVisibility(View.GONE);
-//            }
-//        });
+        binding.paymentBarApplyCustomerBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(contextpage, CustomerPage.class);
+                startActivity(intent);
+                finish();
+            }
+        });
+        binding.paymentBarRemoveCustomerBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                currentCustomerSharePreferenceEdit.putInt("customerID", -1);
+                currentCustomerSharePreferenceEdit.putString("customerName", null);
+                currentCustomerSharePreferenceEdit.putString("customerEmail", null);
+                currentCustomerSharePreferenceEdit.putString("customerPhoneNo", null);
+                currentCustomerSharePreferenceEdit.putString("customerIdentityNo", null);
+                currentCustomerSharePreferenceEdit.putString("customerBirthdate", null);
+                currentCustomerSharePreferenceEdit.commit();
+
+                binding.paymentBarCustomerRl.setVisibility(View.GONE);
+                binding.paymentBarApplyCustomerBtn.setVisibility(View.VISIBLE);
+
+                currentCustomer = null;
+                binding.paymentOrderDetailCustomerName.setText("[Customer Name]");
+                Toast.makeText(contextpage, "Current Customer Removed", Toast.LENGTH_SHORT).show();
+                binding.paymentOrderDetailCustomerName.setVisibility(View.GONE);
+            }
+        });
         binding.paymentOrderDetailConfirmBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -299,6 +315,57 @@ public class PaymentPage extends CheckConnection {
         }
     }
 
+    private void showSplitBill(){
+        PopupWindow popup = new PopupWindow(contextpage);
+        SplitOrderPopupBinding popupBinding = SplitOrderPopupBinding.inflate(getLayoutInflater());
+        popup.setContentView(popupBinding.getRoot());
+        // Set content width and height
+        popup.setHeight(1350);
+        popup.setWidth(2000);
+        popup.setOutsideTouchable(true);
+        popup.setFocusable(true);
+        popup.setElevation(8);
+        popup.setBackgroundDrawable(null);
+
+        //RecyclerView
+        int currentOrderId = currentOrderSharePreference.getInt("orderId", -1);
+        Order order = realm.where(Order.class).equalTo("order_id", currentOrderId).findFirst();
+
+        popupBinding.productsRv.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
+        popupBinding.productsRv.setHasFixedSize(true);
+        splitting_order_lines = new ArrayList<>();
+        splittingOrderLineAdapter = new SplitBillOrderAdapter(splitting_order_lines, this);
+        splitting_order_lines.addAll(order.getOrder_lines());
+        popupBinding.productsRv.setAdapter(splittingOrderLineAdapter);
+
+
+
+
+
+        popupBinding.proceedBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+            }
+        });
+
+        popupBinding.cancelBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                popup.dismiss();
+            }
+        });
+
+        popup.showAtLocation(binding.getRoot(), Gravity.CENTER, 0, 0);
+        //blur background
+        View container = (View) popup.getContentView().getParent();
+        WindowManager wm = (WindowManager) PaymentPage.this.getSystemService(Context.WINDOW_SERVICE);
+        WindowManager.LayoutParams p = (WindowManager.LayoutParams) container.getLayoutParams();
+        p.flags |= WindowManager.LayoutParams.FLAG_DIM_BEHIND;
+        p.dimAmount = 0.3f;
+        wm.updateViewLayout(container, p);
+    }
+
     private void showOrderProducts() {
         PopupWindow popup = new PopupWindow(contextpage);
         PaymentOrderLinePopupBinding popupBinding = PaymentOrderLinePopupBinding.inflate(getLayoutInflater());
@@ -316,7 +383,7 @@ public class PaymentPage extends CheckConnection {
         //RecyclerView
         popupBinding.paymentOrderProductsRv.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
         popupBinding.paymentOrderProductsRv.setHasFixedSize(true);
-        popupBinding.paymentOrderProductsRv.setAdapter(orderLineAdapter);
+        popupBinding.paymentOrderProductsRv.setAdapter(paymentOrderLineAdapter);
 
         //other setting
         popupBinding.paymentOrderPopupOrderId.setText("#" + currentOrder.getOrder_id());
@@ -479,5 +546,10 @@ public class PaymentPage extends CheckConnection {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void onSplitOrderLineClick(int position) {
+
     }
 }

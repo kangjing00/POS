@@ -90,11 +90,11 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
-                android:id="@+id/product_order_product_total_price"
+                android:id="@+id/product_order_product_price_before_discount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginRight="20dp"
-                android:text='@{"RM " + String.valueOf(orderLine.price_total)}'
+                android:text='@{String.format("RM %.2f", orderLine.price_before_discount)}'
                 android:textSize="8dp"
                 android:background="@drawable/strike_through"
                 android:textColor="@color/darkGrey"

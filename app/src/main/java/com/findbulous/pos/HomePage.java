@@ -1,18 +1,18 @@
 package com.findbulous.pos;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.databinding.DataBindingUtil;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -27,7 +27,6 @@ import android.view.animation.AnimationUtils;
 import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -52,21 +51,24 @@ import com.findbulous.pos.databinding.ProductModifierPopupBinding;
 import com.findbulous.pos.databinding.ToolbarSyncPopupBinding;
 import com.google.android.material.button.MaterialButton;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
+
+import javax.net.ssl.HttpsURLConnection;
 
 import io.realm.Case;
 import io.realm.Realm;
@@ -1477,7 +1479,33 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                         .findAll();
                 ArrayList<Attribute> attributes = (ArrayList<Attribute>) realm.copyFromRealm(attribute_results);
                 if(attributes.size() == 0){
-                    addProductToOrder(product);
+                    boolean sameProduct = false;
+                    for(int i = 0; i < order_lines.size(); i++) {
+                        if (product.getId() == order_lines.get(i).getProduct().getProduct_id()){
+                            int qty = order_lines.get(i).getQty() + 1;
+                            double price_before_discount = qty * order_lines.get(i).getPrice_unit();
+                            double discount_amount = 0;
+                            if(order_lines.get(i).isHas_discount()){
+                                if(order_lines.get(i).isIs_percentage()){
+                                    discount_amount = (price_before_discount * order_lines.get(i).getDiscount_percent()) / 100;
+                                }else{
+                                    discount_amount = order_lines.get(i).getAmount_discount();
+                                }
+                            }
+                            double subtotal = price_before_discount - discount_amount;
+
+                            order_lines.get(i).setPrice_subtotal(subtotal);
+                            order_lines.get(i).setAmount_discount(discount_amount);
+                            order_lines.get(i).setQty(qty);
+                            order_lines.get(i).setPrice_before_discount(price_before_discount);
+
+                            sameProduct = true;
+                            orderLineAdapter.notifyDataSetChanged();
+                            updateOrderTotalAmount();
+                        }
+                    }
+                    if(!sameProduct)
+                        addProductToOrder(product);
                     popup.dismiss();
                 }
             }
@@ -1535,6 +1563,10 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
 
         return selected;
     }
+    //NOT YET DONE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!MODIFIER related
+    private void addOrUpdateProductToOrder(Product product){
+
+    }
     //Add & Update product to order
     private void addProductToOrder(Product product){
         int orderState = cartSharedPreference.getInt("orderingState", 0);
@@ -1553,10 +1585,13 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         }else{
             nextID = id.intValue() + 1;
         }
-//        double amount_total = currentOrder.getAmount_total() + product.getProduct_price();
+//        double amount_total = currentOrder.getAmount_total() + product.getPrice_unit();
 //        currentOrder.setAmount_total(amount_total);
-        Order_Line newOrderLine = new Order_Line(nextID, String.valueOf(nextID), 1, product.getList_price(),
-                product.getList_price(), product.getList_price(), 0, currentOrder, product, false, true, 0);
+        Order_Line newOrderLine = new Order_Line(nextID, String.valueOf(order_lines.size()), 1, product.getList_price(),
+                product.getList_price(), product.getList_price(), product.getList_price(), 0,
+                product.getDisplay_list_price(), product.getDisplay_list_price(), product.getDisplay_list_price(),
+                product.getDisplay_list_price(), product.getName(), null, false, true,
+                0, currentOrder, product);
 
         realm.executeTransaction(new Realm.Transaction() {
             @Override
@@ -1568,10 +1603,6 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         order_lines.add(newOrderLine);
         orderLineAdapter.notifyDataSetChanged();
         updateOrderTotalAmount();
-    }
-    //NOT YET DONE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!MODIFIER related
-    private void addOrUpdateProductToOrder(Product product){
-
     }
     private void addNewOrder(){
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -1604,6 +1635,130 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         cartSharedPreferenceEdit.putInt("orderId", order.getOrder_id());
         cartSharedPreferenceEdit.commit();
         refreshCustomerNumber();
+    }
+
+    //Update Order
+    //public class apiUpdateOrder extends AsyncTask<String, String, String>{
+    //
+    //}
+    //Add New Order
+    public class apiAddNewOrder extends AsyncTask<String, String, String>{
+        ProgressDialog pd = null;
+
+        public apiAddNewOrder(){
+
+        }
+
+        @Override
+        protected void onPreExecute() {
+            if(pd == null) {
+                pd = createProgressDialog(contextpage);
+                pd.show();
+            }
+        }
+
+        @Override
+        protected String doInBackground(String... strings) {
+            long timeBefore = Calendar.getInstance().getTimeInMillis();
+            String connection_error = "";
+
+            int customer_id = 0, table_id = -1;
+            String tableID = null;
+            if(table_id == -1){
+                tableID = "";
+            }else{
+                tableID = String.valueOf(table_id);
+            }
+            String tableParameter = "";
+            if(pos_config.isIs_table_management()) {
+                tableParameter = "&table_id=" + tableID;
+            }
+            String urlParameters = "&customer_id=" + customer_id + "&customer_count=1" + tableParameter +
+                    "";
+            byte[] postData = urlParameters.getBytes(Charset.forName("UTF-8"));
+            int postDataLength = postData.length;
+
+            String url = "https://www.c3rewards.com/api/merchant/?module=pos&action=save_order";
+            String agent = "c092dc89b7aac085a210824fb57625db";
+            String jsonUrl =url + "&agent=" + agent;
+            System.out.println(jsonUrl);
+
+            URL obj;
+            try{
+                obj = new URL(url);
+                HttpsURLConnection con = (HttpsURLConnection) obj.openConnection();
+                con.setRequestMethod("POST");
+                con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                con.setRequestProperty("charset", "utf-8");
+                con.setRequestProperty("Content-Length", Integer.toString(postDataLength));
+
+                // Send post request
+                con.setDoOutput(true);
+                DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+                wr.writeBytes(urlParameters);
+                wr.flush();
+                wr.close();
+
+                int responseCode = con.getResponseCode();
+                System.out.println("\nSending 'POST' request to URL : " + url);
+                System.out.println("Post parameters : " + urlParameters);
+                System.out.println("Response Code : " + responseCode);
+
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                System.out.println(response);
+                String data = response.toString();
+                try{
+                    JSONObject json = new JSONObject(data);
+                    String status = json.getString("status");
+
+                    if (status.equals("OK")) {
+
+                    }
+                }catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+            }catch (IOException e){
+                    Log.e("error", "cannot fetch data");
+                    connection_error = e.getMessage() + "";
+                    System.out.println(connection_error);
+                }
+
+            long timeAfter = Calendar.getInstance().getTimeInMillis();
+            System.out.println("Load product & category time: " + (timeAfter - timeBefore) + "ms");
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            if(!NetworkUtils.isNetworkAvailable(contextpage)){
+                Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
+            }else{
+
+            }
+            if (pd != null)
+                pd.dismiss();
+        }
+    }
+    public static ProgressDialog createProgressDialog(Context mContext) {
+        ProgressDialog dialog = new ProgressDialog(mContext);
+        try {
+            dialog.show();
+        } catch (WindowManager.BadTokenException e) {
+
+        }
+        dialog.setCancelable(false);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dialog.setContentView(R.layout.progress_dialog);
+        // dialog.setMessage(Message);
+        return dialog;
     }
 
     //Cart / order line
@@ -1731,7 +1886,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         order_lines.get(position).setPrice_subtotal(updateOrderLine.getPrice_subtotal());
         order_lines.get(position).setAmount_discount(updateOrderLine.getAmount_discount());
         order_lines.get(position).setQty(updateOrderLine.getQty());
-        order_lines.get(position).setPrice_total(updateOrderLine.getPrice_total());
+        order_lines.get(position).setPrice_before_discount(updateOrderLine.getPrice_before_discount());
 
         realm.executeTransaction(new Realm.Transaction() {
             @Override
@@ -1888,13 +2043,41 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
     //Menu Product
     @Override
     public void onMenuProductClick(int position) {
+        Product product = list.get(position);
+
         if(pos_config.isProduct_configurator() || pos_config.isIface_orderline_customer_notes()) {
-            showProductModifier(list.get(position), true);
+            showProductModifier(product, true);
         }else{
-            //add the product to order line directly //NOT DONE YET
-            addProductToOrder(list.get(position));
+            //add the product to order line directly
+            boolean sameProduct = false;
+            for(int i = 0; i < order_lines.size(); i++) {
+                if (product.getId() == order_lines.get(i).getProduct().getProduct_id()){
+                    int qty = order_lines.get(i).getQty() + 1;
+                    double price_before_discount = qty * order_lines.get(i).getPrice_unit();
+                    double discount_amount = 0;
+                    if(order_lines.get(i).isHas_discount()){
+                        if(order_lines.get(i).isIs_percentage()){
+                            discount_amount = (price_before_discount * order_lines.get(i).getDiscount_percent()) / 100;
+                        }else{
+                            discount_amount = order_lines.get(i).getAmount_discount();
+                        }
+                    }
+                    double subtotal = price_before_discount - discount_amount;
+
+                    order_lines.get(i).setPrice_subtotal(subtotal);
+                    order_lines.get(i).setAmount_discount(discount_amount);
+                    order_lines.get(i).setQty(qty);
+                    order_lines.get(i).setPrice_before_discount(price_before_discount);
+
+                    sameProduct = true;
+                    orderLineAdapter.notifyDataSetChanged();
+                    updateOrderTotalAmount();
+                }
+            }
+            if(!sameProduct)
+                addProductToOrder(product);
         }
-        Toast.makeText(this, "" + list.get(position).getName(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "" + product.getName(), Toast.LENGTH_SHORT).show();
     }
     @Override
     public void onMenuProductLongClick(int position){

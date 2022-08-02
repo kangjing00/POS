@@ -9,8 +9,6 @@ import android.widget.Toast;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.findbulous.pos.Attribute;
-import com.findbulous.pos.Attribute_Value;
 import com.findbulous.pos.Order_Line;
 import com.findbulous.pos.POS_Config;
 import com.findbulous.pos.R;
@@ -90,9 +88,9 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
         }
 
         if(order_line.isHas_discount()){
-            holder.binding.productOrderProductTotalPrice.setVisibility(View.VISIBLE);
+            holder.binding.productOrderProductPriceBeforeDiscount.setVisibility(View.VISIBLE);
         }else{
-            holder.binding.productOrderProductTotalPrice.setVisibility(View.INVISIBLE);
+            holder.binding.productOrderProductPriceBeforeDiscount.setVisibility(View.INVISIBLE);
         }
 
         if(order_line.isIs_percentage()) {
@@ -109,13 +107,13 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
             @Override
             public void onClick(View view) {
                 holder.binding.productOrderDiscountEt.setInputType(InputType.TYPE_CLASS_NUMBER);
-                holder.binding.productOrderProductTotalPrice.setVisibility(View.INVISIBLE);
+                holder.binding.productOrderProductPriceBeforeDiscount.setVisibility(View.INVISIBLE);
                 //Reset with no discount
                 int p = holder.getAdapterPosition();
                 double subtotal;
-                double price_total = order_lines.get(p).getPrice_total();
+                double price_before_discount = order_lines.get(p).getPrice_before_discount();
 
-                subtotal = price_total;
+                subtotal = price_before_discount;
                 subtotal = Double.valueOf(String.format("%.2f", subtotal));
 
                 order_lines.get(p).setPrice_subtotal(subtotal);
@@ -136,13 +134,13 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
             @Override
             public void onClick(View view) {
                 holder.binding.productOrderDiscountEt.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
-                holder.binding.productOrderProductTotalPrice.setVisibility(View.INVISIBLE);
+                holder.binding.productOrderProductPriceBeforeDiscount.setVisibility(View.INVISIBLE);
                 //Reset with no discount
                 int p = holder.getAdapterPosition();
                 double subtotal;
-                double price_total = order_lines.get(p).getPrice_total();
+                double price_before_discount = order_lines.get(p).getPrice_before_discount();
 
-                subtotal = price_total;
+                subtotal = price_before_discount;
                 subtotal = Double.valueOf(String.format("%.2f", subtotal));
 
                 order_lines.get(p).setPrice_subtotal(subtotal);
@@ -181,23 +179,23 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
                     cancelledIndex = -1;
 
                     if(p > -1) {
-                        double price_total = qty * order_lines.get(p).getProduct_price();
+                        double price_before_discount = qty * order_lines.get(p).getPrice_unit();
                         double discount_amount = 0;
                         if(order_lines.get(p).isHas_discount()){
                             if(order_lines.get(p).isIs_percentage()){
-                                discount_amount = (price_total * order_lines.get(p).getDiscount_percent()) / 100;
+                                discount_amount = (price_before_discount * order_lines.get(p).getDiscount_percent()) / 100;
                             }else{
                                 discount_amount = order_lines.get(p).getAmount_discount();
                             }
                         }
-                        double subtotal = price_total - discount_amount;
-                        price_total = Double.valueOf(String.format("%.2f", price_total));
-                        subtotal = Double.valueOf(String.format("%.2f", subtotal));
+                        double subtotal = price_before_discount - discount_amount;
+//                        price_total = Double.valueOf(String.format("%.2f", price_total));
+//                        subtotal = Double.valueOf(String.format("%.2f", subtotal));
 
                         order_lines.get(p).setPrice_subtotal(subtotal);
                         order_lines.get(p).setAmount_discount(discount_amount);
                         order_lines.get(p).setQty(qty);
-                        order_lines.get(p).setPrice_total(price_total);
+                        order_lines.get(p).setPrice_before_discount(price_before_discount);
                         Order_Line updateOrderLine = order_lines.get(p);
                         holder.binding.setOrderLine(updateOrderLine);
 
@@ -233,7 +231,7 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
                             amount_discount = 0.0;
                             is_percentage = true;
                             has_discount = true;
-                            holder.binding.productOrderProductTotalPrice.setVisibility(View.VISIBLE);
+                            holder.binding.productOrderProductPriceBeforeDiscount.setVisibility(View.VISIBLE);
                         } else {
                             if(holder.binding.productOrderDiscountEt.getText().toString().equalsIgnoreCase("")){
                                 discount_percentage = 0;
@@ -241,25 +239,25 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
                                 Toast.makeText(context, "Discount over 100% is impossible", Toast.LENGTH_SHORT).show();
                             }
                             has_discount = false;
-                            holder.binding.productOrderProductTotalPrice.setVisibility(View.INVISIBLE);
+                            holder.binding.productOrderProductPriceBeforeDiscount.setVisibility(View.INVISIBLE);
                         }
                     }else{
                         if ((!holder.binding.productOrderDiscountEt.getText().toString().equalsIgnoreCase(""))
                                 && (Double.valueOf(holder.binding.productOrderDiscountEt.getText().toString()) > 0.0)
                                 && (Double.valueOf(holder.binding.productOrderDiscountEt.getText().toString()) <=
-                                order_lines.get(p).getPrice_total())) {
+                                order_lines.get(p).getPrice_before_discount())) {
                             discount_percentage = 0;
                             amount_discount = Double.valueOf(holder.binding.productOrderDiscountEt.getText().toString());
                             is_percentage = false;
                             has_discount = true;
-                            holder.binding.productOrderProductTotalPrice.setVisibility(View.VISIBLE);
+                            holder.binding.productOrderProductPriceBeforeDiscount.setVisibility(View.VISIBLE);
                         } else {
                             if((Double.valueOf(holder.binding.productOrderDiscountEt.getText().toString()) >
-                                    order_lines.get(p).getPrice_total())) {
+                                    order_lines.get(p).getPrice_before_discount())) {
                                 Toast.makeText(context, "Discount over the total product price is impossible", Toast.LENGTH_SHORT).show();
                             }
                             has_discount = false;
-                            holder.binding.productOrderProductTotalPrice.setVisibility(View.INVISIBLE);
+                            holder.binding.productOrderProductPriceBeforeDiscount.setVisibility(View.INVISIBLE);
                         }
                     }
 
@@ -267,12 +265,12 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
 
                     if(p > -1) {
                         double subtotal;
-                        double price_total = order_lines.get(p).getPrice_total();
+                        double price_before_discount = order_lines.get(p).getPrice_before_discount();
 
                         if(is_percentage){
-                            amount_discount = (price_total * discount_percentage) / 100;
+                            amount_discount = (price_before_discount * discount_percentage) / 100;
                         }
-                        subtotal = price_total - amount_discount;
+                        subtotal = price_before_discount - amount_discount;
                         amount_discount = Double.valueOf(String.format("%.2f", amount_discount));
                         subtotal = Double.valueOf(String.format("%.2f", subtotal));
 
