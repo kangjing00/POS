@@ -87,20 +87,31 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
             holder.binding.productOrderCancelProduct.setBackgroundColor(holder.binding.getRoot().getContext().getResources().getColor(R.color.white));
         }
 
-        if(order_line.isHas_discount()){
-            holder.binding.productOrderProductPriceBeforeDiscount.setVisibility(View.VISIBLE);
+        if(order_line.getDiscount_type() != null) {
+            if ((order_line.getDiscount_type().equalsIgnoreCase("percentage")) ||
+                    (order_line.getDiscount_type().equalsIgnoreCase("fixed_amount"))) {
+                holder.binding.productOrderProductPriceBeforeDiscount.setVisibility(View.VISIBLE);
+            } else {
+                holder.binding.productOrderProductPriceBeforeDiscount.setVisibility(View.INVISIBLE);
+            }
         }else{
             holder.binding.productOrderProductPriceBeforeDiscount.setVisibility(View.INVISIBLE);
         }
 
-        if(order_line.isIs_percentage()) {
+        if(order_line.getDiscount_type() != null) {
+            if (order_line.getDiscount_type().equalsIgnoreCase("percentage")) {
+                holder.binding.discountRadioBtnPercentage.setChecked(true);
+                holder.binding.discountRadioBtnAmount.setChecked(false);
+                holder.binding.productOrderDiscountEt.setInputType(InputType.TYPE_CLASS_NUMBER);
+            } else if (order_line.getDiscount_type().equalsIgnoreCase("fixed_amount")) {
+                holder.binding.discountRadioBtnPercentage.setChecked(false);
+                holder.binding.discountRadioBtnAmount.setChecked(true);
+                holder.binding.productOrderDiscountEt.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+            }
+        }else{
             holder.binding.discountRadioBtnPercentage.setChecked(true);
             holder.binding.discountRadioBtnAmount.setChecked(false);
             holder.binding.productOrderDiscountEt.setInputType(InputType.TYPE_CLASS_NUMBER);
-        }else{
-            holder.binding.discountRadioBtnPercentage.setChecked(false);
-            holder.binding.discountRadioBtnAmount.setChecked(true);
-            holder.binding.productOrderDiscountEt.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
         }
 
         holder.binding.discountRadioBtnPercentage.setOnClickListener(new View.OnClickListener() {
@@ -118,10 +129,8 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
 
                 order_lines.get(p).setPrice_subtotal(subtotal);
 
-                order_lines.get(p).setAmount_discount(0.0);
-                order_lines.get(p).setDiscount_percent(0);
-                order_lines.get(p).setIs_percentage(true);
-                order_lines.get(p).setHas_discount(false);
+                order_lines.get(p).setDiscount(0.0);
+                order_lines.get(p).setDiscount_type(null);
 
                 Order_Line updateOrderLine = order_lines.get(p);
                 holder.binding.setOrderLine(updateOrderLine);
@@ -145,10 +154,8 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
 
                 order_lines.get(p).setPrice_subtotal(subtotal);
 
-                order_lines.get(p).setAmount_discount(0.0);
-                order_lines.get(p).setDiscount_percent(0);
-                order_lines.get(p).setIs_percentage(true);
-                order_lines.get(p).setHas_discount(false);
+                order_lines.get(p).setDiscount(0.0);
+                order_lines.get(p).setDiscount_type(null);
 
                 Order_Line updateOrderLine = order_lines.get(p);
                 holder.binding.setOrderLine(updateOrderLine);
@@ -180,20 +187,17 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
 
                     if(p > -1) {
                         double price_before_discount = qty * order_lines.get(p).getPrice_unit();
-                        double discount_amount = 0;
-                        if(order_lines.get(p).isHas_discount()){
-                            if(order_lines.get(p).isIs_percentage()){
-                                discount_amount = (price_before_discount * order_lines.get(p).getDiscount_percent()) / 100;
-                            }else{
-                                discount_amount = order_lines.get(p).getAmount_discount();
+                        double amount_discount = 0;
+                        if(order_lines.get(p).getDiscount_type() != null) {
+                            if (order_lines.get(p).getDiscount_type().equalsIgnoreCase("percentage")) {
+                                amount_discount = (price_before_discount * order_lines.get(p).getDiscount()) / 100;
+                            } else if (order_lines.get(p).getDiscount_type().equalsIgnoreCase("fixed_amount")) {
+                                amount_discount = order_lines.get(p).getDiscount();
                             }
                         }
-                        double subtotal = price_before_discount - discount_amount;
-//                        price_total = Double.valueOf(String.format("%.2f", price_total));
-//                        subtotal = Double.valueOf(String.format("%.2f", subtotal));
+                        double subtotal = price_before_discount - amount_discount;
 
                         order_lines.get(p).setPrice_subtotal(subtotal);
-                        order_lines.get(p).setAmount_discount(discount_amount);
                         order_lines.get(p).setQty(qty);
                         order_lines.get(p).setPrice_before_discount(price_before_discount);
                         Order_Line updateOrderLine = order_lines.get(p);
@@ -209,9 +213,8 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
             @Override
             public void onFocusChange(View view, boolean hasFocus) {
                 if(!hasFocus) {
-                    int discount_percentage = 0;
-                    double amount_discount = 0.0;
-                    boolean has_discount = false, is_percentage = true;
+                    double discount = 0.0;
+                    String discount_type = null;
 
                     int p = holder.getLayoutPosition();
                     if(cancelledIndex != -1){
@@ -227,18 +230,17 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
                         if ((!holder.binding.productOrderDiscountEt.getText().toString().equalsIgnoreCase(""))
                                 && (Double.valueOf(holder.binding.productOrderDiscountEt.getText().toString()) > 0.0)
                                 && (Double.valueOf(holder.binding.productOrderDiscountEt.getText().toString()) <= 100.0)) {
-                            discount_percentage = Integer.parseInt(holder.binding.productOrderDiscountEt.getText().toString());
-                            amount_discount = 0.0;
-                            is_percentage = true;
-                            has_discount = true;
+                            discount = Integer.parseInt(holder.binding.productOrderDiscountEt.getText().toString());
+                            discount_type = "percentage";
                             holder.binding.productOrderProductPriceBeforeDiscount.setVisibility(View.VISIBLE);
                         } else {
                             if(holder.binding.productOrderDiscountEt.getText().toString().equalsIgnoreCase("")){
-                                discount_percentage = 0;
+                                discount = 0;
                             }else if((Double.valueOf(holder.binding.productOrderDiscountEt.getText().toString()) > 100.0)) {
                                 Toast.makeText(context, "Discount over 100% is impossible", Toast.LENGTH_SHORT).show();
                             }
-                            has_discount = false;
+                            discount_type = null;
+                            discount = 0.0;
                             holder.binding.productOrderProductPriceBeforeDiscount.setVisibility(View.INVISIBLE);
                         }
                     }else{
@@ -246,40 +248,37 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
                                 && (Double.valueOf(holder.binding.productOrderDiscountEt.getText().toString()) > 0.0)
                                 && (Double.valueOf(holder.binding.productOrderDiscountEt.getText().toString()) <=
                                 order_lines.get(p).getPrice_before_discount())) {
-                            discount_percentage = 0;
-                            amount_discount = Double.valueOf(holder.binding.productOrderDiscountEt.getText().toString());
-                            is_percentage = false;
-                            has_discount = true;
+                            discount = Double.valueOf(holder.binding.productOrderDiscountEt.getText().toString());
+                            discount_type = "fixed_amount";
                             holder.binding.productOrderProductPriceBeforeDiscount.setVisibility(View.VISIBLE);
                         } else {
                             if((Double.valueOf(holder.binding.productOrderDiscountEt.getText().toString()) >
                                     order_lines.get(p).getPrice_before_discount())) {
                                 Toast.makeText(context, "Discount over the total product price is impossible", Toast.LENGTH_SHORT).show();
                             }
-                            has_discount = false;
+                            discount_type = null;
+                            discount = 0.0;
                             holder.binding.productOrderProductPriceBeforeDiscount.setVisibility(View.INVISIBLE);
                         }
                     }
 
 
-
                     if(p > -1) {
                         double subtotal;
+                        double amount_discount;
                         double price_before_discount = order_lines.get(p).getPrice_before_discount();
 
-                        if(is_percentage){
-                            amount_discount = (price_before_discount * discount_percentage) / 100;
+                        amount_discount = discount;//fixed_amount
+                        if(discount_type != null) {
+                            if (discount_type.equalsIgnoreCase("percentage")) { //percentage
+                                amount_discount = (price_before_discount * discount) / 100;
+                            }
                         }
                         subtotal = price_before_discount - amount_discount;
-                        amount_discount = Double.valueOf(String.format("%.2f", amount_discount));
-                        subtotal = Double.valueOf(String.format("%.2f", subtotal));
 
                         order_lines.get(p).setPrice_subtotal(subtotal);
-
-                        order_lines.get(p).setAmount_discount(amount_discount);
-                        order_lines.get(p).setDiscount_percent(discount_percentage);
-                        order_lines.get(p).setIs_percentage(is_percentage);
-                        order_lines.get(p).setHas_discount(has_discount);
+                        order_lines.get(p).setDiscount(discount);
+                        order_lines.get(p).setDiscount_type(discount_type);
 
                         Order_Line updateOrderLine = order_lines.get(p);
                         holder.binding.setOrderLine(updateOrderLine);

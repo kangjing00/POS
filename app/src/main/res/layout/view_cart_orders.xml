@@ -219,7 +219,7 @@
                                 android:maxLines="1"
                                 android:padding="15dp"
                                 android:layout_marginStart="5dp"
-                                android:text='@{orderLine.is_percentage? (String.format("%d", orderLine.discount_percent)) : (String.format("%.2f", orderLine.amount_discount)) }'
+                                android:text='@{orderLine.discount_type.equalsIgnoreCase("percentage")? (String.valueOf((int)orderLine.discount)) : (orderLine.discount_type.equalsIgnoreCase("fixed_amount")? (String.format("%.2f", orderLine.discount)) : "0") }'
                                 android:textSize="12dp"
                                 android:layout_weight="1"/>
                         </LinearLayout>

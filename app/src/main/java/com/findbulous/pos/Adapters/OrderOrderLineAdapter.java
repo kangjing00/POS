@@ -40,12 +40,18 @@ public class OrderOrderLineAdapter extends RecyclerView.Adapter<OrderOrderLineAd
         Order_Line order_line = order_lines.get(position);
         holder.binding.setOrderLine(order_line);
 
-        if(!order_line.isHas_discount()){
+        if(order_line.getDiscount_type() != null) {
+            if ((order_line.getDiscount_type().equalsIgnoreCase("percentage")) ||
+                    (order_line.getDiscount_type().equalsIgnoreCase("fixed_amount"))) {
+                holder.binding.paymentProductProductDiscount.setVisibility(View.VISIBLE);
+                holder.binding.paymentProductProductPriceBeforeDiscount.setVisibility(View.VISIBLE);
+            } else {  //no discount
+                holder.binding.paymentProductProductDiscount.setVisibility(View.INVISIBLE);
+                holder.binding.paymentProductProductPriceBeforeDiscount.setVisibility(View.INVISIBLE);
+            }
+        }else{
             holder.binding.paymentProductProductDiscount.setVisibility(View.INVISIBLE);
             holder.binding.paymentProductProductPriceBeforeDiscount.setVisibility(View.INVISIBLE);
-        }else{
-            holder.binding.paymentProductProductDiscount.setVisibility(View.VISIBLE);
-            holder.binding.paymentProductProductPriceBeforeDiscount.setVisibility(View.VISIBLE);
         }
     }
 

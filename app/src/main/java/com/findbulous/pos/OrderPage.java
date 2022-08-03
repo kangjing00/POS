@@ -386,13 +386,18 @@ public class OrderPage extends CheckConnection {
                                     product = products.get(x);
                                 }
                             }
+                            String discount_type = null;
+                            if((jo.getString("discount_type").length() > 0) ||
+                                    (jo.getString("discount_type") != null)){
+                                discount_type = jo.getString("discount_type");
+                            }
                             Order_Line orderLine = new Order_Line(
                                 jo.getInt("order_line_id"), jo.getString("name"), jo.getInt("qty"),
                                 jo.getDouble("price_unit"), jo.getDouble("price_subtotal"), jo.getDouble("price_subtotal_incl"),
-                                price_before_discount, 0, jo.getString("display_price_unit"), jo.getString("display_price_subtotal"),
+                                price_before_discount, jo.getString("display_price_unit"), jo.getString("display_price_subtotal"),
                                 jo.getString("display_price_subtotal_incl"), String.format("RM %.2f", price_before_discount),
-                                jo.getString("full_product_name"), jo.getString("customer_note"), false,
-                                true, 0.0, order, product);
+                                jo.getString("full_product_name"), jo.getString("customer_note"), discount_type,
+                                jo.getDouble("discount"), jo.getString("display_discount"), order, product);
 
                             order_lines.add(orderLine);
                         }
@@ -451,7 +456,14 @@ public class OrderPage extends CheckConnection {
         double subtotal = 0.0, product_discount = 0.0, order_discount = 0.0;
         for(int i = 0; i < order_lines.size(); i++){
             subtotal += order_lines.get(i).getPrice_before_discount();
-            product_discount += order_lines.get(i).getAmount_discount();
+            if(order_lines.get(i).getDiscount_type() != null) {
+                if (order_lines.get(i).getDiscount_type().equalsIgnoreCase("percentage")) {
+                    double amount_discount = (order_lines.get(i).getPrice_before_discount() * order_lines.get(i).getDiscount()) / 100;
+                    product_discount += amount_discount;
+                } else if (order_lines.get(i).getDiscount_type().equalsIgnoreCase("fixed_amount")) {
+                    product_discount += order_lines.get(i).getDiscount();
+                }
+            }
         }
         if(product_discount != 0.0){
             product_discount = -product_discount;

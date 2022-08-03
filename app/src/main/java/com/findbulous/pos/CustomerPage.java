@@ -1491,10 +1491,8 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
 //        order_lines.get(position).setDiscount(discount);
 //        Order_Line updateOrderLine = order_lines.get(position);
         order_lines.get(position).setPrice_subtotal(updateOrderLine.getPrice_subtotal());
-        order_lines.get(position).setHas_discount(updateOrderLine.isHas_discount());
-        order_lines.get(position).setIs_percentage(updateOrderLine.isIs_percentage());
-        order_lines.get(position).setDiscount_percent(updateOrderLine.getDiscount_percent());
-        order_lines.get(position).setAmount_discount(updateOrderLine.getAmount_discount());
+        order_lines.get(position).setDiscount_type(updateOrderLine.getDiscount_type());
+        order_lines.get(position).setDiscount(updateOrderLine.getDiscount());
 
         realm.executeTransaction(new Realm.Transaction() {
             @Override

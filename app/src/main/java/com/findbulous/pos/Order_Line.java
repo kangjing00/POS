@@ -7,14 +7,14 @@ public class Order_Line extends RealmObject {
     @PrimaryKey
     private int order_line_id;
     private String name;
-    private int qty, discount_percent;
+    private int qty;
     /*
     price subtotal = the final price of all qty of this product after discount
     price subtotal incl = include tax
     price total = the final price of all qty of this product before discount
     */
-    private double price_unit, price_subtotal, price_subtotal_incl, price_before_discount, amount_discount;
-    private boolean has_discount, is_percentage;
+    private double price_unit, price_subtotal, price_subtotal_incl, price_before_discount, discount;
+    private String discount_type, display_discount; // percentage / fixed_amount
 
     private String display_price_unit, display_price_subtotal, display_price_subtotal_incl, display_price_before_discount;
     private String full_product_name, customer_note;
@@ -24,10 +24,10 @@ public class Order_Line extends RealmObject {
 
     //Constructor
     public Order_Line(int order_line_id, String name, int qty, double price_unit, double price_subtotal,
-                      double price_subtotal_incl, double price_before_discount, int discount_percent,
-                      String display_price_unit, String display_price_subtotal, String display_price_subtotal_incl,
-                      String display_price_before_discount, String full_product_name, String customer_note,
-                      boolean has_discount, boolean is_percentage, double amount_discount, Order order, Product product){
+                      double price_subtotal_incl, double price_before_discount, String display_price_unit,
+                      String display_price_subtotal, String display_price_subtotal_incl, String display_price_before_discount,
+                      String full_product_name, String customer_note, String discount_type, double discount,
+                      String display_discount, Order order, Product product){
         this.order_line_id = order_line_id;
         this.name = name;
         this.qty = qty;
@@ -35,16 +35,15 @@ public class Order_Line extends RealmObject {
         this.price_subtotal = price_subtotal;
         this.price_subtotal_incl = price_subtotal_incl;
         this.price_before_discount = price_before_discount;
-        this.discount_percent = discount_percent;
         this.display_price_unit = display_price_unit;
         this.display_price_subtotal = display_price_subtotal;
         this.display_price_subtotal_incl = display_price_subtotal_incl;
         this.display_price_before_discount = display_price_before_discount;
         this.full_product_name = full_product_name;
         this.customer_note = customer_note;
-        this.has_discount = has_discount;
-        this.is_percentage = is_percentage;
-        this.amount_discount = amount_discount;
+        this.discount_type = discount_type;
+        this.discount = discount;
+        this.display_discount = display_discount;
         this.order = order;
         this.product = product;
     }
@@ -56,16 +55,15 @@ public class Order_Line extends RealmObject {
         price_subtotal = 0.0;
         price_subtotal_incl = 0.0;
         price_before_discount = 0.0;
-        discount_percent = 0;
         display_price_unit = null;
         display_price_subtotal = null;
         display_price_subtotal_incl = null;
         display_price_before_discount = null;
         full_product_name = null;
         customer_note = null;
-        has_discount = false;
-        is_percentage = true;
-        amount_discount = 0.0;
+        discount_type = null;
+        discount = 0.0;
+        display_discount = null;
         order = null;
         product = null;
     }
@@ -116,38 +114,6 @@ public class Order_Line extends RealmObject {
 
     public void setProduct(Product product) {
         this.product = product;
-    }
-
-    public int getDiscount_percent() {
-        return discount_percent;
-    }
-
-    public void setDiscount_percent(int discount_percent) {
-        this.discount_percent = discount_percent;
-    }
-
-    public boolean isHas_discount() {
-        return has_discount;
-    }
-
-    public void setHas_discount(boolean has_discount) {
-        this.has_discount = has_discount;
-    }
-
-    public boolean isIs_percentage() {
-        return is_percentage;
-    }
-
-    public void setIs_percentage(boolean is_percentage) {
-        this.is_percentage = is_percentage;
-    }
-
-    public double getAmount_discount() {
-        return amount_discount;
-    }
-
-    public void setAmount_discount(double amount_discount) {
-        this.amount_discount = amount_discount;
     }
 
     public double getPrice_unit() {
@@ -220,5 +186,29 @@ public class Order_Line extends RealmObject {
 
     public void setCustomer_note(String customer_note) {
         this.customer_note = customer_note;
+    }
+
+    public double getDiscount() {
+        return discount;
+    }
+
+    public void setDiscount(double discount) {
+        this.discount = discount;
+    }
+
+    public String getDiscount_type() {
+        return discount_type;
+    }
+
+    public void setDiscount_type(String discount_type) {
+        this.discount_type = discount_type;
+    }
+
+    public String getDisplay_discount() {
+        return display_discount;
+    }
+
+    public void setDisplay_discount(String display_discount) {
+        this.display_discount = display_discount;
     }
 }

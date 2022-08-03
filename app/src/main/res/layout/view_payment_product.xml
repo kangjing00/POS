@@ -59,10 +59,10 @@
             android:id="@+id/payment_product_product_discount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text='@{orderLine.is_percentage? (String.format("%d%% Disc", orderLine.discount_percent)) : (String.format("RM %.2f Disc", orderLine.amount_discount))}'
+            android:text='@{orderLine.discount_type.equalsIgnoreCase("percentage")? (String.format("%d%%  Disc  •", (int)orderLine.discount)) : (orderLine.discount_type.equalsIgnoreCase("fixed_amount")? (String.format("RM %.2f  Disc  •", orderLine.discount)) : "null") }'
             android:textSize="8dp"
             android:textColor="@color/darkGrey"
-            android:layout_marginRight="10dp"
+            android:layout_marginRight="5dp"
             app:layout_constraintEnd_toStartOf="@+id/payment_product_product_price_before_discount"
             app:layout_constraintTop_toBottomOf="@+id/payment_product_product_subtotal" />
 

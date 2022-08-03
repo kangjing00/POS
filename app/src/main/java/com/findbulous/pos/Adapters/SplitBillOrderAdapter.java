@@ -45,12 +45,18 @@ public class SplitBillOrderAdapter extends RecyclerView.Adapter<SplitBillOrderAd
         Order_Line order_line = order_lines.get(position);
         holder.binding.setOrderLine(order_line);
 
-        if(!order_line.isHas_discount()){
+        if(order_line.getDiscount_type() != null) {
+            if ((order_line.getDiscount_type().equalsIgnoreCase("percentage")) ||
+                    (order_line.getDiscount_type().equalsIgnoreCase("fixed_amount"))) {
+                holder.binding.productDiscount.setVisibility(View.VISIBLE);
+                holder.binding.productPriceBeforeDiscount.setVisibility(View.VISIBLE);
+            } else { //no discount
+                holder.binding.productDiscount.setVisibility(View.INVISIBLE);
+                holder.binding.productPriceBeforeDiscount.setVisibility(View.INVISIBLE);
+            }
+        }else{
             holder.binding.productDiscount.setVisibility(View.INVISIBLE);
             holder.binding.productPriceBeforeDiscount.setVisibility(View.INVISIBLE);
-        }else{
-            holder.binding.productDiscount.setVisibility(View.VISIBLE);
-            holder.binding.productPriceBeforeDiscount.setVisibility(View.VISIBLE);
         }
 
         holder.binding.orderLineCl.setOnClickListener(new View.OnClickListener() {

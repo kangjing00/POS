@@ -1484,18 +1484,17 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                         if (product.getId() == order_lines.get(i).getProduct().getProduct_id()){
                             int qty = order_lines.get(i).getQty() + 1;
                             double price_before_discount = qty * order_lines.get(i).getPrice_unit();
-                            double discount_amount = 0;
-                            if(order_lines.get(i).isHas_discount()){
-                                if(order_lines.get(i).isIs_percentage()){
-                                    discount_amount = (price_before_discount * order_lines.get(i).getDiscount_percent()) / 100;
-                                }else{
-                                    discount_amount = order_lines.get(i).getAmount_discount();
+                            double amount_discount = 0;
+                            if(order_lines.get(i).getDiscount_type() != null) {
+                                if (order_lines.get(i).getDiscount_type().equalsIgnoreCase("percentage")) {
+                                    amount_discount = (price_before_discount * order_lines.get(i).getDiscount()) / 100;
+                                } else if (order_lines.get(i).getDiscount_type().equalsIgnoreCase("fixed_amount")) {
+                                    amount_discount = order_lines.get(i).getDiscount();
                                 }
                             }
-                            double subtotal = price_before_discount - discount_amount;
+                            double subtotal = price_before_discount - amount_discount;
 
                             order_lines.get(i).setPrice_subtotal(subtotal);
-                            order_lines.get(i).setAmount_discount(discount_amount);
                             order_lines.get(i).setQty(qty);
                             order_lines.get(i).setPrice_before_discount(price_before_discount);
 
@@ -1588,10 +1587,10 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
 //        double amount_total = currentOrder.getAmount_total() + product.getPrice_unit();
 //        currentOrder.setAmount_total(amount_total);
         Order_Line newOrderLine = new Order_Line(nextID, String.valueOf(order_lines.size()), 1, product.getList_price(),
-                product.getList_price(), product.getList_price(), product.getList_price(), 0,
+                product.getList_price(), product.getList_price(), product.getList_price(),
                 product.getDisplay_list_price(), product.getDisplay_list_price(), product.getDisplay_list_price(),
-                product.getDisplay_list_price(), product.getName(), null, false, true,
-                0, currentOrder, product);
+                product.getDisplay_list_price(), product.getName(), null, null, 0.0,
+                null, currentOrder, product);
 
         realm.executeTransaction(new Realm.Transaction() {
             @Override
@@ -1855,10 +1854,8 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
 //        Order_Line updateOrderLine = order_lines.get(position);
         order_lines.get(position).setPrice_subtotal(updateOrderLine.getPrice_subtotal());
 
-        order_lines.get(position).setHas_discount(updateOrderLine.isHas_discount());
-        order_lines.get(position).setIs_percentage(updateOrderLine.isIs_percentage());
-        order_lines.get(position).setDiscount_percent(updateOrderLine.getDiscount_percent());
-        order_lines.get(position).setAmount_discount(updateOrderLine.getAmount_discount());
+        order_lines.get(position).setDiscount_type(updateOrderLine.getDiscount_type());
+        order_lines.get(position).setDiscount(updateOrderLine.getDiscount());
 
         realm.executeTransaction(new Realm.Transaction() {
             @Override
@@ -1884,7 +1881,6 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
 //        order_lines.get(position).setPrice_total(price_total);
 //        Order_Line updateOrderLine = order_lines.get(position);
         order_lines.get(position).setPrice_subtotal(updateOrderLine.getPrice_subtotal());
-        order_lines.get(position).setAmount_discount(updateOrderLine.getAmount_discount());
         order_lines.get(position).setQty(updateOrderLine.getQty());
         order_lines.get(position).setPrice_before_discount(updateOrderLine.getPrice_before_discount());
 
@@ -2051,21 +2047,21 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
             //add the product to order line directly
             boolean sameProduct = false;
             for(int i = 0; i < order_lines.size(); i++) {
-                if (product.getId() == order_lines.get(i).getProduct().getProduct_id()){
+                if (product.getId() == order_lines.get(i).getProduct().getProduct_id()){    //cart has the same product
                     int qty = order_lines.get(i).getQty() + 1;
                     double price_before_discount = qty * order_lines.get(i).getPrice_unit();
-                    double discount_amount = 0;
-                    if(order_lines.get(i).isHas_discount()){
-                        if(order_lines.get(i).isIs_percentage()){
-                            discount_amount = (price_before_discount * order_lines.get(i).getDiscount_percent()) / 100;
-                        }else{
-                            discount_amount = order_lines.get(i).getAmount_discount();
+                    double amount_discount = 0;
+                    if(order_lines.get(i).getDiscount_type() != null) {
+                        if (order_lines.get(i).getDiscount_type().equalsIgnoreCase("percentage")) {
+                            amount_discount = (price_before_discount * order_lines.get(i).getDiscount()) / 100;
+                        } else if (order_lines.get(i).getDiscount_type().equalsIgnoreCase("fixed_amount")) {
+                            amount_discount = order_lines.get(i).getDiscount();
                         }
                     }
-                    double subtotal = price_before_discount - discount_amount;
+
+                    double subtotal = price_before_discount - amount_discount;
 
                     order_lines.get(i).setPrice_subtotal(subtotal);
-                    order_lines.get(i).setAmount_discount(discount_amount);
                     order_lines.get(i).setQty(qty);
                     order_lines.get(i).setPrice_before_discount(price_before_discount);
 
