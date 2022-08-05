@@ -5,13 +5,14 @@ import io.realm.annotations.PrimaryKey;
 
 public class Order_Line extends RealmObject {
     @PrimaryKey
+    private int local_order_line_id;
     private int order_line_id;
     private String name;
     private int qty;
     /*
     price subtotal = the final price of all qty of this product after discount
     price subtotal incl = include tax
-    price total = the final price of all qty of this product before discount
+    price_before_discount = the final price of all qty of this product before discount
     */
     private double price_unit, price_subtotal, price_subtotal_incl, price_before_discount, discount;
     private String discount_type, display_discount; // percentage / fixed_amount
@@ -23,11 +24,12 @@ public class Order_Line extends RealmObject {
     private Product product;
 
     //Constructor
-    public Order_Line(int order_line_id, String name, int qty, double price_unit, double price_subtotal,
+    public Order_Line(int local_order_line_id, int order_line_id, String name, int qty, double price_unit, double price_subtotal,
                       double price_subtotal_incl, double price_before_discount, String display_price_unit,
                       String display_price_subtotal, String display_price_subtotal_incl, String display_price_before_discount,
                       String full_product_name, String customer_note, String discount_type, double discount,
                       String display_discount, Order order, Product product){
+        this.local_order_line_id = local_order_line_id;
         this.order_line_id = order_line_id;
         this.name = name;
         this.qty = qty;
@@ -48,6 +50,7 @@ public class Order_Line extends RealmObject {
         this.product = product;
     }
     public Order_Line(){
+        local_order_line_id = -1;
         order_line_id = -1;
         name = null;
         qty = 0;
@@ -210,5 +213,13 @@ public class Order_Line extends RealmObject {
 
     public void setDisplay_discount(String display_discount) {
         this.display_discount = display_discount;
+    }
+
+    public int getLocal_order_line_id() {
+        return local_order_line_id;
+    }
+
+    public void setLocal_order_line_id(int local_order_line_id) {
+        this.local_order_line_id = local_order_line_id;
     }
 }

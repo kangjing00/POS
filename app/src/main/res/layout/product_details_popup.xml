@@ -84,7 +84,7 @@
                 android:layout_below="@id/product_details_image"
                 android:layout_alignParentEnd="true"
                 android:layout_marginTop="10dp"
-                android:text='@{String.format("RM %.2f", product.price_incl_tax)}'
+                android:text='@{product.display_price_incl_tax}'
                 android:textSize="18dp" />
 
             <TextView
@@ -131,7 +131,7 @@
 
                     <TextView
                         android:id="@+id/price_excl_tax"
-                        android:text='@{String.format("RM %.2f", product.price_excl_tax)}'/>
+                        android:text='@{product.display_price_excl_tax}'/>
                 </TableRow>
 
                 <TableRow>
@@ -140,7 +140,7 @@
 
                     <TextView
                         android:id="@+id/standard_price"
-                        android:text='@{String.format("RM %.2f", product.standard_price)}'/>
+                        android:text='@{product.display_standard_price}'/>
 
                     <TextView
                         android:layout_marginStart="30dp"
@@ -149,7 +149,7 @@
 
                     <TextView
                         android:id="@+id/list_price"
-                        android:text='@{String.format("RM %.2f", product.list_price)}'/>
+                        android:text='@{product.display_list_price}'/>
                 </TableRow>
 
                 <TableRow>
@@ -158,7 +158,7 @@
 
                     <TextView
                         android:id="@+id/margin_margin_percent"
-                        android:text='@{String.format("RM %.2f (%.2f%%)", product.margin, product.margin_percent)}'/>
+                        android:text='@{String.format("%s (%s)", product.display_margin, product.display_margin_percent)}'/>
                 </TableRow>
 
             </TableLayout>

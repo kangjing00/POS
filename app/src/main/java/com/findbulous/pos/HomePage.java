@@ -50,6 +50,10 @@ import com.findbulous.pos.databinding.ProductDetailsPopupBinding;
 import com.findbulous.pos.databinding.ProductModifierPopupBinding;
 import com.findbulous.pos.databinding.ToolbarSyncPopupBinding;
 import com.google.android.material.button.MaterialButton;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -106,6 +110,10 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
     private Table updateTableOnHold;
     //Number of Customer Popup
     private EditText number_customer_et;
+    //Product attribute
+    private EditText radioEt = null, selectEt = null, colorEt = null, pillEt = null;
+    String radioAttribute = "", selectAttribute = "", colorAttribute = "", pillAttribute = "";
+    double radioPrice_extra = 0.0, selectPrice_extra = 0.0, colorPrice_extra = 0.0, pillPrice_extra = 0.0;
 
     //POS Type
     private ArrayAdapter<String> orderTypes;
@@ -170,21 +178,41 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         getOrderLineFromRealm();
         binding.cartInclude.cartOrdersRv.setAdapter(orderLineAdapter);
 
-        int currentOrderId = cartSharedPreference.getInt("orderId", -1);
-        Order order = realm.where(Order.class).equalTo("order_id", currentOrderId).findFirst();
+        int currentOrderId = cartSharedPreference.getInt("localOrderId", -1);
+        Order order = realm.where(Order.class).equalTo("local_order_id", currentOrderId).findFirst();
         if(order != null){
             currentOrder = realm.copyFromRealm(order);
         }
         //Cart Discount
-        if(currentOrder.isHas_order_discount()){
-            binding.cartInclude.cartOrderSummaryDiscountRl.setVisibility(View.VISIBLE);
-            binding.cartInclude.cartOrderSummaryDiscount.setText("- RM " + String.format("%.2f", currentOrder.getAmount_order_discount()));
-            binding.cartInclude.cartOrderDiscountBtn.setTextColor(contextpage.getResources().getColor(R.color.green));
+        if(currentOrder.getDiscount_type() != null) {
+            if (currentOrder.getDiscount_type().equalsIgnoreCase("percentage")
+                    || currentOrder.getDiscount_type().equalsIgnoreCase("fixed_amount")) {
+
+                binding.cartInclude.cartOrderSummaryDiscountRl.setVisibility(View.VISIBLE);
+
+                if(currentOrder.getDiscount_type().equalsIgnoreCase("fixed_amount")) {
+                    binding.cartInclude.cartOrderSummaryDiscount.setText(
+                            "- RM " + String.format("%.2f", currentOrder.getDiscount()));
+                }else if(currentOrder.getDiscount_type().equalsIgnoreCase("percentage")){
+                    double total_price_subtotal_incl = 0.0;
+                    double amount_discount = 0.0;
+//                    Order_Line order_lineForDiscount = realm.where(Order_Line.class).equalTo("order.local_order_id")
+                    System.out.println("Current order, order_line size ===========" + currentOrder.getOrder_lines().size());
+                    for(int i = 0; i < currentOrder.getOrder_lines().size(); i++){
+                        Order_Line order_line = currentOrder.getOrder_lines().get(i);
+                        total_price_subtotal_incl += order_line.getPrice_subtotal_incl();
+                    }
+                    amount_discount = (total_price_subtotal_incl * currentOrder.getDiscount()) / 100;
+                    binding.cartInclude.cartOrderSummaryDiscount.setText(
+                            "- RM " + String.format("%.2f", amount_discount));
+                }
+
+
+                binding.cartInclude.cartOrderDiscountBtn.setTextColor(contextpage.getResources().getColor(R.color.green));
+            }
         }
 
         binding.toolbarLayoutIncl.toolbarSearchLayout.setVisibility(View.VISIBLE);
-
-
         //OnClickListener
         //Menu
         binding.allCategoryBtn.setOnClickListener(new View.OnClickListener() {
@@ -337,7 +365,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         binding.cartInclude.cartOrderDiscountBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                if((currentOrder.getOrder_id() != -1) && (order_lines.size() != 0))
+                if((currentOrder.getLocal_order_id() != -1) && (order_lines.size() != 0))
                     showCartOrderAddDiscountPopup(view);
                 else
                     Toast.makeText(contextpage, "Please add discount with at least 1 product", Toast.LENGTH_SHORT).show();
@@ -352,7 +380,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         binding.cartInclude.cartOrderNoteBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                if(cartSharedPreference.getInt("orderId", -1) == -1){
+                if(cartSharedPreference.getInt("localOrderId", -1) == -1){
                     Toast.makeText(contextpage, "Please create an order before adding note", Toast.LENGTH_SHORT).show();
                 }else {
                     showCartOrderAddNotePopup(binding.cartInclude.cartOrderNoteBtn.getId());
@@ -370,7 +398,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         binding.cartInclude.cartOrderSummaryHoldBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                if(currentOrder.getOrder_id() == -1){
+                if(currentOrder.getLocal_order_id() == -1){
                     Toast.makeText(contextpage, "No order to hold", Toast.LENGTH_SHORT).show();
                 }
 //                else if(customerSharedPreference.getInt("customerID", -1) == -1){
@@ -384,12 +412,12 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         binding.cartInclude.cartOrderSummaryProceedBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                int current_order_id = cartSharedPreference.getInt("orderId", -1);
+                int current_local_order_id = cartSharedPreference.getInt("localOrderId", -1);
                 int orderTypePosition = cartSharedPreference.getInt("orderTypePosition", -1);
-                if(current_order_id == -1){ //no order and no order_line(products)
+                if(current_local_order_id == -1){ //no order and no order_line(products)
                     Toast.makeText(contextpage, "Please proceed payment with at least 1 product", Toast.LENGTH_SHORT).show();
                 }else {//got order
-                    RealmResults<Order_Line> results = realm.where(Order_Line.class).equalTo("order.order_id", current_order_id)
+                    RealmResults<Order_Line> results = realm.where(Order_Line.class).equalTo("order.local_order_id", current_local_order_id)
                                                             .findAll();
                     if(results.isEmpty()){//no order_line(products)
                         Toast.makeText(contextpage, "Please proceed payment with at least 1 product", Toast.LENGTH_SHORT).show();
@@ -474,25 +502,25 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 int orderTypePosition = binding.cartInclude.cartBtnPosType.getSelectedItemPosition(); //0 = takeaway, 1 = dine-in
                 //if change from dine-in to takeaway \/ takeaway to dine-in
-                if((orderTypePosition == 0) && (currentOrder.getOrder_id() != -1)
+                if((orderTypePosition == 0) && (currentOrder.getLocal_order_id() != -1)
                     && (currentOrder.getTable() != null)){//takeaway && order now && order has table
                     //update table
                     RealmResults<Order> results = realm.where(Order.class)
                             .equalTo("table.table_id", currentOrder.getTable().getTable_id())
                             .and().notEqualTo("state", "paid").and()
-                            .notEqualTo("order_id", currentOrder.getOrder_id()).findAll();
+                            .notEqualTo("local_order_id", currentOrder.getLocal_order_id()).findAll();
                     if(results.size() == 0)
                         tableOccupiedToVacant(currentOrder.getTable());
 
-                    RealmResults<Order_Line> order_lines = realm.where(Order_Line.class).equalTo("order.order_id", currentOrder.getOrder_id())
+                    RealmResults<Order_Line> order_lines = realm.where(Order_Line.class).equalTo("order.local_order_id", currentOrder.getLocal_order_id())
                             .findAll();
                     if(order_lines.size() < 1){// when order_lines empty, delete the order
                         //delete order
                         Order deleteOrder = realm.where(Order.class)
-                                .equalTo("order_id", currentOrder.getOrder_id())
+                                .equalTo("local_order_id", currentOrder.getLocal_order_id())
                                 .findFirst();
                         cartSharedPreferenceEdit.putInt("orderingState", 0);
-                        cartSharedPreferenceEdit.putInt("orderId", -1);
+                        cartSharedPreferenceEdit.putInt("localOrderId", -1);
                         cartSharedPreferenceEdit.commit();
                         currentOrder = new Order();
                         binding.cartInclude.cartBtnNumberCustomer.setText("Guest(s)");
@@ -525,10 +553,9 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         binding.cartInclude.cartOrderSummaryDiscountCancelBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(currentOrder.isHas_order_discount()) {
-                    currentOrder.setAmount_order_discount(0.0);
-                    currentOrder.setHas_order_discount(false);
-                    currentOrder.setIs_percentage(true);
+                if(currentOrder.getDiscount_type() != null) {
+                    currentOrder.setDiscount(0.0);
+                    currentOrder.setDiscount_type(null);
                     updateOrderTotalAmount();
                 }
                 binding.cartInclude.cartOrderSummaryDiscount.setText("- RM 0.00");
@@ -578,7 +605,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
     private ArrayList<POS_Category> getAllRelatedCategory(POS_Category category, ArrayList<POS_Category> category_list){
         //add parent & itself
         ArrayList<POS_Category> all_list = new ArrayList<>();
-        all_list.addAll(getParentCategry(category, category_list));
+        all_list.addAll(getParentCategory(category, category_list));
         categories_clicked_wo_child.clear();
         categories_clicked_wo_child.addAll(all_list);
         //add sub-category
@@ -587,7 +614,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         }
         return all_list;
     }
-    private ArrayList<POS_Category> getParentCategry(POS_Category category, ArrayList<POS_Category> category_list){
+    private ArrayList<POS_Category> getParentCategory(POS_Category category, ArrayList<POS_Category> category_list){
         ArrayList<POS_Category> parent_list = new ArrayList<>();
 
         int counter = 0;
@@ -597,7 +624,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
             for(int i = 0; i < sub_category.size(); i++){
                 if(category.getPos_categ_id() == sub_category.get(i).getPos_categ_id()){
                     parent_category = category_list.get(counter);
-                    parent_list.addAll(getParentCategry(parent_category, category_list));
+                    parent_list.addAll(getParentCategory(parent_category, category_list));
                 }
             }
             counter++;
@@ -616,9 +643,9 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         productAdapter.notifyDataSetChanged();
     }
     private void getOrderLineFromRealm(){
-        int orderId = cartSharedPreference.getInt("orderId", -1);
-        if(orderId > -1) {
-            RealmResults<Order_Line> results = realm.where(Order_Line.class).equalTo("order.order_id", orderId).findAll();
+        int localOrderId = cartSharedPreference.getInt("localOrderId", -1);
+        if(localOrderId > -1) {
+            RealmResults<Order_Line> results = realm.where(Order_Line.class).equalTo("order.local_order_id", localOrderId).findAll();
             order_lines.addAll(realm.copyFromRealm(results));
         }else{
             order_lines.clear();
@@ -636,7 +663,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         if(current_customer_id != -1){
             customer = new Customer(current_customer_id, customer_name, customerEmail, customerPhoneNo, customerIdentityNo, customerBirthdate);
         }else{
-            customer = realm.where(Customer.class).equalTo("customer_id", 1).findFirst();
+            customer = realm.where(Customer.class).equalTo("customer_id", 0).findFirst();
         }
 
         return customer;
@@ -759,7 +786,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         MaterialButton confirm_btn = layout.findViewById(R.id.confirm_btn);
 
         number_customer_et.setShowSoftInputOnFocus(false);
-        if(currentOrder.getOrder_id() != -1){
+        if(currentOrder.getLocal_order_id() != -1){
             if(currentOrder.getCustomer_count() != 0) {
                 number_customer_et.setText(String.valueOf(currentOrder.getCustomer_count()));
             }else{
@@ -880,7 +907,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
             confirm_btn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if(currentOrder.getOrder_id() != -1) {
+                    if(currentOrder.getLocal_order_id() != -1) {
                         if (number_customer_et.getText().toString().equalsIgnoreCase("0")) {
                             binding.cartInclude.cartBtnNumberCustomer.setText("1 Guest(s)");
                             currentOrder.setCustomer_count(Integer.valueOf(1));
@@ -939,7 +966,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         wm.updateViewLayout(container, p);
 
 
-        if(currentOrder.getOrder_id() != -1) {
+        if(currentOrder.getLocal_order_id() != -1) {
             if(currentOrder.getNote() != null){
                 if(!currentOrder.getNote().isEmpty()) {
                     popupBinding.addNotePopupEt.setText(currentOrder.getNote());
@@ -1019,7 +1046,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                         customerSharedPreferenceEdit.putString("customerBirthdate", null);
                         customerSharedPreferenceEdit.commit();
                         cartSharedPreferenceEdit.putInt("orderingState", 0);
-                        cartSharedPreferenceEdit.putInt("orderId", -1);
+                        cartSharedPreferenceEdit.putInt("localOrderId", -1);
                         cartSharedPreferenceEdit.commit();
 
                         updateOrderTotalAmount();
@@ -1075,19 +1102,22 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         p.dimAmount = 0.3f;
         wm.updateViewLayout(container, p);
 
-        System.out.println("OUTSIDEEEEEEEEEEEEEEEEEEEEEE: " + popup.isOutsideTouchable());
-
-        if((currentOrder.getOrder_id() != -1) && (currentOrder.isHas_order_discount())) {
-            if(currentOrder.isIs_percentage()){
-                popupBinding.addDiscountPopupEt.setText(String.valueOf(currentOrder.getDiscount_percent()));
+        if((currentOrder.getLocal_order_id() != -1) && (currentOrder.getDiscount_type() != null)) {
+            if(currentOrder.getDiscount_type().equalsIgnoreCase("percentage")){
+                popupBinding.addDiscountPopupEt.setText(String.valueOf(currentOrder.getDiscount()));
                 popupBinding.addDiscountPopupRadioBtnPercentage.setChecked(true);
                 popupBinding.addDiscountPopupRadioBtnAmount.setChecked(false);
                 popupBinding.addDiscountPopupEt.setInputType(InputType.TYPE_CLASS_NUMBER);
-            }else{
-                popupBinding.addDiscountPopupEt.setText(String.valueOf(currentOrder.getAmount_order_discount()));
+            }else if(currentOrder.getDiscount_type().equalsIgnoreCase("fixed_amount")){
+                popupBinding.addDiscountPopupEt.setText(String.valueOf(currentOrder.getDiscount()));
                 popupBinding.addDiscountPopupRadioBtnPercentage.setChecked(false);
                 popupBinding.addDiscountPopupRadioBtnAmount.setChecked(true);
                 popupBinding.addDiscountPopupEt.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+            }else{
+                popupBinding.addDiscountPopupRadioBtnPercentage.setChecked(true);
+                popupBinding.addDiscountPopupRadioBtnAmount.setChecked(false);
+                popupBinding.addDiscountPopupEt.setText("0");
+                popupBinding.addDiscountPopupEt.setInputType(InputType.TYPE_CLASS_NUMBER);
             }
         }else{
             popupBinding.addDiscountPopupRadioBtnPercentage.setChecked(true);
@@ -1113,28 +1143,25 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                 if(discountInDouble > 0.0) {
                     String discount = String.format("%.2f", discountInDouble);
 
-                    if (popupBinding.addDiscountPopupRadioBtnAmount.isChecked()) {
-                        currentOrder.setIs_percentage(false);
-                    } else {
-                        currentOrder.setIs_percentage(true);
+                    if (popupBinding.addDiscountPopupRadioBtnAmount.isChecked()) {  //fixed_amount
+                        currentOrder.setDiscount_type("fixed_amount");
+                    } else {    //percentage
+                        currentOrder.setDiscount_type("percentage");
                     }
 
-                    if(currentOrder.isIs_percentage()){
+                    if(currentOrder.getDiscount_type().equalsIgnoreCase("percentage")){
                         int order_discount_percent = (int)(Double.parseDouble(discount));
-                        double subtotal = 0;
+                        double total_price_subtotal_incl = 0;
                         for(int i=0; i < order_lines.size(); i++){
-                            subtotal += order_lines.get(i).getPrice_subtotal();
+                            total_price_subtotal_incl += order_lines.get(i).getPrice_subtotal_incl();
                         }
-                        double amount_order_discount = subtotal * ((double)order_discount_percent / 100);
+                        double amount_order_discount = total_price_subtotal_incl * ((double)order_discount_percent / 100);
                         discount = String.format("%.2f", amount_order_discount);
-                        currentOrder.setDiscount_percent(order_discount_percent);
-                    }else{
-                        currentOrder.setDiscount_percent(0);
                     }
+
                     binding.cartInclude.cartOrderSummaryDiscount.setText("- RM " + discount);
 
-                    currentOrder.setHas_order_discount(true);
-                    currentOrder.setAmount_order_discount(Double.valueOf(discount));
+                    currentOrder.setDiscount(Double.valueOf(discount));
                     updateOrderTotalAmount();
                 }
                 popup.dismiss();
@@ -1228,6 +1255,11 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         popupBinding.productNameModifierPopup.setText(product.getName());
 
         // Add view for extra attributes
+        radioAttribute = "";
+        selectAttribute = "";
+        colorAttribute = "";
+        pillAttribute = "";
+
         if(pos_config.isProduct_configurator()){
             RealmResults attribute_results = realm.where(Attribute.class).equalTo("product_tmpl_id", product.getProduct_tmpl_id())
                     .findAll();
@@ -1268,6 +1300,8 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                             rb.setText(attribute_value.getName());
                         }
                         if(x == 0){
+                            radioPrice_extra = attribute_value.getPrice_extra();
+                            radioAttribute = attribute_value.getName();
                             rb.setChecked(true);
                         }
                         //IS_CUSTOM
@@ -1275,9 +1309,13 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                         rb.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
+                                radioPrice_extra = attribute_value.getPrice_extra();
+                                radioAttribute = attribute_value.getName();
                                 if(attribute_value.isIs_custom() && rb.isChecked()){
+                                    radioEt = custom_et;
                                     custom_et.setVisibility(View.VISIBLE);
                                 }else{
+                                    radioEt = null;
                                     custom_et.setVisibility(View.GONE);
                                 }
                             }
@@ -1286,8 +1324,10 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                         rg.addView(rb);
                         if(attribute_value.isIs_custom()){
                             if(rb.isChecked()){
+                                radioEt = custom_et;
                                 custom_et.setVisibility(View.VISIBLE);
                             }else {
+                                radioEt = null;
                                 custom_et.setVisibility(View.GONE);
                             }
                             custom_et.setMaxWidth(500);
@@ -1336,6 +1376,10 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                         spinner.setAdapter(itemAdapter);
                         spinner.setDropDownVerticalOffset(80);
                         spinner.setSelection(0);
+                        if(x == 0){
+                            selectPrice_extra = attribute_value.getPrice_extra();
+                            selectAttribute = attribute_value.getName();
+                        }
                         spinner.setPopupBackgroundDrawable(getResources().getDrawable(R.drawable.box_btm_corner_light_grey));
                         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                             @Override
@@ -1343,9 +1387,14 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                                 int id = item_ids[position];
                                 //IS_CUSTOM
                                 Attribute_Value av = realm.where(Attribute_Value.class).equalTo("id", id).findFirst();
+
+                                selectPrice_extra = attribute_value.getPrice_extra();
+                                selectAttribute = attribute_value.getName();
                                 if(av.isIs_custom()){
+                                    selectEt = custom_et;
                                     custom_et.setVisibility(View.VISIBLE);
                                 }else{
+                                    selectEt = null;
                                     custom_et.setVisibility(View.GONE);
                                 }
                             }
@@ -1363,8 +1412,10 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                             .equalTo("id", attribute_values.get(0).getId())
                             .findFirst();
                     if(av.isIs_custom()){
+                        selectEt = custom_et;
                         custom_et.setVisibility(View.VISIBLE);
                     }else{
+                        selectEt = null;
                         custom_et.setVisibility(View.GONE);
                     }
                     custom_et.setMaxWidth(500);
@@ -1381,6 +1432,12 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                         Attribute_Value attribute_value = attribute_values.get(x);
 
                         ImageButton btn = new ImageButton(contextpage);
+                        TextView tv = new TextView(contextpage);
+                        if(attribute_value.getPrice_extra() > 0) {
+                            tv.setText("( " + attribute_value.getDisplay_price_extra() + ")");
+                        }else{
+                            tv.setText("");
+                        }
                         btn.setId(attribute_value.getId());
                         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
                                 ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -1392,12 +1449,16 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                             btn.setTooltipText(attribute_value.getName());
                         }
                         if(x == 0){
+                            colorPrice_extra = attribute_value.getPrice_extra();
+                            colorAttribute = attribute_value.getName();
                             btn.setBackground(select(btn.getId()));
                             lastClickedColorBtn = btn;
                         }
                         btn.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
+                                colorPrice_extra = attribute_value.getPrice_extra();
+                                colorAttribute = attribute_value.getName();
                                 if(btn != lastClickedColorBtn) {
                                     btn.startAnimation(AnimationUtils.loadAnimation(getBaseContext(), android.R.anim.fade_in));
                                     lastClickedColorBtn.setBackground(unselect(lastClickedColorBtn.getId()));
@@ -1407,6 +1468,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                             }
                         });
                         ll.addView(btn);
+                        ll.addView(tv);
                     }
                     popupBinding.productModifierLl.addView(ll);
                 }
@@ -1431,28 +1493,36 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                         rb.setBackground(getResources().getDrawable(R.drawable.pills_selector));
                         rb.setButtonDrawable(null);
                         if(x == 0){
+                            pillPrice_extra = attribute_value.getPrice_extra();
+                            pillAttribute = attribute_value.getName();
                             rb.setChecked(true);
                         }
                         //IS_CUSTOM
                         EditText custom_et = new EditText(contextpage);
-                        if(attribute_value.isIs_custom() && rb.isChecked()){
-                            custom_et.setVisibility(View.VISIBLE);
-                        }else{
-                            custom_et.setVisibility(View.GONE);
-                        }
+
                         rb.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
+                                pillPrice_extra = attribute_value.getPrice_extra();
+                                pillAttribute = attribute_value.getName();
                                 if(attribute_value.isIs_custom() && rb.isChecked()){
+                                    pillEt = custom_et;
                                     custom_et.setVisibility(View.VISIBLE);
                                 }else{
+                                    pillEt = null;
                                     custom_et.setVisibility(View.GONE);
                                 }
                             }
                         });
                         rg.addView(rb);
                         if(attribute_value.isIs_custom()){
-                            custom_et.setVisibility(View.GONE);
+                            if(rb.isChecked()){
+                                pillEt = custom_et;
+                                custom_et.setVisibility(View.VISIBLE);
+                            }else{
+                                pillEt = null;
+                                custom_et.setVisibility(View.GONE);
+                            }
                             custom_et.setTextSize(15);
                             custom_et.setPadding(10, 10, 10, 10);
                             rg.addView(custom_et);
@@ -1480,31 +1550,31 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                 ArrayList<Attribute> attributes = (ArrayList<Attribute>) realm.copyFromRealm(attribute_results);
                 if(attributes.size() == 0){
                     boolean sameProduct = false;
-                    for(int i = 0; i < order_lines.size(); i++) {
-                        if (product.getId() == order_lines.get(i).getProduct().getProduct_id()){
-                            int qty = order_lines.get(i).getQty() + 1;
-                            double price_before_discount = qty * order_lines.get(i).getPrice_unit();
-                            double amount_discount = 0;
-                            if(order_lines.get(i).getDiscount_type() != null) {
-                                if (order_lines.get(i).getDiscount_type().equalsIgnoreCase("percentage")) {
-                                    amount_discount = (price_before_discount * order_lines.get(i).getDiscount()) / 100;
-                                } else if (order_lines.get(i).getDiscount_type().equalsIgnoreCase("fixed_amount")) {
-                                    amount_discount = order_lines.get(i).getDiscount();
-                                }
-                            }
-                            double subtotal = price_before_discount - amount_discount;
-
-                            order_lines.get(i).setPrice_subtotal(subtotal);
-                            order_lines.get(i).setQty(qty);
-                            order_lines.get(i).setPrice_before_discount(price_before_discount);
-
-                            sameProduct = true;
-                            orderLineAdapter.notifyDataSetChanged();
-                            updateOrderTotalAmount();
-                        }
-                    }
-                    if(!sameProduct)
-                        addProductToOrder(product);
+//                    for(int i = 0; i < order_lines.size(); i++) {
+//                        if (product.getId() == order_lines.get(i).getProduct().getProduct_id()){
+//                            int qty = order_lines.get(i).getQty() + 1;
+//                            double price_before_discount = qty * order_lines.get(i).getPrice_unit();
+//                            double amount_discount = 0;
+//                            if(order_lines.get(i).getDiscount_type() != null) {
+//                                if (order_lines.get(i).getDiscount_type().equalsIgnoreCase("percentage")) {
+//                                    amount_discount = (price_before_discount * order_lines.get(i).getDiscount()) / 100;
+//                                } else if (order_lines.get(i).getDiscount_type().equalsIgnoreCase("fixed_amount")) {
+//                                    amount_discount = order_lines.get(i).getDiscount();
+//                                }
+//                            }
+//                            double subtotal = price_before_discount - amount_discount;
+//
+//                            order_lines.get(i).setPrice_subtotal(subtotal);
+//                            order_lines.get(i).setQty(qty);
+//                            order_lines.get(i).setPrice_before_discount(price_before_discount);
+//
+//                            sameProduct = true;
+//                            orderLineAdapter.notifyDataSetChanged();
+//                            updateOrderTotalAmount();
+//                        }
+//                    }
+                    if(!sameProduct)    //not same product
+                        addProductToOrder(product, null, 0.0, null);
                     popup.dismiss();
                 }
             }
@@ -1531,10 +1601,36 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         popupBinding.productModifierPopupPositiveBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                double price_extra = 0.0;
+                String attributesName = null;
+                String customer_note = null;
+                if(!pos_config.isIface_orderline_customer_notes()) {
+                    customer_note = popupBinding.productModifierNote.getText().toString().trim();
+                    if(customer_note.equalsIgnoreCase("")){
+                        customer_note = null;
+                    }
+                }
+
+
+                if(pos_config.isProduct_configurator()){
+                    price_extra = radioPrice_extra + selectPrice_extra + colorPrice_extra + pillPrice_extra;
+                    if(radioEt != null){
+                        radioAttribute += ": " + radioEt.getText().toString().trim();
+                    }
+                    if(selectEt != null){
+                        selectAttribute += ": " + selectEt.getText().toString().trim();
+                    }
+                    if(pillEt != null){
+                        pillAttribute += ": " + pillEt.getText().toString().trim();
+                    }
+                    attributesName = "(" + radioAttribute + ", " + selectAttribute + ", " +
+                            colorAttribute + ", " + pillAttribute + ")";
+                }
+
                 if(fromMenu) {
-                    addProductToOrder(product);
+                    addProductToOrder(product, attributesName, price_extra, customer_note);
                 }else{
-                    addOrUpdateProductToOrder(product);
+                    //addOrUpdateProductToOrder(product);
                 }
                 popup.dismiss();
             }
@@ -1562,12 +1658,12 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
 
         return selected;
     }
-    //NOT YET DONE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!MODIFIER related
+    //NOT YET DONE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Product Attribute related
+    //Add & Update product to order
     private void addOrUpdateProductToOrder(Product product){
 
     }
-    //Add & Update product to order
-    private void addProductToOrder(Product product){
+    private void addProductToOrder(Product product, String attributes, double price_extra, String customer_note){
         int orderState = cartSharedPreference.getInt("orderingState", 0);
         if(orderState == 0) {
             cartSharedPreferenceEdit.putInt("orderingState", 1);
@@ -1575,8 +1671,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
             addNewOrder();
         }
 
-        Number id = realm.where(Order_Line.class).max("order_line_id");
-
+        Number id = realm.where(Order_Line.class).max("local_order_line_id");
         int nextID = -1;
         System.out.println(id);
         if(id == null){
@@ -1584,68 +1679,52 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         }else{
             nextID = id.intValue() + 1;
         }
-//        double amount_total = currentOrder.getAmount_total() + product.getPrice_unit();
-//        currentOrder.setAmount_total(amount_total);
-        Order_Line newOrderLine = new Order_Line(nextID, String.valueOf(order_lines.size()), 1, product.getList_price(),
-                product.getList_price(), product.getList_price(), product.getList_price(),
-                product.getDisplay_list_price(), product.getDisplay_list_price(), product.getDisplay_list_price(),
-                product.getDisplay_list_price(), product.getName(), null, null, 0.0,
+
+        ArrayList<Product_Tax> product_taxes = new ArrayList<>();
+        RealmResults product_taxes_results = realm.where(Product_Tax.class)
+                .equalTo("product_tmpl_id", product.getProduct_tmpl_id()).findAll();
+        product_taxes.addAll(realm.copyFromRealm(product_taxes_results));
+        double price_unit = product.getList_price() + price_extra;
+        double price_unit_excl_tax = calculate_price_unit_excl_tax(product, price_unit);
+        double price_subtotal = price_unit_excl_tax * 1;
+        double price_subtotal_incl = calculate_price_subtotal_incl(product_taxes, price_subtotal);
+        String product_name = product.getName();
+        if(attributes != null){
+            product_name += attributes;
+        }
+
+        Order_Line newOrderLine = new Order_Line(nextID, -1, String.valueOf(order_lines.size()), 1, price_unit,
+                price_subtotal, price_subtotal_incl, price_unit, String.format("$ .2f", price_unit),
+                String.format("$ .2f", price_subtotal), String.format("$ .2f", price_subtotal_incl),
+                String.format("$ .2f", price_unit), product_name, customer_note, null, 0.0,
                 null, currentOrder, product);
 
         realm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
                 realm.insertOrUpdate(newOrderLine);
-//                realm.insertOrUpdate(currentOrder);
             }
         });
         order_lines.add(newOrderLine);
+
+        if(!NetworkUtils.isNetworkAvailable(contextpage)){  //no internet
+            Toast.makeText(contextpage, "No Internet Connection, product added into order stored in local", Toast.LENGTH_SHORT).show();
+        }else{
+            //call add product to order api
+            //new apiAddProductToOrder(currentOrder.getOrder_id, product.getProduct_id).execute();
+        }
+
         orderLineAdapter.notifyDataSetChanged();
         updateOrderTotalAmount();
     }
-    private void addNewOrder(){
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        df.setTimeZone(TimeZone.getTimeZone("Asia/Kuala_Lumpur"));
-        Date today = new Date();
-        Order order = new Order();
-        Number id = realm.where(Order.class).max("order_id");
-
-        int nextID = -1;
-        System.out.println(id);
-        if(id == null){
-            nextID = 1;
-        }else{
-            nextID = id.intValue() + 1;
-        }
-
-        order.setOrder_id(nextID);
-        order.setDate_order(df.format(today));
-        order.setState("draft");
-        order.setState_name("Ongoing");
-        order.setCustomer_count(1);
-
-        currentOrder = order;
-        realm.executeTransaction(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                realm.insertOrUpdate(order);
-            }
-        });
-        cartSharedPreferenceEdit.putInt("orderId", order.getOrder_id());
-        cartSharedPreferenceEdit.commit();
-        refreshCustomerNumber();
-    }
-
-    //Update Order
-    //public class apiUpdateOrder extends AsyncTask<String, String, String>{
-    //
-    //}
-    //Add New Order
-    public class apiAddNewOrder extends AsyncTask<String, String, String>{
+    //Add product to order api
+    public class apiAddProductToOrder extends AsyncTask<String, String, String> {
         ProgressDialog pd = null;
+        int order_id, product_id, qty = 1;
 
-        public apiAddNewOrder(){
-
+        public apiAddProductToOrder(int order_id, int product_id){
+            this.order_id = order_id;
+            this.product_id = product_id;
         }
 
         @Override
@@ -1661,19 +1740,9 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
             long timeBefore = Calendar.getInstance().getTimeInMillis();
             String connection_error = "";
 
-            int customer_id = 0, table_id = -1;
-            String tableID = null;
-            if(table_id == -1){
-                tableID = "";
-            }else{
-                tableID = String.valueOf(table_id);
-            }
-            String tableParameter = "";
-            if(pos_config.isIs_table_management()) {
-                tableParameter = "&table_id=" + tableID;
-            }
-            String urlParameters = "&customer_id=" + customer_id + "&customer_count=1" + tableParameter +
-                    "";
+            String urlParameters = "&order_id=" + order_id +
+                    "&produproduct_id=" + product_id + "&";
+
             byte[] postData = urlParameters.getBytes(Charset.forName("UTF-8"));
             int postDataLength = postData.length;
 
@@ -1684,7 +1753,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
 
             URL obj;
             try{
-                obj = new URL(url);
+                obj = new URL(jsonUrl);
                 HttpsURLConnection con = (HttpsURLConnection) obj.openConnection();
                 con.setRequestMethod("POST");
                 con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
@@ -1699,7 +1768,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                 wr.close();
 
                 int responseCode = con.getResponseCode();
-                System.out.println("\nSending 'POST' request to URL : " + url);
+                System.out.println("\nSending 'POST' request to URL : " + jsonUrl);
                 System.out.println("Post parameters : " + urlParameters);
                 System.out.println("Response Code : " + responseCode);
 
@@ -1712,26 +1781,34 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                 }
                 in.close();
 
+                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                JsonElement je = JsonParser.parseString(String.valueOf(response));
+                String prettyJsonString = gson.toJson(je);
+                System.out.println(prettyJsonString);
                 System.out.println(response);
                 String data = response.toString();
                 try{
                     JSONObject json = new JSONObject(data);
                     String status = json.getString("status");
 
+
                     if (status.equals("OK")) {
+                        JSONObject jresult = json.getJSONObject("result");
+                        JSONObject jo_order = jresult.getJSONObject("order");
+
 
                     }
                 }catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-            }catch (IOException e){
-                    Log.e("error", "cannot fetch data");
-                    connection_error = e.getMessage() + "";
-                    System.out.println(connection_error);
+                    e.printStackTrace();
                 }
+            }catch (IOException e){
+                Log.e("error", "cannot fetch data");
+                connection_error = e.getMessage() + "";
+                System.out.println(connection_error);
+            }
 
             long timeAfter = Calendar.getInstance().getTimeInMillis();
-            System.out.println("Load product & category time: " + (timeAfter - timeBefore) + "ms");
+            System.out.println("Add product to order time taken: " + (timeAfter - timeBefore) + "ms");
             return null;
         }
 
@@ -1746,19 +1823,234 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                 pd.dismiss();
         }
     }
-    public static ProgressDialog createProgressDialog(Context mContext) {
-        ProgressDialog dialog = new ProgressDialog(mContext);
-        try {
-            dialog.show();
-        } catch (WindowManager.BadTokenException e) {
 
-        }
-        dialog.setCancelable(false);
-        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        dialog.setContentView(R.layout.progress_dialog);
-        // dialog.setMessage(Message);
-        return dialog;
+    private double calculate_price_unit_excl_tax(Product product, double price_unit){
+        double fixed = product.getAmount_tax_incl_fixed(),
+                percent = product.getAmount_tax_incl_percent(),
+                division = product.getAmount_tax_incl_division();
+
+        double price_unit_excl_tax = ((price_unit  - fixed) / (1 + (percent / 100))) * (1 - (division / 100));
+
+        return price_unit_excl_tax;
     }
+    private double calculate_price_subtotal_incl(ArrayList<Product_Tax> product_taxes, double price_subtotal){
+        double price_subtotal_incl;
+        double total_taxes = 0.0, price = price_subtotal;
+        double tax = 0.0;
+
+        for(int i = 0; i < product_taxes.size(); i++){
+            Product_Tax product_tax = product_taxes.get(i);
+            if(product_tax.getAmount_type().equalsIgnoreCase("fixed")){
+                tax = product_tax.getAmount();
+            }else if(product_tax.getAmount_type().equalsIgnoreCase("percent")){
+                tax = (price * (product_tax.getAmount() / 100));
+            }else if(product_tax.getAmount_type().equalsIgnoreCase("division")){
+                tax = ((price / (1 - (product_tax.getAmount() / 100))) - price);
+            }
+
+            if(product_tax.isInclude_base_amount()){    //TRUE
+                price += tax;
+            }
+
+            total_taxes += tax;
+        }
+        price_subtotal_incl = price_subtotal + total_taxes;
+
+        return price_subtotal_incl;
+    }
+
+    private void addNewOrder(){
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        df.setTimeZone(TimeZone.getTimeZone("Asia/Kuala_Lumpur"));
+        Date today = new Date();
+        Order order = new Order();
+        Number id = realm.where(Order.class).max("local_order_id");
+
+        int nextID = -1;
+        System.out.println(id);
+        if(id == null){
+            nextID = 1;
+        }else{
+            nextID = id.intValue() + 1;
+        }
+
+        order.setLocal_order_id(nextID);
+        order.setDate_order(df.format(today));
+        order.setState("draft");
+        order.setState_name("Ongoing");
+        order.setCustomer_count(1);
+        order.setCustomer(getCurrentCustomer());
+
+        currentOrder = order;
+        realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.insertOrUpdate(order);
+            }
+        });
+        cartSharedPreferenceEdit.putInt("localOrderId", order.getLocal_order_id());
+        cartSharedPreferenceEdit.commit();
+
+        if(!NetworkUtils.isNetworkAvailable(contextpage)){  //no internet
+            Toast.makeText(contextpage, "No Internet Connection, order created stored in local", Toast.LENGTH_SHORT).show();
+        }else{
+            Customer customer = getCurrentCustomer();
+            if(getCurrentCustomer().getCustomer_id() == 0){
+                customer = realm.copyFromRealm(getCurrentCustomer());
+            }
+            new apiAddNewDraftOrder(order.getLocal_order_id(), customer).execute();
+        }
+
+        refreshCustomerNumber();
+    }
+    //Add New Draft Order (While user add any product from homepage menu)
+    public class apiAddNewDraftOrder extends AsyncTask<String, String, String> {
+        ProgressDialog pd = null;
+        Order createdOrder = null;
+        Customer customer;
+        int localOrderId;
+        boolean is_table_management = false;
+
+        public apiAddNewDraftOrder(int localOrderId, Customer customer){
+            this.customer = customer;
+            this.localOrderId = localOrderId;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            if(pd == null) {
+                pd = createProgressDialog(contextpage);
+                pd.show();
+            }
+            is_table_management = pos_config.isIs_table_management();
+        }
+
+        @Override
+        protected String doInBackground(String... strings) {
+            long timeBefore = Calendar.getInstance().getTimeInMillis();
+            String connection_error = "";
+
+            int customer_id = customer.getCustomer_id();
+            String urlParameters = "";
+            if(customer_id != 0){
+                urlParameters += "&customer_id=" + customer_id;
+            }
+            if(is_table_management) {
+                urlParameters += "&customer_count=1";
+            }
+            byte[] postData = urlParameters.getBytes(Charset.forName("UTF-8"));
+            int postDataLength = postData.length;
+
+            String url = "https://www.c3rewards.com/api/merchant/?module=pos&action=save_order";
+            String agent = "c092dc89b7aac085a210824fb57625db";
+            String jsonUrl =url + "&agent=" + agent;
+            System.out.println(jsonUrl);
+
+            URL obj;
+            try{
+                obj = new URL(jsonUrl);
+                HttpsURLConnection con = (HttpsURLConnection) obj.openConnection();
+                con.setRequestMethod("POST");
+                con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                con.setRequestProperty("charset", "utf-8");
+                con.setRequestProperty("Content-Length", Integer.toString(postDataLength));
+
+                // Send post request
+                con.setDoOutput(true);
+                DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+                wr.writeBytes(urlParameters);
+                wr.flush();
+                wr.close();
+
+                int responseCode = con.getResponseCode();
+                System.out.println("\nSending 'POST' request to URL : " + jsonUrl);
+                System.out.println("Post parameters : " + urlParameters);
+                System.out.println("Response Code : " + responseCode);
+
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                JsonElement je = JsonParser.parseString(String.valueOf(response));
+                String prettyJsonString = gson.toJson(je);
+                System.out.println(prettyJsonString);
+                System.out.println(response);
+                String data = response.toString();
+                try{
+                    JSONObject json = new JSONObject(data);
+                    String status = json.getString("status");
+
+
+                    if (status.equals("OK")) {
+                        JSONObject jresult = json.getJSONObject("result");
+                        JSONObject jo_order = jresult.getJSONObject("order");
+                        double tip_amount = 0;
+                        boolean is_tipped = false;
+                        int partner_id = 0;
+                        if(jo_order.getString("tip_amount").length() > 0){
+                            tip_amount = jo_order.getDouble("tip_amount");
+                        }
+                        if(jo_order.getString("is_tipped").length() > 0){
+                            is_tipped = jo_order.getBoolean("is_tipped");
+                        }
+                        if(jo_order.getString("partner_id").length() > 0){
+                            partner_id = jo_order.getInt("partner_id");
+                        }
+
+                        createdOrder = new Order(localOrderId, jo_order.getInt("order_id"), jo_order.getString("name"),
+                                jo_order.getString("date_order"), jo_order.getString("pos_reference"),
+                                jo_order.getString("state"), jo_order.getString("state_name"),
+                                jo_order.getDouble("amount_tax"), jo_order.getDouble("amount_total"),
+                                jo_order.getDouble("amount_paid"), jo_order.getDouble("amount_return"),
+                                tip_amount, is_tipped, null, customer,
+                                jo_order.getString("note"), jo_order.getDouble("discount"),
+                                jo_order.getString("discount_type"), jo_order.getInt("customer_count"),
+                                jo_order.getInt("session_id"), jo_order.getInt("user_id"), jo_order.getInt("company_id"),
+                                partner_id);
+                    }
+                }catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+            }catch (IOException e){
+                    Log.e("error", "cannot fetch data");
+                    connection_error = e.getMessage() + "";
+                    System.out.println(connection_error);
+                }
+
+            long timeAfter = Calendar.getInstance().getTimeInMillis();
+            System.out.println("Add new draft order time taken: " + (timeAfter - timeBefore) + "ms");
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            if(!NetworkUtils.isNetworkAvailable(contextpage)){
+                Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
+            }else{
+                currentOrder = createdOrder;
+                realm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        realm.insertOrUpdate(currentOrder);
+                    }
+                });
+                cartSharedPreferenceEdit.putInt("localOrderId", currentOrder.getLocal_order_id());
+                cartSharedPreferenceEdit.commit();
+            }
+            if (pd != null)
+                pd.dismiss();
+        }
+    }
+    //Update Order
+    //public class apiUpdateOrder extends AsyncTask<String, String, String>{
+    //
+    //}
 
     //Cart / order line
     @Override
@@ -1774,10 +2066,10 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
     public void onOrderLineCancelClick(int position) {
         Order_Line deleteOrderLine = realm.where(Order_Line.class)
                 .equalTo("order_line_id", order_lines.get(position).getOrder_line_id())
-                .equalTo("order.order_id", currentOrder.getOrder_id())
+                .equalTo("order.local_order_id", currentOrder.getLocal_order_id())
                 .findFirst();
         Order deleteOrder = realm.where(Order.class)
-                .equalTo("order_id", currentOrder.getOrder_id())
+                .equalTo("local_order_id", currentOrder.getLocal_order_id())
                 .findFirst();
 
         //popup
@@ -1794,13 +2086,13 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                                 RealmResults<Order> results = realm.where(Order.class)
                                         .equalTo("table.table_id", currentOrder.getTable().getTable_id())
                                         .and().notEqualTo("state", "paid").and()
-                                        .notEqualTo("order_id", currentOrder.getOrder_id()).findAll();
+                                        .notEqualTo("local_order_id", currentOrder.getLocal_order_id()).findAll();
                                 if(results.size() == 0)
                                     tableOccupiedToVacant(currentOrder.getTable());
                             }
                             //delete order
                             cartSharedPreferenceEdit.putInt("orderingState", 0);
-                            cartSharedPreferenceEdit.putInt("orderId", -1);
+                            cartSharedPreferenceEdit.putInt("localOrderId", -1);
                             cartSharedPreferenceEdit.commit();
                             currentOrder = new Order();
                             refreshNote();
@@ -1901,25 +2193,27 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
 
     private void updateOrderTotalAmount(){
         int orderState = cartSharedPreference.getInt("orderingState", 0);
-        double tax = 0.0, order_subtotal = 0.0, amount_total = 0.0;
+        double order_subtotal = 0.0, total_price_subtotal_incl = 0.0, amount_total = 0.0, amount_order_discount = 0.0;
+        double total_tax_amount = 0.0;
         if(orderState == 1) {
             for(int i = 0; i < order_lines.size(); i++){
                 order_subtotal += order_lines.get(i).getPrice_subtotal();
+                total_price_subtotal_incl += order_lines.get(i).getPrice_subtotal_incl();
             }
-            //Default / testing tax = 10%
-            tax = (order_subtotal * 10) / 100;
-            tax = Double.valueOf(String.format("%.2f", tax));
-            amount_total = order_subtotal + tax;
-            if(currentOrder.isHas_order_discount()){
-                if(currentOrder.isIs_percentage()){
-                    double amount_order_discount = order_subtotal * ((double)currentOrder.getDiscount_percent()/100);
-                    currentOrder.setAmount_order_discount(Double.valueOf(String.format("%.2f", amount_order_discount)));
+            amount_total = total_price_subtotal_incl;
+            if(currentOrder.getDiscount_type() != null){
+                if(currentOrder.getDiscount_type().equalsIgnoreCase("percentage")){
+                    amount_order_discount = total_price_subtotal_incl * (currentOrder.getDiscount()/100);
+                }else if(currentOrder.getDiscount_type().equalsIgnoreCase("fixed_amount")){
+                    amount_order_discount = currentOrder.getDiscount();
                 }
-                amount_total -= currentOrder.getAmount_order_discount();
+                amount_total -= amount_order_discount;
             }
-            amount_total = Double.valueOf(String.format("%.2f", amount_total));
+
+            total_tax_amount = totalAllOrderLineTax();
+
             currentOrder.setAmount_total(amount_total);
-            currentOrder.setAmount_tax(tax);
+            currentOrder.setAmount_tax(total_tax_amount);
 
             realm.executeTransaction(new Realm.Transaction() {
                 @Override
@@ -1929,15 +2223,15 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
             });
         }
 
-        if((currentOrder.isHas_order_discount()) && (orderState == 1)){
-            binding.cartInclude.cartOrderSummaryDiscount.setText(String.format("- RM %.2f", currentOrder.getAmount_order_discount()));
+        if((currentOrder.getDiscount_type() != null) && (orderState == 1)){
+            binding.cartInclude.cartOrderSummaryDiscount.setText(String.format("- RM %.2f", amount_order_discount));
         }else{
             binding.cartInclude.cartOrderSummaryDiscount.setText("- RM 0.00");
             binding.cartInclude.cartOrderSummaryDiscountRl.setVisibility(View.GONE);
             binding.cartInclude.cartOrderDiscountBtn.setTextColor(contextpage.getResources().getColor(R.color.darkOrange));
         }
         binding.cartInclude.cartOrderSummarySubtotal.setText(String.format("RM %.2f", order_subtotal));
-        binding.cartInclude.cartOrderSummaryTax.setText(String.format("RM %.2f", tax));
+        binding.cartInclude.cartOrderSummaryTax.setText(String.format("RM %.2f", total_tax_amount));
         binding.cartInclude.cartOrderSummaryPayableAmount.setText(String.format("RM %.2f", amount_total));
     }
     private void tableOccupiedToVacant(Table table){
@@ -1950,7 +2244,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         });
     }
     private void refreshNote(){
-        if(currentOrder.getOrder_id() != -1){
+        if(currentOrder.getLocal_order_id() != -1){
             if(currentOrder.getNote() != null){
                 if(!currentOrder.getNote().isEmpty()) {
                     binding.cartInclude.cartOrderNoteBtn.setTextColor(contextpage.getResources().getColor(R.color.green));
@@ -1975,7 +2269,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         }
     }
     private void refreshCustomerNumber(){
-        if(currentOrder.getOrder_id() == -1){
+        if(currentOrder.getLocal_order_id() == -1){
             binding.cartInclude.cartBtnNumberCustomer.setText("Guest(s)");
         }else{
             binding.cartInclude.cartBtnNumberCustomer.setText(currentOrder.getCustomer_count() + " Guest(s)");
@@ -1988,6 +2282,17 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
             posOrderType.add(dine_in_posType);
             orderTypes.notifyDataSetChanged();
         }
+    }
+
+    private double totalAllOrderLineTax(){
+        double total_tax_amount = 0.0;
+
+        for(int i = 0; i < order_lines.size(); i++){
+            double amount_tax = order_lines.get(i).getPrice_subtotal_incl() - order_lines.get(i).getPrice_subtotal();
+            total_tax_amount += amount_tax;
+        }
+
+        return total_tax_amount;
     }
 
     //Menu Category
@@ -2046,32 +2351,32 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         }else{
             //add the product to order line directly
             boolean sameProduct = false;
-            for(int i = 0; i < order_lines.size(); i++) {
-                if (product.getId() == order_lines.get(i).getProduct().getProduct_id()){    //cart has the same product
-                    int qty = order_lines.get(i).getQty() + 1;
-                    double price_before_discount = qty * order_lines.get(i).getPrice_unit();
-                    double amount_discount = 0;
-                    if(order_lines.get(i).getDiscount_type() != null) {
-                        if (order_lines.get(i).getDiscount_type().equalsIgnoreCase("percentage")) {
-                            amount_discount = (price_before_discount * order_lines.get(i).getDiscount()) / 100;
-                        } else if (order_lines.get(i).getDiscount_type().equalsIgnoreCase("fixed_amount")) {
-                            amount_discount = order_lines.get(i).getDiscount();
-                        }
-                    }
-
-                    double subtotal = price_before_discount - amount_discount;
-
-                    order_lines.get(i).setPrice_subtotal(subtotal);
-                    order_lines.get(i).setQty(qty);
-                    order_lines.get(i).setPrice_before_discount(price_before_discount);
-
-                    sameProduct = true;
-                    orderLineAdapter.notifyDataSetChanged();
-                    updateOrderTotalAmount();
-                }
-            }
+//            for(int i = 0; i < order_lines.size(); i++) {
+//                if (product.getId() == order_lines.get(i).getProduct().getProduct_id()){    //cart has the same product
+//                    int qty = order_lines.get(i).getQty() + 1;
+//                    double price_before_discount = qty * order_lines.get(i).getPrice_unit();
+//                    double amount_discount = 0;
+//                    if(order_lines.get(i).getDiscount_type() != null) {
+//                        if (order_lines.get(i).getDiscount_type().equalsIgnoreCase("percentage")) {
+//                            amount_discount = (price_before_discount * order_lines.get(i).getDiscount()) / 100;
+//                        } else if (order_lines.get(i).getDiscount_type().equalsIgnoreCase("fixed_amount")) {
+//                            amount_discount = order_lines.get(i).getDiscount();
+//                        }
+//                    }
+//
+//                    double subtotal = price_before_discount - amount_discount;
+//
+//                    order_lines.get(i).setPrice_subtotal(subtotal);
+//                    order_lines.get(i).setQty(qty);
+//                    order_lines.get(i).setPrice_before_discount(price_before_discount);
+//
+//                    sameProduct = true;
+//                    orderLineAdapter.notifyDataSetChanged();
+//                    updateOrderTotalAmount();
+//                }
+//            }
             if(!sameProduct)
-                addProductToOrder(product);
+                addProductToOrder(product, null, 0.0, null);
         }
         Toast.makeText(this, "" + product.getName(), Toast.LENGTH_SHORT).show();
     }
@@ -2084,8 +2389,8 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
     public void onResume() {
         super.onResume();
 
-        int currentOrderId = cartSharedPreference.getInt("orderId", -1);
-        Order order = realm.where(Order.class).equalTo("order_id", currentOrderId).findFirst();
+        int currentOrderId = cartSharedPreference.getInt("localOrderId", -1);
+        Order order = realm.where(Order.class).equalTo("local_order_id", currentOrderId).findFirst();
         if(order != null) {
             currentOrder = realm.copyFromRealm(order);
         }
@@ -2125,5 +2430,19 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         if(!pos_config.isIs_table_management()){
             binding.navbarLayoutInclude.navBarTables.setVisibility(View.GONE);
         }
+    }
+
+    public static ProgressDialog createProgressDialog(Context mContext) {
+        ProgressDialog dialog = new ProgressDialog(mContext);
+        try {
+            dialog.show();
+        } catch (WindowManager.BadTokenException e) {
+
+        }
+        dialog.setCancelable(false);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dialog.setContentView(R.layout.progress_dialog);
+        // dialog.setMessage(Message);
+        return dialog;
     }
 }

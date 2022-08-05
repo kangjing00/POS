@@ -123,13 +123,20 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
         binding.paymentOrderDetailProductRv.setAdapter(paymentOrderLineAdapter);
         paymentMethodPagerAdapter = new PaymentMethodPagerAdapter(this);
 
-        double order_subtotal = 0.0;
+        double order_subtotal = 0.0, total_price_subtotal_incl = 0.0, amount_order_discount = 0.0;
         for(int i = 0; i < payment_order_lines.size(); i++){
             order_subtotal += payment_order_lines.get(i).getPrice_subtotal();
+            total_price_subtotal_incl += payment_order_lines.get(i).getPrice_subtotal_incl();
         }
         binding.paymentSubtotal.setText(String.format("%.2f", order_subtotal));
         binding.paymentTax.setText(String.format("%.2f", currentOrder.getAmount_tax()));
-        binding.paymentDiscount.setText(String.format("- %.2f", currentOrder.getAmount_order_discount()));
+        if(currentOrder.getDiscount_type().equalsIgnoreCase("percentage")){
+            amount_order_discount = (total_price_subtotal_incl * currentOrder.getDiscount()) / 100;
+        }else if(currentOrder.getDiscount_type().equalsIgnoreCase("fixed_amount")){
+            amount_order_discount = currentOrder.getDiscount();
+        }
+        binding.paymentDiscount.setText(String.format("- %.2f", amount_order_discount));
+
         binding.paymentGrandTotal.setText(String.format("%.2f", currentOrder.getAmount_total()));
         binding.paymentBarPayableAmount.setText(String.format("RM %.2f", currentOrder.getAmount_total()));
         viewModel.setAmount_total(currentOrder.getAmount_total());
@@ -259,7 +266,7 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
                     updated_current_order.setAmount_paid(amount_total);
                     updated_current_order.setAmount_return(Double.valueOf(viewModel.getPayment_order_detail_balance().getValue()));
                     if(currentCustomer == null){
-                        currentCustomer = realm.where(Customer.class).equalTo("customer_id", 1).findFirst();
+                        currentCustomer = realm.where(Customer.class).equalTo("customer_id", 0).findFirst();
                     }
                     updated_current_order.setCustomer(currentCustomer);
                     if(current_order.getTable() != null){

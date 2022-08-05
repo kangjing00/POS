@@ -134,10 +134,32 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
             currentOrder = realm.copyFromRealm(order);
         }
         //Cart Discount
-        if(currentOrder.isHas_order_discount()){
-            binding.cartInclude.cartOrderSummaryDiscountRl.setVisibility(View.VISIBLE);
-            binding.cartInclude.cartOrderSummaryDiscount.setText("- RM " + String.format("%.2f", currentOrder.getAmount_order_discount()));
-            binding.cartInclude.cartOrderDiscountBtn.setTextColor(contextpage.getResources().getColor(R.color.green));
+        if(currentOrder.getDiscount_type() != null) {
+            if (currentOrder.getDiscount_type().equalsIgnoreCase("percentage")
+                    || currentOrder.getDiscount_type().equalsIgnoreCase("fixed_amount")) {
+
+                binding.cartInclude.cartOrderSummaryDiscountRl.setVisibility(View.VISIBLE);
+
+                if(currentOrder.getDiscount_type().equalsIgnoreCase("fixed_amount")) {
+                    binding.cartInclude.cartOrderSummaryDiscount.setText(
+                            "- RM " + String.format("%.2f", currentOrder.getDiscount()));
+                }else if(currentOrder.getDiscount_type().equalsIgnoreCase("percentage")){
+                    double total_price_subtotal_incl = 0.0;
+                    double amount_discount = 0.0;
+//                    Order_Line order_lineForDiscount = realm.where(Order_Line.class).equalTo("order.order_id")
+                    System.out.println("Current order, order_line size ===========" + currentOrder.getOrder_lines().size());
+                    for(int i = 0; i < currentOrder.getOrder_lines().size(); i++){
+                        Order_Line order_line = currentOrder.getOrder_lines().get(i);
+                        total_price_subtotal_incl += order_line.getPrice_subtotal_incl();
+                    }
+                    amount_discount = (total_price_subtotal_incl * currentOrder.getDiscount()) / 100;
+                    binding.cartInclude.cartOrderSummaryDiscount.setText(
+                            "- RM " + String.format("%.2f", amount_discount));
+                }
+
+
+                binding.cartInclude.cartOrderDiscountBtn.setTextColor(contextpage.getResources().getColor(R.color.green));
+            }
         }
 
         //Fragment Settings
@@ -482,10 +504,9 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
         binding.cartInclude.cartOrderSummaryDiscountCancelBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(currentOrder.isHas_order_discount()) {
-                    currentOrder.setAmount_order_discount(0.0);
-                    currentOrder.setHas_order_discount(false);
-                    currentOrder.setIs_percentage(true);
+                if(currentOrder.getDiscount_type() != null) {
+                    currentOrder.setDiscount(0.0);
+                    currentOrder.setDiscount_type(null);
                     updateOrderTotalAmount();
                 }
                 binding.cartInclude.cartOrderSummaryDiscount.setText("- RM 0.00");
@@ -964,14 +985,14 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
         wm.updateViewLayout(container, p);
 
 
-        if((currentOrder.getOrder_id() != -1) && (currentOrder.isHas_order_discount())) {
-            if(currentOrder.isIs_percentage()){ //percentage
-                popupBinding.addDiscountPopupEt.setText(String.valueOf(currentOrder.getDiscount_percent()));
+        if((currentOrder.getOrder_id() != -1) && (currentOrder.getDiscount_type() != null)) {
+            if(currentOrder.getDiscount_type().equalsIgnoreCase("percentage")){ //percentage
+                popupBinding.addDiscountPopupEt.setText(String.valueOf(currentOrder.getDiscount()));
                 popupBinding.addDiscountPopupRadioBtnPercentage.setChecked(true);
                 popupBinding.addDiscountPopupRadioBtnAmount.setChecked(false);
                 popupBinding.addDiscountPopupEt.setInputType(InputType.TYPE_CLASS_NUMBER);
-            }else{  //amount
-                popupBinding.addDiscountPopupEt.setText(String.valueOf(currentOrder.getAmount_order_discount()));
+            }else if(currentOrder.getDiscount_type().equalsIgnoreCase("fixed_amount")){  //amount
+                popupBinding.addDiscountPopupEt.setText(String.valueOf(currentOrder.getDiscount()));
                 popupBinding.addDiscountPopupRadioBtnPercentage.setChecked(false);
                 popupBinding.addDiscountPopupRadioBtnAmount.setChecked(true);
                 popupBinding.addDiscountPopupEt.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
@@ -1000,28 +1021,24 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                 if(discountInDouble > 0.0) {
                     String discount = String.format("%.2f", discountInDouble);
 
-                    if (popupBinding.addDiscountPopupRadioBtnAmount.isChecked()) {
-                        currentOrder.setIs_percentage(false);
-                    } else {
-                        currentOrder.setIs_percentage(true);
+                    if (popupBinding.addDiscountPopupRadioBtnAmount.isChecked()) {//fixed_amount
+                        currentOrder.setDiscount_type("fixed_amount");
+                    } else {    //percentage
+                        currentOrder.setDiscount_type("percentage");
                     }
 
-                    if(currentOrder.isIs_percentage()){
+                    if(currentOrder.getDiscount_type().equalsIgnoreCase("percentage")){
                         int order_discount_percent = (int)(Double.parseDouble(discount));
-                        double subtotal = 0;
+                        double total_price_subtotal_incl = 0;
                         for(int i=0; i < order_lines.size(); i++){
-                            subtotal += order_lines.get(i).getPrice_subtotal();
+                            total_price_subtotal_incl += order_lines.get(i).getPrice_subtotal_incl();
                         }
-                        double amount_order_discount = subtotal * ((double)order_discount_percent / 100);
+                        double amount_order_discount = total_price_subtotal_incl * ((double)order_discount_percent / 100);
                         discount = String.format("%.2f", amount_order_discount);
-                        currentOrder.setDiscount_percent(order_discount_percent);
-                    }else{
-                        currentOrder.setDiscount_percent(0);
                     }
                     binding.cartInclude.cartOrderSummaryDiscount.setText("- RM " + discount);
 
-                    currentOrder.setHas_order_discount(true);
-                    currentOrder.setAmount_order_discount(Double.valueOf(discount));
+                    currentOrder.setDiscount(Double.valueOf(discount));
                     updateOrderTotalAmount();
                 }
                 popup.dismiss();
@@ -1560,25 +1577,27 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
     }
     private void updateOrderTotalAmount() {
         int orderState = cartSharedPreference.getInt("orderingState", 0);
-        double tax = 0.0, order_subtotal = 0.0, amount_total = 0.0;
-        if (orderState == 1) {
-            for (int i = 0; i < order_lines.size(); i++) {
+        double order_subtotal = 0.0, total_price_subtotal_incl = 0.0, amount_total = 0.0, amount_order_discount = 0.0;
+        double total_tax_amount = 0.0;
+        if(orderState == 1) {
+            for(int i = 0; i < order_lines.size(); i++){
                 order_subtotal += order_lines.get(i).getPrice_subtotal();
+                total_price_subtotal_incl += order_lines.get(i).getPrice_subtotal_incl();
             }
-            //Default / testing tax = 10%
-            tax = (order_subtotal * 10) / 100;
-            tax = Double.valueOf(String.format("%.2f", tax));
-            amount_total = order_subtotal + tax;
-            if (currentOrder.isHas_order_discount()) {
-                if (currentOrder.isIs_percentage()) {
-                    double amount_order_discount = order_subtotal * ((double)currentOrder.getDiscount_percent() / 100);
-                    currentOrder.setAmount_order_discount(Double.valueOf(String.format("%.2f", amount_order_discount)));
+            amount_total = total_price_subtotal_incl;
+            if(currentOrder.getDiscount_type() != null){
+                if(currentOrder.getDiscount_type().equalsIgnoreCase("percentage")){
+                    amount_order_discount = total_price_subtotal_incl * (currentOrder.getDiscount()/100);
+                }else if(currentOrder.getDiscount_type().equalsIgnoreCase("fixed_amount")){
+                    amount_order_discount = currentOrder.getDiscount();
                 }
-                amount_total -= currentOrder.getAmount_order_discount();
+                amount_total -= amount_order_discount;
             }
-            amount_total = Double.valueOf(String.format("%.2f", amount_total));
+
+            total_tax_amount = totalAllOrderLineTax();
+
             currentOrder.setAmount_total(amount_total);
-            currentOrder.setAmount_tax(tax);
+            currentOrder.setAmount_tax(total_tax_amount);
 
             realm.executeTransaction(new Realm.Transaction() {
                 @Override
@@ -1588,15 +1607,15 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
             });
         }
 
-        if((currentOrder.isHas_order_discount()) && (orderState == 1)){
-            binding.cartInclude.cartOrderSummaryDiscount.setText(String.format("- RM %.2f", currentOrder.getAmount_order_discount()));
+        if((currentOrder.getDiscount_type() != null) && (orderState == 1)){
+            binding.cartInclude.cartOrderSummaryDiscount.setText(String.format("- RM %.2f", amount_order_discount));
         }else{
             binding.cartInclude.cartOrderSummaryDiscount.setText("- RM 0.00");
             binding.cartInclude.cartOrderSummaryDiscountRl.setVisibility(View.GONE);
             binding.cartInclude.cartOrderDiscountBtn.setTextColor(contextpage.getResources().getColor(R.color.darkOrange));
         }
         binding.cartInclude.cartOrderSummarySubtotal.setText(String.format("RM %.2f", order_subtotal));
-        binding.cartInclude.cartOrderSummaryTax.setText(String.format("RM %.2f", tax));
+        binding.cartInclude.cartOrderSummaryTax.setText(String.format("RM %.2f", total_tax_amount));
         binding.cartInclude.cartOrderSummaryPayableAmount.setText(String.format("RM %.2f", amount_total));
     }
     public void refreshCartCurrentCustomer(){
@@ -1625,6 +1644,17 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
             posOrderType.add(dine_in_posType);
             orderTypes.notifyDataSetChanged();
         }
+    }
+
+    private double totalAllOrderLineTax(){
+        double total_tax_amount = 0.0;
+
+        for(int i = 0; i < order_lines.size(); i++){
+            double amount_tax = order_lines.get(i).getPrice_subtotal_incl() - order_lines.get(i).getPrice_subtotal();
+            total_tax_amount += amount_tax;
+        }
+
+        return total_tax_amount;
     }
 
     public void viewCustomerDetail(int customer_id){

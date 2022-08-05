@@ -111,9 +111,9 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         new loadProduct().execute();//<<<<<<<<<<<<<<<<<<<<<<<
         new loadFloorAndTable().execute();//<<<<<<<<<<<<<<<<<<<
 
-        Customer guestAccInRealm = realm.where(Customer.class).equalTo("customer_id", 1).findFirst();
+        Customer guestAccInRealm = realm.where(Customer.class).equalTo("customer_id", 0).findFirst();
         if(guestAccInRealm == null) {
-            Customer guestAcc = new Customer(1, "Guest", "guestEmail", null, null, null);
+            Customer guestAcc = new Customer(0, "Guest", "guestEmail", null, null, null);
             realm.executeTransaction(new Realm.Transaction() {
                 @Override
                 public void execute(Realm realm) {
@@ -407,12 +407,12 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                                 jpos_config.getBoolean("is_table_management"), iface_tipproduct,
                                 iface_orderline_customer_notes, start_categ_id,
                                 jpos_config.getBoolean("iface_orderline_notes"), jpos_config.getBoolean("manual_discount"),
-                                product_configurator);
+                                product_configurator, jpos_config.getInt("company_id"));
 
                         pos_session = new POS_Session(jpos_session.getInt("id"), jpos_session.getString("name"),
                                 jpos_session.getString("start_at"), jpos_session.getString("stop_at"),
                                 jpos_session.getString("state"), jpos_session.getString("opening_notes"),
-                                jpos_session.getInt("login_number"), pos_config);
+                                jpos_session.getInt("login_number"), pos_config, jpos_session.getInt("user_id"));
                     }
                 }catch (JSONException e) {
                     e.printStackTrace();
@@ -435,6 +435,8 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         @Override
         protected void onPostExecute(String s) {
             if(!NetworkUtils.isNetworkAvailable(contextpage)){
+                if (pd != null)
+                    pd.dismiss();
                 Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
             }else{
                 if(error){
@@ -525,6 +527,7 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                             // Product
                             for (int a = 0; a < jproducts.length(); a++) {
                                 JSONObject jo = jproducts.getJSONObject(a);
+                                JSONObject jTti_by_amount_type = jo.getJSONObject("total_taxes_incl_by_amount_type");
                                 JSONArray jProductTax = null;
                                 int category_id = -1;
                                 if(!(jo.getString("pos_categ_id").isEmpty())){
@@ -573,10 +576,13 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                                     }
                                 }
 
+
                                 Product product = new Product(jo.getInt("id"), jo.getInt("product_id"), jo.getInt("product_tmpl_id"),
                                         jo.getString("name"), jo.getString("default_code"), jo.getDouble("list_price"),
                                         jo.getDouble("standard_price"), jo.getDouble("margin"), jo.getDouble("margin_percent"),
-                                        jo.getDouble("price_incl_tax"), jo.getDouble("price_excl_tax"), jo.getString("display_list_price"),
+                                        jo.getDouble("price_incl_tax"), jo.getDouble("price_excl_tax"),
+                                        jTti_by_amount_type.getDouble("fixed"), jTti_by_amount_type.getDouble("percent"),
+                                        jTti_by_amount_type.getDouble("division"), jo.getString("display_list_price"),
                                         jo.getString("display_standard_price"), jo.getString("display_margin"),
                                         jo.getString("display_margin_percent"), jo.getString("display_price_incl_tax"),
                                         jo.getString("display_price_excl_tax"), category);
@@ -586,9 +592,11 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                                     jProductTax = jo.getJSONArray("taxes");
                                     for(int x = 0; x < jProductTax.length(); x++){
                                         JSONObject joProductTax = jProductTax.getJSONObject(x);
-                                        String product_tax_id = product.getProduct_id() + joProductTax.getString("tax_id");
-                                        Product_Tax product_tax = new Product_Tax(Integer.valueOf(product_tax_id), joProductTax.getString("name"),
-                                                joProductTax.getDouble("amount"), joProductTax.getString("display_amount"), product);
+                                        Product_Tax product_tax = new Product_Tax(joProductTax.getInt("tax_id"), jo.getInt("product_tmpl_id"),
+                                                joProductTax.getString("name"), joProductTax.getString("amount_type"),
+                                                joProductTax.getDouble("amount"), joProductTax.getDouble("actual_amount"),
+                                                joProductTax.getBoolean("include_base_amount"), joProductTax.getString("display_amount"),
+                                                joProductTax.getString("display_actual_amount"), product);
                                         product_taxes.add(product_tax);
                                     }
                                 }
@@ -616,6 +624,8 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         @Override
         protected void onPostExecute(String s) {
             if(!NetworkUtils.isNetworkAvailable(contextpage)){
+                if (pd != null)
+                    pd.dismiss();
                 Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
             }else{
                 long timeBefore = Calendar.getInstance().getTimeInMillis();
@@ -764,6 +774,8 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         @Override
         protected void onPostExecute(String s) {
             if(!NetworkUtils.isNetworkAvailable(contextpage)){
+                if (pd != null)
+                    pd.dismiss();
                 Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
             }else{
                 realm.executeTransaction(new Realm.Transaction() {
@@ -864,7 +876,7 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         private Customer guestAcc;
         @Override
         protected void onPreExecute(){
-            guestAcc = realm.where(Customer.class).equalTo("customer_id", 1).findFirst();
+            guestAcc = realm.where(Customer.class).equalTo("customer_id", 0).findFirst();
         }
 
         @Override
@@ -939,17 +951,38 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                                         }
                                     }
                                 }
+                                int partner_id = -1;
                                 if(jo.getString("partner_id").length() > 0){
-                                    customer = getCustomer(jo.getInt("partner_id"));
+                                    partner_id = jo.getInt("partner_id");
+                                    customer = getCustomer(partner_id);
+                                }else{
+                                    customer = guestAcc;
                                 }
 
+                                double discount = 0.0;
+                                if(jo.getString("discount").length() > 0){
+                                    discount = jo.getDouble("discount");
+                                }
+                                String discount_type = null;
+                                if(jo.getString("discount_type").length() > 0){
+                                    discount_type = jo.getString("discount_type");
+                                }
 
-                                Order order = new Order(jo.getInt("order_id"), jo.getString("name"), jo.getString("date_order"),
+                                double tip_amount = 0;
+                                boolean is_tipped = false;
+                                if(jo.getString("tip_amount").length() > 0){
+                                    tip_amount = jo.getDouble("tip_amount");
+                                }
+                                if(jo.getString("is_tipped").length() > 0){
+                                    is_tipped = jo.getBoolean("is_tipped");
+                                }
+
+                                Order order = new Order((i + 1),jo.getInt("order_id"), jo.getString("name"), jo.getString("date_order"),
                                         jo.getString("pos_reference"), jo.getString("state"), jo.getString("state_name"),
                                         jo.getDouble("amount_tax"), jo.getDouble("amount_total"), jo.getDouble("amount_paid"),
-                                        jo.getDouble("amount_return"), jo.getDouble("tip_amount"), jo.getBoolean("is_tipped"),
-                                        table, customer, jo.getString("note"), 0.0, false, true,
-                                        jo.getInt("customer_count"), 0);
+                                        jo.getDouble("amount_return"), tip_amount, is_tipped,
+                                        table, customer, jo.getString("note"), discount, discount_type, jo.getInt("customer_count"),
+                                        pos_session.getId(), pos_session.getUser_id(), pos_config.getCompany_id(), partner_id);
 
                                 if(customer != null)
                                     customers.add(customer);
@@ -961,6 +994,7 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                         e.printStackTrace();
                     }
                 } catch (IOException e) {
+                    page = -1;
                     Log.e("error", "cannot fetch data");
                 }
             }
@@ -1044,14 +1078,9 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                 });
                 long timeAfter = Calendar.getInstance().getTimeInMillis();
                 System.out.println("Update orders to realm time: " + (timeAfter - timeBefore) + "ms");
-
-                //Temporarily
-//                finishApiLoad = true;
-                if (pd != null)
-                {
-                    pd.dismiss();
-                }
             }
+            if (pd != null)
+                pd.dismiss();
         }
     }
 

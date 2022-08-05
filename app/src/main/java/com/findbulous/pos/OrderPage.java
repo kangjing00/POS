@@ -391,7 +391,7 @@ public class OrderPage extends CheckConnection {
                                     (jo.getString("discount_type") != null)){
                                 discount_type = jo.getString("discount_type");
                             }
-                            Order_Line orderLine = new Order_Line(
+                            Order_Line orderLine = new Order_Line((i +1),
                                 jo.getInt("order_line_id"), jo.getString("name"), jo.getInt("qty"),
                                 jo.getDouble("price_unit"), jo.getDouble("price_subtotal"), jo.getDouble("price_subtotal_incl"),
                                 price_before_discount, jo.getString("display_price_unit"), jo.getString("display_price_subtotal"),
@@ -453,9 +453,10 @@ public class OrderPage extends CheckConnection {
         double amount_total = orderSelected.getAmount_total();
         double balance = orderSelected.getAmount_return();
         double amount_paid = orderSelected.getAmount_paid() + balance;
-        double subtotal = 0.0, product_discount = 0.0, order_discount = 0.0;
+        double subtotal = 0.0, total_price_subtotal_incl = 0.0, product_discount = 0.0, amount_order_discount = 0.0;
         for(int i = 0; i < order_lines.size(); i++){
             subtotal += order_lines.get(i).getPrice_before_discount();
+            total_price_subtotal_incl += order_lines.get(i).getPrice_subtotal_incl();
             if(order_lines.get(i).getDiscount_type() != null) {
                 if (order_lines.get(i).getDiscount_type().equalsIgnoreCase("percentage")) {
                     double amount_discount = (order_lines.get(i).getPrice_before_discount() * order_lines.get(i).getDiscount()) / 100;
@@ -469,8 +470,12 @@ public class OrderPage extends CheckConnection {
             product_discount = -product_discount;
         }
 
-        if(orderSelected.isHas_order_discount()){
-            order_discount = -orderSelected.getAmount_order_discount();
+        if(orderSelected.getDiscount_type() != null){
+            if(orderSelected.getDiscount_type().equalsIgnoreCase("percentage")){
+                amount_order_discount = -((total_price_subtotal_incl * orderSelected.getDiscount()) / 100);
+            }else if(orderSelected.getDiscount_type().equalsIgnoreCase("fixed_amount")){
+                amount_order_discount = -orderSelected.getDiscount();
+            }
         }
 
         binding.orderDetailTax.setText(String.format("%.2f", tax));
@@ -480,7 +485,7 @@ public class OrderPage extends CheckConnection {
         binding.orderDetailBalance.setText(String.format("%.2f", balance));
         binding.orderDetailSubtotal.setText(String.format("%.2f", subtotal));
         binding.orderDetailProductDiscount.setText(String.format("%.2f", product_discount));
-        binding.orderDetailOrderDiscount.setText(String.format("%.2f", order_discount));
+        binding.orderDetailOrderDiscount.setText(String.format("%.2f", amount_order_discount));
 
         binding.orderDetailOrderId.setText("#" + orderSelected.getOrder_id());
         if(orderSelected.getTable() != null){

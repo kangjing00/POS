@@ -9,10 +9,11 @@ public class POS_Config extends RealmObject {
     private String name;
     private boolean is_table_management, iface_tipproduct, iface_orderline_customer_notes,
             iface_orderline_notes, manual_discount, product_configurator;
-    private int iface_start_categ_id;
+    private int iface_start_categ_id, company_id;
 
     public POS_Config(int id, String name, boolean is_table_management, boolean iface_tipproduct, boolean iface_orderline_customer_notes,
-                      int iface_start_categ_id, boolean iface_orderline_notes, boolean manual_discount, boolean product_configurator){
+                      int iface_start_categ_id, boolean iface_orderline_notes, boolean manual_discount, boolean product_configurator,
+                      int company_id){
         this.id = id;
         this.name = name;
         this.is_table_management = is_table_management;
@@ -22,6 +23,7 @@ public class POS_Config extends RealmObject {
         this.iface_orderline_notes = iface_orderline_notes;
         this.manual_discount = manual_discount;
         this.product_configurator = product_configurator;
+        this.company_id = company_id;
     }
 
     public POS_Config(){
@@ -34,6 +36,7 @@ public class POS_Config extends RealmObject {
         iface_orderline_notes = false;
         manual_discount = false;
         product_configurator = false;
+        company_id = -1;
     }
 
     public int getId() {
@@ -106,5 +109,13 @@ public class POS_Config extends RealmObject {
 
     public void setProduct_configurator(boolean product_configurator) {
         this.product_configurator = product_configurator;
+    }
+
+    public int getCompany_id() {
+        return company_id;
+    }
+
+    public void setCompany_id(int company_id) {
+        this.company_id = company_id;
     }
 }

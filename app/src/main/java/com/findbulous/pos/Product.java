@@ -13,7 +13,8 @@ public class Product extends RealmObject {
     private int product_id, product_tmpl_id;
     private String name, default_code;
     private double list_price, standard_price, margin, margin_percent,
-            price_incl_tax, price_excl_tax;
+            price_incl_tax, price_excl_tax, amount_tax_incl_fixed, amount_tax_incl_percent,
+            amount_tax_incl_division;
     private String display_list_price, display_standard_price, display_margin, display_margin_percent,
             display_price_incl_tax, display_price_excl_tax;
 
@@ -25,9 +26,10 @@ public class Product extends RealmObject {
     //Constructor
     public Product(int id, int product_id, int product_tmpl_id, String name, String default_code,
                    double list_price, double standard_price, double margin, double margin_percent,
-                   double price_incl_tax, double price_excl_tax,
-                   String display_list_price, String display_standard_price, String display_margin, String display_margin_percent,
-                   String display_price_incl_tax, String display_price_excl_tax, POS_Category category) {
+                   double price_incl_tax, double price_excl_tax, double amount_tax_incl_fixed, double amount_tax_incl_percent,
+                   double amount_tax_incl_division, String display_list_price, String display_standard_price,
+                   String display_margin, String display_margin_percent, String display_price_incl_tax,
+                   String display_price_excl_tax, POS_Category category) {
         this.id = id;
         this.product_id = product_id;
         this.product_tmpl_id = product_tmpl_id;
@@ -39,6 +41,9 @@ public class Product extends RealmObject {
         this.margin_percent = margin_percent;
         this.price_incl_tax = price_incl_tax;
         this.price_excl_tax = price_excl_tax;
+        this.amount_tax_incl_fixed = amount_tax_incl_fixed;
+        this.amount_tax_incl_percent = amount_tax_incl_percent;
+        this.amount_tax_incl_division = amount_tax_incl_division;
         this.display_list_price = display_list_price;
         this.display_standard_price = display_standard_price;
         this.display_margin = display_margin;
@@ -59,6 +64,9 @@ public class Product extends RealmObject {
         margin_percent = -1;
         price_incl_tax = -1;
         price_excl_tax = -1;
+        amount_tax_incl_fixed = 0.0;
+        amount_tax_incl_percent = 0.0;
+        amount_tax_incl_division = 0.0;
         display_list_price = null;
         display_standard_price = null;
         display_margin = null;
@@ -208,5 +216,29 @@ public class Product extends RealmObject {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public double getAmount_tax_incl_fixed() {
+        return amount_tax_incl_fixed;
+    }
+
+    public void setAmount_tax_incl_fixed(double amount_tax_incl_fixed) {
+        this.amount_tax_incl_fixed = amount_tax_incl_fixed;
+    }
+
+    public double getAmount_tax_incl_percent() {
+        return amount_tax_incl_percent;
+    }
+
+    public void setAmount_tax_incl_percent(double amount_tax_incl_percent) {
+        this.amount_tax_incl_percent = amount_tax_incl_percent;
+    }
+
+    public double getAmount_tax_incl_division() {
+        return amount_tax_incl_division;
+    }
+
+    public void setAmount_tax_incl_division(double amount_tax_incl_division) {
+        this.amount_tax_incl_division = amount_tax_incl_division;
     }
 }

@@ -86,8 +86,6 @@ public class LoginPage extends AppCompatActivity {
                 Intent intent = new Intent(contextpage, ChoosePOSPermissionPage.class);
                 startActivity(intent);
                 finish();
-//                new loadProduct().execute();
-//                new loadFloorAndTable().execute();
             }
         });
         binding.registerBtn.setOnClickListener(new View.OnClickListener() {
@@ -177,6 +175,7 @@ public class LoginPage extends AppCompatActivity {
                             // Product
                             for (int a = 0; a < jproducts.length(); a++) {
                                 JSONObject jo = jproducts.getJSONObject(a);
+                                JSONObject jTti_by_amount_type = jo.getJSONObject("total_taxes_incl_by_amount_type");
                                 JSONArray jProductTax = null;
                                 int category_id = -1;
                                 if(!(jo.getString("pos_categ_id").isEmpty())){
@@ -224,7 +223,9 @@ public class LoginPage extends AppCompatActivity {
                                 Product product = new Product(jo.getInt("id"), jo.getInt("product_id"), jo.getInt("product_tmpl_id"),
                                         jo.getString("name"), jo.getString("default_code"), jo.getDouble("list_price"),
                                         jo.getDouble("standard_price"), jo.getDouble("margin"), jo.getDouble("margin_percent"),
-                                        jo.getDouble("price_incl_tax"), jo.getDouble("price_excl_tax"), jo.getString("display_list_price"),
+                                        jo.getDouble("price_incl_tax"), jo.getDouble("price_excl_tax"),
+                                        jTti_by_amount_type.getDouble("fixed"), jTti_by_amount_type.getDouble("percent"),
+                                        jTti_by_amount_type.getDouble("division"), jo.getString("display_list_price"),
                                         jo.getString("display_standard_price"), jo.getString("display_margin"),
                                         jo.getString("display_margin_percent"), jo.getString("display_price_incl_tax"),
                                         jo.getString("display_price_excl_tax"), category);
@@ -234,9 +235,11 @@ public class LoginPage extends AppCompatActivity {
                                     jProductTax = jo.getJSONArray("taxes");
                                     for(int x = 0; x < jProductTax.length(); x++){
                                         JSONObject joProductTax = jProductTax.getJSONObject(x);
-                                        String product_tax_id = product.getProduct_id() + joProductTax.getString("tax_id");
-                                        Product_Tax product_tax = new Product_Tax(Integer.valueOf(product_tax_id), joProductTax.getString("name"),
-                                                joProductTax.getDouble("amount"), joProductTax.getString("display_amount"), product);
+                                        Product_Tax product_tax = new Product_Tax(joProductTax.getInt("tax_id"), jo.getInt("product_tmpl_id"),
+                                                joProductTax.getString("name"), joProductTax.getString("amount_type"),
+                                                joProductTax.getDouble("amount"), joProductTax.getDouble("actual_amount"),
+                                                jo.getBoolean("include_base_amount"), jo.getString("display_amount"),
+                                                jo.getString("display_actual_amount"), product);
                                         product_taxes.add(product_tax);
                                     }
                                 }
@@ -430,7 +433,7 @@ public class LoginPage extends AppCompatActivity {
     }
 
 
-
+    //Temporarily
     private void deleteRealm(){
         realm.executeTransaction(new Realm.Transaction() {
             @Override

@@ -8,11 +8,14 @@ import io.realm.annotations.PrimaryKey;
 public class Order  extends RealmObject {
 
     @PrimaryKey
+    private int local_order_id;
     private int order_id;
     private String name, date_order, pos_reference, note, state, state_name; //state: "paid", "draft" ("OnGoing"), "onHold"
-    private double amount_tax, amount_total, amount_paid, amount_return, tip_amount, amount_order_discount;
-    private boolean is_tipped, has_order_discount, is_percentage;
-    private int customer_count, discount_percent;
+    private double amount_tax, amount_total, amount_paid, amount_return, tip_amount, discount;
+    private boolean is_tipped;
+    private int customer_count;
+    private String discount_type;
+    private int session_id, user_id, company_id, partner_id;
 
     private Table table;
     private Customer customer;
@@ -22,10 +25,11 @@ public class Order  extends RealmObject {
 
     //Constructors
     //Dine-in
-    public Order(int order_id, String name, String date_order, String pos_reference, String state, String state_name,
+    public Order(int local_order_id, int order_id, String name, String date_order, String pos_reference, String state, String state_name,
                  double amount_tax, double amount_total, double amount_paid, double amount_return, double tip_amount,
-                 boolean is_tipped, Table table, Customer customer, String note, double amount_order_discount,
-                 boolean has_order_discount, boolean is_percentage, int customer_count, int discount_percent){
+                 boolean is_tipped, Table table, Customer customer, String note, double discount,
+                 String discount_type, int customer_count, int session_id, int user_id, int company_id, int partner_id){
+        this.local_order_id = local_order_id;
         this.order_id = order_id;
         this.name = name;
         this.date_order = date_order;
@@ -41,14 +45,17 @@ public class Order  extends RealmObject {
         this.table = table;
         this.customer = customer;
         this.note = note;
-        this.amount_order_discount = amount_order_discount;
-        this.has_order_discount = has_order_discount;
-        this.is_percentage = is_percentage;
+        this.discount = discount;
+        this.discount_type = discount_type;
         this.customer_count = customer_count;
-        this.discount_percent = discount_percent;
+        this.session_id = session_id;
+        this.user_id = user_id;
+        this.company_id = company_id;
+        this.partner_id = partner_id;
     }
 
     public Order(){
+        local_order_id = -1;
         order_id = -1;
         name = null;
         date_order = null;
@@ -64,11 +71,13 @@ public class Order  extends RealmObject {
         table = null;
         customer = null;
         note = null;
-        amount_order_discount = 0.0;
-        has_order_discount = false;
-        is_percentage = true;
+        discount = 0.0;
+        discount_type = null;
         customer_count = 0;
-        discount_percent = 0;
+        session_id = -1;
+        user_id = -1;
+        company_id = -1;
+        partner_id = -1;
     }
 
     public int getOrder_id() {
@@ -161,44 +170,12 @@ public class Order  extends RealmObject {
         this.note = note;
     }
 
-    public double getAmount_order_discount() {
-        return amount_order_discount;
-    }
-
-    public void setAmount_order_discount(double amount_order_discount) {
-        this.amount_order_discount = amount_order_discount;
-    }
-
-    public boolean isHas_order_discount() {
-        return has_order_discount;
-    }
-
-    public void setHas_order_discount(boolean has_order_discount) {
-        this.has_order_discount = has_order_discount;
-    }
-
-    public boolean isIs_percentage() {
-        return is_percentage;
-    }
-
-    public void setIs_percentage(boolean is_percentage) {
-        this.is_percentage = is_percentage;
-    }
-
     public int getCustomer_count() {
         return customer_count;
     }
 
     public void setCustomer_count(int customer_count) {
         this.customer_count = customer_count;
-    }
-
-    public int getDiscount_percent() {
-        return discount_percent;
-    }
-
-    public void setDiscount_percent(int discount_percent) {
-        this.discount_percent = discount_percent;
     }
 
     public String getName() {
@@ -231,5 +208,61 @@ public class Order  extends RealmObject {
 
     public void setAmount_return(double amount_return) {
         this.amount_return = amount_return;
+    }
+
+    public double getDiscount() {
+        return discount;
+    }
+
+    public void setDiscount(double discount) {
+        this.discount = discount;
+    }
+
+    public String getDiscount_type() {
+        return discount_type;
+    }
+
+    public void setDiscount_type(String discount_type) {
+        this.discount_type = discount_type;
+    }
+
+    public int getSession_id() {
+        return session_id;
+    }
+
+    public void setSession_id(int session_id) {
+        this.session_id = session_id;
+    }
+
+    public int getUser_id() {
+        return user_id;
+    }
+
+    public void setUser_id(int user_id) {
+        this.user_id = user_id;
+    }
+
+    public int getCompany_id() {
+        return company_id;
+    }
+
+    public void setCompany_id(int company_id) {
+        this.company_id = company_id;
+    }
+
+    public int getPartner_id() {
+        return partner_id;
+    }
+
+    public void setPartner_id(int partner_id) {
+        this.partner_id = partner_id;
+    }
+
+    public int getLocal_order_id() {
+        return local_order_id;
+    }
+
+    public void setLocal_order_id(int local_order_id) {
+        this.local_order_id = local_order_id;
     }
 }

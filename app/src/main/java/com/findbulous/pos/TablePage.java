@@ -450,6 +450,8 @@ public class TablePage extends CheckConnection implements
 
             if(no_connection){
                 System.out.println("Connection Error Message: " + connection_error);
+            }else{
+                System.out.println("Internet Reconnected!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             }
             if (pd != null)
                 pd.dismiss();
@@ -474,7 +476,7 @@ public class TablePage extends CheckConnection implements
         df.setTimeZone(TimeZone.getTimeZone("Asia/Kuala_Lumpur"));
         Date today = new Date();
         Order order = new Order();
-        Number id = realm.where(Order.class).max("order_id");
+        Number id = realm.where(Order.class).max("local_order_id");
 
         int nextID = -1;
         System.out.println(id);
@@ -484,7 +486,7 @@ public class TablePage extends CheckConnection implements
             nextID = id.intValue() + 1;
         }
 
-        order.setOrder_id(nextID);
+        order.setLocal_order_id(nextID);
         order.setDate_order(df.format(today));
         order.setState("draft");
         order.setState_name("Ongoing");
