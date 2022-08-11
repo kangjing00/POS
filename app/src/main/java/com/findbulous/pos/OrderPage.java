@@ -391,13 +391,19 @@ public class OrderPage extends CheckConnection {
                                     (jo.getString("discount_type") != null)){
                                 discount_type = jo.getString("discount_type");
                             }
+                            double total_cost = 0.0;
+                            if(jo.getString("total_cost").length() > 0){
+                                total_cost = jo.getDouble("total_cost");
+                            }
                             Order_Line orderLine = new Order_Line((i +1),
                                 jo.getInt("order_line_id"), jo.getString("name"), jo.getInt("qty"),
                                 jo.getDouble("price_unit"), jo.getDouble("price_subtotal"), jo.getDouble("price_subtotal_incl"),
                                 price_before_discount, jo.getString("display_price_unit"), jo.getString("display_price_subtotal"),
                                 jo.getString("display_price_subtotal_incl"), String.format("RM %.2f", price_before_discount),
                                 jo.getString("full_product_name"), jo.getString("customer_note"), discount_type,
-                                jo.getDouble("discount"), jo.getString("display_discount"), order, product);
+                                jo.getDouble("discount"), jo.getString("display_discount"),
+                                total_cost, jo.getString("display_total_cost"), jo.getDouble("price_extra"),
+                                jo.getString("display_price_extra"), order, product, null);
 
                             order_lines.add(orderLine);
                         }

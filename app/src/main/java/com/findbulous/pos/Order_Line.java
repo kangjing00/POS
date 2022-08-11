@@ -1,5 +1,6 @@
 package com.findbulous.pos;
 
+import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 
@@ -10,25 +11,29 @@ public class Order_Line extends RealmObject {
     private String name;
     private int qty;
     /*
-    price subtotal = the final price of all qty of this product after discount
-    price subtotal incl = include tax
-    price_before_discount = the final price of all qty of this product before discount
+    price subtotal = exclude tax, after discount, all qty
+    price subtotal incl = include tax, after discount, all qty
+    price_before_discount = include tax, before discount, all qty
     */
-    private double price_unit, price_subtotal, price_subtotal_incl, price_before_discount, discount;
-    private String discount_type, display_discount; // percentage / fixed_amount
+    private double price_unit, price_subtotal, price_subtotal_incl, price_before_discount, discount, total_cost, price_extra;
+    private String discount_type, display_discount; // percentage /or/ fixed_amount
 
-    private String display_price_unit, display_price_subtotal, display_price_subtotal_incl, display_price_before_discount;
+    private String display_price_unit, display_price_subtotal, display_price_subtotal_incl, display_price_before_discount,
+                    display_total_cost, display_price_extra;
     private String full_product_name, customer_note;
 
     private Order order;
     private Product product;
+
+    private RealmList<Attribute_Value> attribute_values;
 
     //Constructor
     public Order_Line(int local_order_line_id, int order_line_id, String name, int qty, double price_unit, double price_subtotal,
                       double price_subtotal_incl, double price_before_discount, String display_price_unit,
                       String display_price_subtotal, String display_price_subtotal_incl, String display_price_before_discount,
                       String full_product_name, String customer_note, String discount_type, double discount,
-                      String display_discount, Order order, Product product){
+                      String display_discount, double total_cost, String display_total_cost, double price_extra,
+                      String display_price_extra, Order order, Product product, RealmList<Attribute_Value> attribute_values){
         this.local_order_line_id = local_order_line_id;
         this.order_line_id = order_line_id;
         this.name = name;
@@ -46,8 +51,13 @@ public class Order_Line extends RealmObject {
         this.discount_type = discount_type;
         this.discount = discount;
         this.display_discount = display_discount;
+        this.total_cost = total_cost;
+        this.display_total_cost = display_total_cost;
+        this.price_extra = price_extra;
+        this.display_price_extra = display_price_extra;
         this.order = order;
         this.product = product;
+        this.attribute_values = attribute_values;
     }
     public Order_Line(){
         local_order_line_id = -1;
@@ -67,8 +77,13 @@ public class Order_Line extends RealmObject {
         discount_type = null;
         discount = 0.0;
         display_discount = null;
+        total_cost = 0.0;
+        display_total_cost = null;
+        price_extra = 0.0;
+        display_price_extra = null;
         order = null;
         product = null;
+        attribute_values = null;
     }
 
     public int getOrder_line_id() {
@@ -221,5 +236,45 @@ public class Order_Line extends RealmObject {
 
     public void setLocal_order_line_id(int local_order_line_id) {
         this.local_order_line_id = local_order_line_id;
+    }
+
+    public double getTotal_cost() {
+        return total_cost;
+    }
+
+    public void setTotal_cost(double total_cost) {
+        this.total_cost = total_cost;
+    }
+
+    public double getPrice_extra() {
+        return price_extra;
+    }
+
+    public void setPrice_extra(double price_extra) {
+        this.price_extra = price_extra;
+    }
+
+    public String getDisplay_total_cost() {
+        return display_total_cost;
+    }
+
+    public void setDisplay_total_cost(String display_total_cost) {
+        this.display_total_cost = display_total_cost;
+    }
+
+    public String getDisplay_price_extra() {
+        return display_price_extra;
+    }
+
+    public void setDisplay_price_extra(String display_price_extra) {
+        this.display_price_extra = display_price_extra;
+    }
+
+    public RealmList<Attribute_Value> getAttribute_values() {
+        return attribute_values;
+    }
+
+    public void setAttribute_values(RealmList<Attribute_Value> attribute_values) {
+        this.attribute_values = attribute_values;
     }
 }

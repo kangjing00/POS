@@ -21,6 +21,10 @@ import android.widget.Toast;
 import com.findbulous.pos.Network.NetworkUtils;
 import com.findbulous.pos.databinding.ChoosePosPermissionPageBinding;
 import com.google.android.material.button.MaterialButton;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -108,6 +112,7 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         pd = null;
 
         new getCheckOpenedSession().execute();
+
         new loadProduct().execute();//<<<<<<<<<<<<<<<<<<<<<<<
         new loadFloorAndTable().execute();//<<<<<<<<<<<<<<<<<<<
 
@@ -120,7 +125,6 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                     realm.insertOrUpdate(guestAcc);
                 }
             });
-
         }else{
             System.out.println("guestAccInRealm: " + guestAccInRealm);
         }
@@ -595,8 +599,9 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                                         Product_Tax product_tax = new Product_Tax(joProductTax.getInt("tax_id"), jo.getInt("product_tmpl_id"),
                                                 joProductTax.getString("name"), joProductTax.getString("amount_type"),
                                                 joProductTax.getDouble("amount"), joProductTax.getDouble("actual_amount"),
-                                                joProductTax.getBoolean("include_base_amount"), joProductTax.getString("display_amount"),
-                                                joProductTax.getString("display_actual_amount"), product);
+                                                joProductTax.getBoolean("include_base_amount"), joProductTax.getBoolean("price_include"),
+                                                joProductTax.getString("display_amount"), joProductTax.getString("display_actual_amount"),
+                                                product);
                                         product_taxes.add(product_tax);
                                     }
                                 }
@@ -874,8 +879,14 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
 //    }
     public class loadOrder extends AsyncTask<String, String, String>{
         private Customer guestAcc;
+        private ArrayList<Order> orderInRealm;
+
         @Override
         protected void onPreExecute(){
+            RealmResults<Order> results = realm.where(Order.class).findAll();
+            orderInRealm = new ArrayList<>();
+            orderInRealm.addAll(realm.copyFromRealm(results));
+
             guestAcc = realm.where(Customer.class).equalTo("customer_id", 0).findFirst();
         }
 
@@ -977,12 +988,28 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                                     is_tipped = jo.getBoolean("is_tipped");
                                 }
 
-                                Order order = new Order((i + 1),jo.getInt("order_id"), jo.getString("name"), jo.getString("date_order"),
+                                int order_id = jo.getInt("order_id");
+                                int local_order_id = 1;
+                                if(orderInRealm.size() > 0){
+                                    local_order_id = orderInRealm.get(orderInRealm.size() - 1).getLocal_order_id() + 1;
+                                }
+                                boolean found = false;
+                                for(int y = 0; y < orderInRealm.size(); y++){
+                                    if(order_id == orderInRealm.get(y).getOrder_id()){
+                                        local_order_id = orderInRealm.get(y).getLocal_order_id();
+                                        found = true;
+                                    }
+                                }
+                                Order order = new Order(local_order_id, order_id, jo.getString("name"), jo.getString("date_order"),
                                         jo.getString("pos_reference"), jo.getString("state"), jo.getString("state_name"),
                                         jo.getDouble("amount_tax"), jo.getDouble("amount_total"), jo.getDouble("amount_paid"),
-                                        jo.getDouble("amount_return"), tip_amount, is_tipped,
+                                        jo.getDouble("amount_return"), jo.getDouble("amount_subtotal"), tip_amount, is_tipped,
                                         table, customer, jo.getString("note"), discount, discount_type, jo.getInt("customer_count"),
                                         pos_session.getId(), pos_session.getUser_id(), pos_config.getCompany_id(), partner_id);
+
+                                if(found == false){ //not found in local db = new order from cloud db
+                                    orderInRealm.add(order);
+                                }
 
                                 if(customer != null)
                                     customers.add(customer);

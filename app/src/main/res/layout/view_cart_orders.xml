@@ -71,8 +71,8 @@
                 android:id="@+id/product_order_product_option"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Medium - Half Grilled"
-                android:textSize="8dp"
+                android:text='@{String.format("%s", (orderLine.full_product_name.indexOf("(") >= 0)? orderLine.full_product_name.substring((orderLine.full_product_name.indexOf("(") + 1), orderLine.full_product_name.indexOf(")")) : "")}'
+                android:textSize="10dp"
                 android:layout_marginLeft="10dp"
                 android:textColor="@color/darkGrey"
                 app:layout_constraintTop_toBottomOf="@+id/product_order_product_name"
@@ -83,7 +83,7 @@
                 android:id="@+id/product_order_product_subtotal"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text='@{String.format("RM %.2f", orderLine.price_subtotal)}'
+                android:text='@{String.format("RM %.2f", orderLine.price_subtotal_incl)}'
                 android:layout_marginTop="10dp"
                 android:layout_marginRight="20dp"
                 app:layout_constraintEnd_toStartOf="@+id/product_order_cancel_product"

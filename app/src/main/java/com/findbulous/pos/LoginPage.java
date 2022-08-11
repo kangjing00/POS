@@ -19,18 +19,26 @@ import android.widget.Toast;
 
 import com.findbulous.pos.Network.NetworkUtils;
 import com.findbulous.pos.databinding.LoginActivityBinding;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Calendar;
+
+import javax.net.ssl.HttpsURLConnection;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
@@ -79,6 +87,9 @@ public class LoginPage extends AppCompatActivity {
         floors = new ArrayList<>();
         tableStates = new ArrayList<>();
         tables = new ArrayList<>();
+
+        //Delete Testing orders
+        //new deleteTestingOrders().execute();
 
         binding.loginBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -238,8 +249,9 @@ public class LoginPage extends AppCompatActivity {
                                         Product_Tax product_tax = new Product_Tax(joProductTax.getInt("tax_id"), jo.getInt("product_tmpl_id"),
                                                 joProductTax.getString("name"), joProductTax.getString("amount_type"),
                                                 joProductTax.getDouble("amount"), joProductTax.getDouble("actual_amount"),
-                                                jo.getBoolean("include_base_amount"), jo.getString("display_amount"),
-                                                jo.getString("display_actual_amount"), product);
+                                                jo.getBoolean("include_base_amount"), joProductTax.getBoolean("price_include"),
+                                                jo.getString("display_amount"), jo.getString("display_actual_amount"),
+                                                product);
                                         product_taxes.add(product_tax);
                                     }
                                 }
@@ -441,5 +453,80 @@ public class LoginPage extends AppCompatActivity {
                 realm.deleteAll();
             }
         });
+    }
+    public class deleteTestingOrders extends AsyncTask<String, String, String> {
+
+        @Override
+        protected String doInBackground(String... strings) {
+            long timeBefore = Calendar.getInstance().getTimeInMillis();
+            String connection_error = "";
+
+            String urlParameters = "&order_ids[]=50";
+
+            //Testing (check error)
+//            urlParameters += "&dev=1";
+
+            byte[] postData = urlParameters.getBytes(Charset.forName("UTF-8"));
+            int postDataLength = postData.length;
+
+            String url = "https://www.c3rewards.com/api/merchant/?module=pos&action=delete_orders";
+            String agent = "c092dc89b7aac085a210824fb57625db";
+            String jsonUrl =url + "&agent=" + agent;
+            System.out.println(jsonUrl);
+
+            URL obj;
+            try{
+                obj = new URL(jsonUrl);
+                HttpsURLConnection con = (HttpsURLConnection) obj.openConnection();
+                con.setRequestMethod("POST");
+                con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                con.setRequestProperty("charset", "utf-8");
+                con.setRequestProperty("Content-Length", Integer.toString(postDataLength));
+
+                // Send post request
+                con.setDoOutput(true);
+                DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+                wr.writeBytes(urlParameters);
+                wr.flush();
+                wr.close();
+
+                int responseCode = con.getResponseCode();
+                System.out.println("\nSending 'POST' request to URL : " + jsonUrl);
+                System.out.println("Post parameters : " + urlParameters);
+                System.out.println("Response Code : " + responseCode);
+
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                JsonElement je = JsonParser.parseString(String.valueOf(response));
+                String prettyJsonString = gson.toJson(je);
+                System.out.println(prettyJsonString);
+                System.out.println("Post parameters : " + urlParameters);
+                System.out.println(response);
+                String data = response.toString();
+                try{
+                    JSONObject json = new JSONObject(data);
+                    String status = json.getString("status");
+
+                }catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }catch (IOException e){
+                Log.e("error", "cannot fetch data");
+                connection_error = e.getMessage() + "";
+                System.out.println(connection_error);
+            }
+
+            long timeAfter = Calendar.getInstance().getTimeInMillis();
+            System.out.println("Delete order time taken: " + (timeAfter - timeBefore) + "ms");
+            return null;
+        }
     }
 }

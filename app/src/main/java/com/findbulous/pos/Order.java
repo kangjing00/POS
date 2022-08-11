@@ -11,7 +11,7 @@ public class Order  extends RealmObject {
     private int local_order_id;
     private int order_id;
     private String name, date_order, pos_reference, note, state, state_name; //state: "paid", "draft" ("OnGoing"), "onHold"
-    private double amount_tax, amount_total, amount_paid, amount_return, tip_amount, discount;
+    private double amount_tax, amount_total, amount_paid, amount_return, amount_subtotal, tip_amount, discount;
     private boolean is_tipped;
     private int customer_count;
     private String discount_type;
@@ -26,8 +26,8 @@ public class Order  extends RealmObject {
     //Constructors
     //Dine-in
     public Order(int local_order_id, int order_id, String name, String date_order, String pos_reference, String state, String state_name,
-                 double amount_tax, double amount_total, double amount_paid, double amount_return, double tip_amount,
-                 boolean is_tipped, Table table, Customer customer, String note, double discount,
+                 double amount_tax, double amount_total, double amount_paid, double amount_return, double amount_subtotal,
+                 double tip_amount, boolean is_tipped, Table table, Customer customer, String note, double discount,
                  String discount_type, int customer_count, int session_id, int user_id, int company_id, int partner_id){
         this.local_order_id = local_order_id;
         this.order_id = order_id;
@@ -40,6 +40,7 @@ public class Order  extends RealmObject {
         this.amount_total = amount_total;
         this.amount_paid = amount_paid;
         this.amount_return = amount_return;
+        this.amount_subtotal = amount_subtotal;
         this.tip_amount = tip_amount;
         this.is_tipped = is_tipped;
         this.table = table;
@@ -264,5 +265,13 @@ public class Order  extends RealmObject {
 
     public void setLocal_order_id(int local_order_id) {
         this.local_order_id = local_order_id;
+    }
+
+    public double getAmount_subtotal() {
+        return amount_subtotal;
+    }
+
+    public void setAmount_subtotal(double amount_subtotal) {
+        this.amount_subtotal = amount_subtotal;
     }
 }

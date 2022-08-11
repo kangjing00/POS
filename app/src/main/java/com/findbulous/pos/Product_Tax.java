@@ -14,12 +14,13 @@ public class Product_Tax extends RealmObject {
     //actual_amount = the calculated product tax result
     private double amount, actual_amount;
     private boolean include_base_amount;    //TRUE = start calculate from the last (tax added) price_subtotal
+    private boolean price_included;
     private String display_amount, display_actual_amount;
 
     private Product product;
 
     public Product_Tax(int tax_id, int product_tmpl_id, String name, String amount_type,
-                       double amount, double actual_amount, boolean include_base_amount,
+                       double amount, double actual_amount, boolean include_base_amount, boolean price_included,
                        String display_amount, String display_actual_amount, Product product){
         this.tax_id = tax_id;
         this.product_tmpl_id = product_tmpl_id;
@@ -29,6 +30,7 @@ public class Product_Tax extends RealmObject {
         this.amount = amount;
         this.actual_amount = actual_amount;
         this.include_base_amount = include_base_amount;
+        this.price_included = price_included;
         this.display_amount = display_amount;
         this.display_actual_amount = display_actual_amount;
         this.product = product;
@@ -43,6 +45,7 @@ public class Product_Tax extends RealmObject {
         amount = 0.0;
         actual_amount = 0.0;
         include_base_amount = false;
+        price_included = false;
         display_amount = null;
         display_actual_amount = null;
         product = null;
@@ -134,5 +137,13 @@ public class Product_Tax extends RealmObject {
 
     public void setDisplay_actual_amount(String display_actual_amount) {
         this.display_actual_amount = display_actual_amount;
+    }
+
+    public boolean isPrice_included() {
+        return price_included;
+    }
+
+    public void setPrice_included(boolean price_included) {
+        this.price_included = price_included;
     }
 }
