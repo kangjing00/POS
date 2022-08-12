@@ -40,7 +40,9 @@ import android.widget.Toast;
 
 import com.findbulous.pos.API.DeleteOneDraftOrder;
 import com.findbulous.pos.API.DeleteOneOrderLine;
+import com.findbulous.pos.API.UpdateOneOrderLineConfig;
 import com.findbulous.pos.API.UpdateOneOrderLineQtyDisc;
+import com.findbulous.pos.API.UpdateOrderCustomerCount;
 import com.findbulous.pos.Adapters.CartOrderLineAdapter;
 import com.findbulous.pos.Adapters.ProductAdapter;
 import com.findbulous.pos.Adapters.ProductCategoryAdapter;
@@ -535,9 +537,9 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                         cartSharedPreferenceEdit.putInt("orderingState", 0);
                         cartSharedPreferenceEdit.putInt("localOrderId", -1);
                         cartSharedPreferenceEdit.commit();
-
-                        new DeleteOneDraftOrder(contextpage, currentOrder.getOrder_id()).execute();
-
+                        if(NetworkUtils.isNetworkAvailable(contextpage)) {
+                            new DeleteOneDraftOrder(contextpage, currentOrder.getOrder_id()).execute();
+                        }
                         currentOrder = new Order();
                         binding.cartInclude.cartBtnNumberCustomer.setText("Guest(s)");
                         realm.executeTransaction(new Realm.Transaction() {
@@ -923,7 +925,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                     if(currentOrder.getLocal_order_id() != -1) {
                         if (number_customer_et.getText().toString().equalsIgnoreCase("0")) {
                             binding.cartInclude.cartBtnNumberCustomer.setText("1 Guest(s)");
-                            currentOrder.setCustomer_count(Integer.valueOf(1));
+                            currentOrder.setCustomer_count(1);
                         } else {
                             binding.cartInclude.cartBtnNumberCustomer.setText(number_customer_et.getText().toString() + " Guest(s)");
                             currentOrder.setCustomer_count(Integer.valueOf(number_customer_et.getText().toString()));
@@ -935,6 +937,9 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                             }
                         });
                         refreshCustomerNumber();
+
+                        new UpdateOrderCustomerCount(contextpage, currentOrder.getOrder_id(),
+                                currentOrder.getLocal_order_id(), currentOrder.getCustomer_count()).execute();
                     }
                     popup.dismiss();
                 }
@@ -1240,7 +1245,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
             }
         });
     }
-    private void showProductModifier(Product product, boolean fromMenu){
+    private void showProductModifier(Order_Line order_line, Product product){
         PopupWindow popup = new PopupWindow(contextpage);
         ProductModifierPopupBinding popupBinding = ProductModifierPopupBinding.inflate(getLayoutInflater());
 //        View layout = getLayoutInflater().inflate(R.layout.product_modifier_popup, null);
@@ -1573,7 +1578,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
             popupBinding.textView1.setTextSize(0);
         }
 
-        if(fromMenu){
+        if(order_line == null){ //from menu because it is new order_line
             if(pos_config.isProduct_configurator() && !pos_config.isIface_orderline_customer_notes()) {
                 RealmResults attribute_results = realm.where(Attribute.class).equalTo("product_tmpl_id", product.getProduct_tmpl_id())
                         .findAll();
@@ -1641,7 +1646,6 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                     }
                 }
 
-
                 if(pos_config.isProduct_configurator()){
                     for(int i = 0; i < allAttributes.length; i++){
                         price_extra += allAttributes[i].getPrice_extra();
@@ -1664,53 +1668,56 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                     product_attributesName += ")";
                 }
 
-                if(fromMenu) {
-                    boolean empty_custom_et = true, empty_customer_note = true;
 
-                    if(pos_config.isIface_orderline_customer_notes()){
-                        if(popupBinding.productModifierNote.getText().toString().trim().length() > 0){
-                            empty_customer_note = false;
-                        }
-                    }else{
+
+
+                boolean empty_custom_et = true, empty_customer_note = true;
+
+                if(pos_config.isIface_orderline_customer_notes()){
+                    if(popupBinding.productModifierNote.getText().toString().trim().length() > 0){
                         empty_customer_note = false;
                     }
+                }else{
+                    empty_customer_note = false;
+                }
 
-                    if(pos_config.isProduct_configurator()){
-                        boolean attribute_is_custom = false; //one of the attribute_value selected is custom
-                        for(int i = 0; i < allAttributes.length; i++){
-                            if(allAttributes[i].isIs_custom()){
-                                attribute_is_custom = true;
-                                if(allAttributes_custom[i] != null) {
-                                    if (allAttributes_custom[i].getText().toString().trim().length() > 0) {
-                                        empty_custom_et = false;
-                                    }
+                if(pos_config.isProduct_configurator()){
+                    boolean attribute_is_custom = false; //one of the attribute_value selected is custom
+                    for(int i = 0; i < allAttributes.length; i++){
+                        if(allAttributes[i].isIs_custom()){
+                            attribute_is_custom = true;
+                            if(allAttributes_custom[i] != null) {
+                                if (allAttributes_custom[i].getText().toString().trim().length() > 0) {
+                                    empty_custom_et = false;
                                 }
                             }
-                            System.out.println(allAttributes[i].getName() + " (is_custom): " + allAttributes[i].isIs_custom());
-                            System.out.println("ATTRIBUTE_IS_CUSTOM: " + attribute_is_custom);
                         }
+                        System.out.println(allAttributes[i].getName() + " (is_custom): " + allAttributes[i].isIs_custom());
+                        System.out.println("ATTRIBUTE_IS_CUSTOM: " + attribute_is_custom);
+                    }
 
-                        if(!attribute_is_custom){
-                            empty_custom_et = false;
-                        }
-                    }else{
+                    if(!attribute_is_custom){
                         empty_custom_et = false;
                     }
-                    System.out.println("EMPTY_CUSTOMER_NOTE: " + empty_customer_note + "\n"
-                    + "EMPTY_CUSTOM_ET: " + empty_custom_et);
+                }else{
+                    empty_custom_et = false;
+                }
+                System.out.println("EMPTY_CUSTOMER_NOTE: " + empty_customer_note + "\n"
+                + "EMPTY_CUSTOM_ET: " + empty_custom_et);
 
-                    if(!empty_customer_note && !empty_custom_et) {
+                if(!empty_customer_note && !empty_custom_et) {
+                    if(order_line == null) {
                         addProductToOrder(product, product_attributesName, price_extra, customer_note,
                                 allAttributes, allAttributes_custom);
-                        popup.dismiss();
                     }else{
-                        Toast.makeText(contextpage, "Please fill in all of the requirements", Toast.LENGTH_SHORT).show();
+                        updateOrderLineConfig(order_line, product, product_attributesName,
+                                              price_extra, customer_note,
+                                              allAttributes, allAttributes_custom);
                     }
-
+                    popup.dismiss();
                 }else{
-                    //addOrUpdateProductToOrder(product);
+                    Toast.makeText(contextpage, "Please fill in all of the requirements", Toast.LENGTH_SHORT).show();
                 }
-                
             }
         });
     }
@@ -1736,10 +1743,69 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
 
         return selected;
     }
-    //NOT YET DONE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Product Attribute related
     //Add & Update product to order
-    private void addOrUpdateProductToOrder(Product product){
+    private void updateOrderLineConfig(Order_Line order_line, Product product, String attributesName,
+                                       double price_extra, String customer_note,
+                                       Attribute_Value[] allAttributes, EditText[] allAttributes_custom){
+        int index = order_lines.indexOf(order_line);
+        double price_unit = product.getList_price() + price_extra;
+        double price_unit_excl_tax = calculate_price_unit_excl_tax(product, price_unit);
+        double price_subtotal = price_unit_excl_tax * order_line.getQty();
+        ArrayList<Product_Tax> product_taxes = new ArrayList<>();
+        RealmResults product_taxes_results = realm.where(Product_Tax.class)
+                .equalTo("product_tmpl_id", product.getProduct_tmpl_id()).findAll();
+        product_taxes.addAll(realm.copyFromRealm(product_taxes_results));
+        double price_subtotal_incl = calculate_price_subtotal_incl(product_taxes, price_subtotal);
+        double price_before_discount = price_subtotal_incl;
 
+        if(order_line.getDiscount_type() != null){
+            if(order_line.getDiscount_type().equalsIgnoreCase("percentage")){
+                price_subtotal = price_subtotal - (price_subtotal * (order_line.getDiscount() / 100));
+                price_subtotal_incl = price_subtotal_incl - (price_subtotal_incl * (order_line.getDiscount() / 100));
+            }else if(order_line.getDiscount_type().equalsIgnoreCase("fixed_amount")){
+                price_subtotal = price_subtotal - order_line.getDiscount();
+                price_subtotal_incl = price_subtotal_incl - order_line.getDiscount();
+            }
+        }
+
+        String product_name = product.getName();
+        if(attributesName != null){
+            product_name += " " + attributesName;
+        }
+
+        RealmList<Attribute_Value> attributeValues = new RealmList<Attribute_Value>();
+        if(allAttributes != null) {
+            attributeValues.addAll(Arrays.asList(allAttributes));
+        }else{
+            attributeValues = null;
+        }
+
+        Order_Line updated_order_line = new Order_Line(order_line.getLocal_order_line_id(), order_line.getOrder_line_id(),
+                order_line.getName(), order_line.getQty(), price_unit, price_subtotal, price_subtotal_incl, price_before_discount,
+                String.format("$ .2f", price_unit), String.format("$ .2f", price_subtotal),
+                String.format("$ .2f", price_subtotal_incl), String.format("$ .2f", price_before_discount),
+                product_name, customer_note, order_line.getDiscount_type(), order_line.getDiscount(),
+                order_line.getDisplay_discount(), order_line.getTotal_cost(), order_line.getDisplay_total_cost(),
+                price_extra, String.format("$ .2f", price_extra), order_line.getOrder(), product, attributeValues);
+
+        realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.insertOrUpdate(updated_order_line);
+            }
+        });
+        order_lines.set(index, updated_order_line);
+        orderLineAdapter.notifyDataSetChanged();
+        updateOrderTotalAmount();
+
+        if(!NetworkUtils.isNetworkAvailable(contextpage)){  //no internet
+            Toast.makeText(contextpage, "No Internet Connection, product updated and stored in local", Toast.LENGTH_SHORT).show();
+        }else{
+            //call update order line api
+            new UpdateOneOrderLineConfig(contextpage, order_line.getOrder().getLocal_order_id(),
+                    order_line.getOrder().getOrder_id(), order_line.getLocal_order_line_id(), order_line.getOrder_line_id(),
+                    customer_note, allAttributes, allAttributes_custom).execute();
+        }
     }
     private void addProductToOrder(Product product, String attributesName, double price_extra, String customer_note,
                                    Attribute_Value[] allAttributes, EditText[] allAttributes_custom){
@@ -2303,7 +2369,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
     public void onOrderLineClick(int position) {
         //order_lines
         if(pos_config.isProduct_configurator() || pos_config.isIface_orderline_customer_notes()) {
-            showProductModifier(order_lines.get(position).getProduct(), false);
+            showProductModifier(order_lines.get(position), order_lines.get(position).getProduct());
         }
 
         Toast.makeText(contextpage, "" + order_lines.get(position).getOrder_line_id(), Toast.LENGTH_SHORT).show();
@@ -2341,8 +2407,9 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                             cartSharedPreferenceEdit.putInt("localOrderId", -1);
                             cartSharedPreferenceEdit.commit();
 
-                            new DeleteOneDraftOrder(contextpage, currentOrder.getOrder_id()).execute();
-
+                            if(NetworkUtils.isNetworkAvailable(contextpage)){
+                                new DeleteOneDraftOrder(contextpage, currentOrder.getOrder_id()).execute();
+                            }
                             currentOrder = new Order();
                             refreshNote();
                             refreshCustomerNumber();
@@ -2373,10 +2440,12 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         }else {
             Toast.makeText(contextpage, "Cancel: " + order_lines.get(position).getOrder_line_id(), Toast.LENGTH_SHORT).show();
 
-            new DeleteOneOrderLine(contextpage, order_lines.get(position).getOrder().getLocal_order_id(),
-                    order_lines.get(position).getOrder().getOrder_id(),
-                    order_lines.get(position).getOrder_line_id()).execute();
+            if(NetworkUtils.isNetworkAvailable(contextpage)) {
+                new DeleteOneOrderLine(contextpage, order_lines.get(position).getOrder().getLocal_order_id(),
+                        order_lines.get(position).getOrder().getOrder_id(),
+                        order_lines.get(position).getOrder_line_id()).execute();
 
+            }
             order_lines.remove(position);
             orderLineAdapter.notifyDataSetChanged();
 
@@ -2409,7 +2478,19 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         order_lines.get(position).setDisplay_price_subtotal_incl(updateOrderLine.getDisplay_price_subtotal_incl());
         order_lines.get(position).setDiscount(updateOrderLine.getDiscount());
         order_lines.get(position).setDisplay_discount(updateOrderLine.getDisplay_discount());
-        order_lines.get(position).setDiscount_type(updateOrderLine.getDiscount_type());
+        String discount_type;
+        if(updateOrderLine.getDiscount_type() != null) {
+            if (updateOrderLine.getDiscount_type().equalsIgnoreCase("empty")) {
+                order_lines.get(position).setDiscount_type(null);
+                discount_type = "empty";
+            } else {
+                order_lines.get(position).setDiscount_type(updateOrderLine.getDiscount_type());
+                discount_type = updateOrderLine.getDiscount_type();
+            }
+        }else{
+            order_lines.get(position).setDiscount_type(null);
+            discount_type = "empty";
+        }
 
 
         realm.executeTransaction(new Realm.Transaction() {
@@ -2431,7 +2512,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
             Toast.makeText(contextpage, "No Internet Connection, product added into order stored in local", Toast.LENGTH_SHORT).show();
         }else {
             new UpdateOneOrderLineQtyDisc(contextpage, order_line.getOrder().getLocal_order_id(), order_line.getOrder().getOrder_id(),
-                    order_line.getLocal_order_line_id(), order_line.getOrder_line_id(), -1, order_line.getDiscount_type(),
+                    order_line.getLocal_order_line_id(), order_line.getOrder_line_id(), -1, discount_type,
                     order_line.getDiscount()).execute();
         }
     }
@@ -2476,7 +2557,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         }else {
             new UpdateOneOrderLineQtyDisc(contextpage, order_line.getOrder().getLocal_order_id(),
                     order_line.getOrder().getOrder_id(), order_line.getLocal_order_line_id(),
-                    order_line.getOrder_line_id(), order_line.getQty(), null, 0).execute();
+                    order_line.getOrder_line_id(), order_line.getQty(), null, -1).execute();
         }
     }
 
@@ -2641,7 +2722,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         Product product = list.get(position);
 
         if(pos_config.isProduct_configurator() || pos_config.isIface_orderline_customer_notes()) {
-            showProductModifier(product, true);
+            showProductModifier(null, product);
         }else{
             //add the product to order line directly
             boolean sameProduct = false;

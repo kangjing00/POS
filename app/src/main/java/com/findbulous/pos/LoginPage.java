@@ -89,7 +89,7 @@ public class LoginPage extends AppCompatActivity {
         tables = new ArrayList<>();
 
         //Delete Testing orders
-        //new deleteTestingOrders().execute();
+//        new deleteTestingOrders().execute();
 
         binding.loginBtn.setOnClickListener(new View.OnClickListener() {
             @Override

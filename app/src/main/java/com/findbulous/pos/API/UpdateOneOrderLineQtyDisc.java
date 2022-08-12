@@ -119,9 +119,14 @@ public class UpdateOneOrderLineQtyDisc extends AsyncTask<String, String, String>
         if(qty != -1){
             urlParameters += "&products[0][qty]=" + qty;
         }
-        if((discount_type != null) && (discount > 0)){
-            urlParameters += "&products[0][discount_type]=" + discount_type
-                    + "&products[0][discount]=" + discount;
+        if((discount_type != null)){
+            if(discount > 0) {
+                urlParameters += "&products[0][discount_type]=" + discount_type
+                        + "&products[0][discount]=" + discount;
+            }
+            if ((discount_type.equalsIgnoreCase("empty"))) { //remove discount
+                urlParameters += "&products[0][discount_type]=" + "&products[0][discount]=" + 0;
+            }
         }
 
         //Testing (check error)
@@ -231,6 +236,18 @@ public class UpdateOneOrderLineQtyDisc extends AsyncTask<String, String, String>
                             if (jo_order_line.getString("price_extra").length() > 0) {
                                 price_extra = jo_order_line.getDouble("price_extra");
                             }
+                            String order_line_discount_type = null;
+                            if(jo_order_line.getString("discount_type").length() > 0){
+                                order_line_discount_type = jo_order_line.getString("discount_type");
+                            }
+                            double order_line_discount = 0.0;
+                            if(jo_order_line.getString("discount").length() > 0){
+                                order_line_discount = jo_order_line.getDouble("discount");
+                            }
+                            String order_line_display_discount = null;
+                            if(jo_order_line.getString("display_discount").length() > 0){
+                                order_line_display_discount = jo_order_line.getString("display_discount");
+                            }
 
                             update_order_line = new Order_Line(local_order_line_id, order_line_id, jo_order_line.getString("name"),
                                 qty, price_unit, jo_order_line.getDouble("price_subtotal"),
@@ -238,8 +255,7 @@ public class UpdateOneOrderLineQtyDisc extends AsyncTask<String, String, String>
                                 jo_order_line.getString("display_price_unit"), jo_order_line.getString("display_price_subtotal"),
                                 jo_order_line.getString("display_price_subtotal_incl"), String.format("$ .2f", price_before_discount),
                                 jo_order_line.getString("full_product_name"), jo_order_line.getString("customer_note"),
-                                jo_order_line.getString("discount_type"), jo_order_line.getDouble("discount"),
-                                jo_order_line.getString("display_discount"), total_cost,
+                                order_line_discount_type, order_line_discount, order_line_display_discount, total_cost,
                                 jo_order_line.getString("display_total_cost"), price_extra,
                                 jo_order_line.getString("display_price_extra"), order_line_order, product, attribute_values);
                         }

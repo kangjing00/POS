@@ -135,7 +135,7 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
                 order_lines.get(p).setDisplay_price_subtotal_incl(String.format("$ .2f", price_subtotal_incl));
                 order_lines.get(p).setDiscount(0.0);
                 order_lines.get(p).setDisplay_discount(null);
-                order_lines.get(p).setDiscount_type(null);
+                order_lines.get(p).setDiscount_type("empty");
 
                 Order_Line updateOrderLine = order_lines.get(p);
                 holder.binding.setOrderLine(updateOrderLine);
@@ -162,7 +162,7 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
                 order_lines.get(p).setDisplay_price_subtotal_incl(String.format("$ .2f", price_subtotal_incl));
                 order_lines.get(p).setDiscount(0.0);
                 order_lines.get(p).setDisplay_discount(null);
-                order_lines.get(p).setDiscount_type(null);
+                order_lines.get(p).setDiscount_type("empty");
 
                 Order_Line updateOrderLine = order_lines.get(p);
                 holder.binding.setOrderLine(updateOrderLine);
@@ -182,16 +182,17 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
                         qty = Integer.parseInt(holder.binding.productOrderQuantityEt.getText().toString());
                     }
 
-                    int p = holder.getLayoutPosition();
-                    if(cancelledIndex != -1){
-                        if(cancelledIndex == p){
-                            p = -1;
-                        }else if(cancelledIndex < p){
-                            p = p - 1;
-                        }
-                    }
-                    cancelledIndex = -1;
-
+                    int p = holder.getAdapterPosition();//holder.getLayoutPosition();
+//                    if(cancelledIndex != -1){
+//                        if(cancelledIndex == p){
+//                            p = -1;
+//                        }else if(cancelledIndex < p){
+//                            p = p - 1;
+//                        }
+//                    }
+//                    System.out.println("CancelledIndexxxxxxxxxx: " + cancelledIndex);
+//                    cancelledIndex = -1;
+                    System.out.println("Ppppppppppppppppppppp111111111: " + p);
                     if(p > -1) {
                         RealmResults<Product_Tax> product_tax_results = realm.where(Product_Tax.class)
                                 .equalTo("product_tmpl_id", order_lines.get(p).getProduct().getProduct_tmpl_id()).findAll();
@@ -205,16 +206,18 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
                                 calculate_price_subtotal_incl(product_taxes, price_subtotal_wo_discount);
                         double price_before_discount = price_subtotal_incl_wo_discount;
 
-                        double amount_discount = 0;
+                        double amount_discount_incl = 0, amount_discount = 0;
                         if(order_lines.get(p).getDiscount_type() != null) {
                             if (order_lines.get(p).getDiscount_type().equalsIgnoreCase("percentage")) {
-                                amount_discount = (price_before_discount * order_lines.get(p).getDiscount()) / 100;
+                                amount_discount_incl = (price_before_discount * order_lines.get(p).getDiscount()) / 100;
+                                amount_discount = (price_subtotal_wo_discount * order_lines.get(p).getDiscount()) / 100;
                             } else if (order_lines.get(p).getDiscount_type().equalsIgnoreCase("fixed_amount")) {
+                                amount_discount_incl = order_lines.get(p).getDiscount();
                                 amount_discount = order_lines.get(p).getDiscount();
                             }
                         }
                         double price_subtotal = price_subtotal_wo_discount - amount_discount;
-                        double price_subtotal_incl = price_subtotal_incl_wo_discount - amount_discount;
+                        double price_subtotal_incl = price_subtotal_incl_wo_discount - amount_discount_incl;
 
                         order_lines.get(p).setPrice_subtotal(price_subtotal);
                         order_lines.get(p).setDisplay_price_subtotal(String.format("$ .2f", price_subtotal));
@@ -240,15 +243,18 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
                     double discount = 0.0;
                     String discount_type = null;
 
-                    int p = holder.getLayoutPosition();
-                    if(cancelledIndex != -1){
-                        if(cancelledIndex == p){
-                            p = -1;
-                        }else if(cancelledIndex < p){
-                            p = p - 1;
-                        }
-                    }
-                    cancelledIndex = -1;
+                    int p = holder.getAdapterPosition();//holder.getLayoutPosition();
+//                    if(cancelledIndex != -1){
+//                        if(cancelledIndex == p){
+//                            p = -1;
+//                        }else if(cancelledIndex < p){
+//                            p = p - 1;
+//                        }
+//                    }
+//                    System.out.println("Adapter Positionnnnnnnnnnnn: " + holder.getAdapterPosition());
+//                    System.out.println("CancelledIndexxxxxxxxxx: " + cancelledIndex);
+//                    cancelledIndex = -1;
+                    System.out.println("Ppppppppppppppppppppp111111111: " + p);
 
                     if(holder.binding.discountRadioBtnPercentage.isChecked()){  //Percentage
                         if ((!holder.binding.productOrderDiscountEt.getText().toString().equalsIgnoreCase(""))
@@ -288,26 +294,31 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
 
                     if(p > -1) {
                         double price_unit_excl_tax, price_subtotal, price_subtotal_incl;
-                        double amount_discount = 0.0;
-                        double price_before_discount = order_lines.get(p).getPrice_before_discount();
+                        double amount_discount_incl = 0.0, amount_discount = 0.0;
                         String display_discount = null;
 
+                        double price_before_discount = order_lines.get(p).getPrice_before_discount();
+
+                        price_unit_excl_tax = calculate_price_unit_excl_tax(order_lines.get(p).getProduct(),
+                                order_lines.get(p).getPrice_unit());
+                        price_subtotal = price_unit_excl_tax * order_lines.get(p).getQty();
                         if(discount_type != null) {
-                            display_discount = "" + discount;
-                            amount_discount = discount;//fixed_amount
+                            display_discount = discount + "$";
+                            amount_discount_incl = discount;//fixed_amount
+                            amount_discount = discount;
                             if (discount_type.equalsIgnoreCase("percentage")) { //percentage
-                                amount_discount = (price_before_discount * discount) / 100;
+                                amount_discount_incl = (price_before_discount * discount) / 100;
+                                amount_discount = (price_subtotal * discount) / 100;
                                 display_discount = discount + "%";
                             }
                         }
-                        price_subtotal_incl = price_before_discount - amount_discount;
-                        price_unit_excl_tax = calculate_price_unit_excl_tax(order_lines.get(p).getProduct(),
-                                                                            order_lines.get(p).getPrice_unit());
-                        price_subtotal = price_unit_excl_tax * order_lines.get(p).getQty();
+                        price_subtotal -= amount_discount;
+                        price_subtotal_incl = price_before_discount - amount_discount_incl;
+
 
                         order_lines.get(p).setPrice_subtotal(price_subtotal);
                         order_lines.get(p).setDisplay_price_subtotal(String.format("$ .2f", price_subtotal));
-                        order_lines.get(p).setPrice_subtotal(price_subtotal_incl);
+                        order_lines.get(p).setPrice_subtotal_incl(price_subtotal_incl);
                         order_lines.get(p).setDisplay_price_subtotal_incl(String.format("$ .2f", price_subtotal_incl));
                         order_lines.get(p).setDiscount(discount);
                         order_lines.get(p).setDisplay_discount(display_discount);
@@ -349,7 +360,10 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
         holder.binding.productOrderCancelProduct.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                cancelledIndex = holder.getAdapterPosition();
+//                cancelledIndex = holder.getAdapterPosition();
+//                if(order_lines.size() <= 1 ){
+//                    cancelledIndex = -1;
+//                }
                 listener.onOrderLineCancelClick(holder.getAdapterPosition());
             }
         });
