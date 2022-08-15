@@ -1747,7 +1747,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
     private void updateOrderLineConfig(Order_Line order_line, Product product, String attributesName,
                                        double price_extra, String customer_note,
                                        Attribute_Value[] allAttributes, EditText[] allAttributes_custom){
-        int index = order_lines.indexOf(order_line);
+        int index = order_lines.indexOf(order_line);//
         double price_unit = product.getList_price() + price_extra;
         double price_unit_excl_tax = calculate_price_unit_excl_tax(product, price_unit);
         double price_subtotal = price_unit_excl_tax * order_line.getQty();
