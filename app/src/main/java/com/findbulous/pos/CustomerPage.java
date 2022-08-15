@@ -34,6 +34,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.findbulous.pos.API.SetOrderCustomer;
 import com.findbulous.pos.Adapters.CartOrderLineAdapter;
 import com.findbulous.pos.CustomerFragments.FragmentAddCustomer;
 import com.findbulous.pos.CustomerFragments.FragmentCustomer;
@@ -128,8 +129,8 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
         getOrderLineFromRealm();
         binding.cartInclude.cartOrdersRv.setAdapter(orderLineAdapter);
 
-        int currentOrderId = cartSharedPreference.getInt("orderId", -1);
-        Order order = realm.where(Order.class).equalTo("order_id", currentOrderId).findFirst();
+        int currentOrderId = cartSharedPreference.getInt("localOrderId", -1);
+        Order order = realm.where(Order.class).equalTo("local_order_id", currentOrderId).findFirst();
         if(order != null){
             currentOrder = realm.copyFromRealm(order);
         }
@@ -331,7 +332,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
         binding.cartInclude.cartOrderNoteBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                if(cartSharedPreference.getInt("orderId", -1) == -1){
+                if(cartSharedPreference.getInt("localOrderId", -1) == -1){
                     Toast.makeText(contextpage, "Please create an order before adding note", Toast.LENGTH_SHORT).show();
                 }else {
                     showCartOrderAddNotePopup(binding.cartInclude.cartOrderNoteBtn.getId());
@@ -363,7 +364,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
         binding.cartInclude.cartOrderSummaryProceedBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                int current_order_id = cartSharedPreference.getInt("orderId", -1);
+                int current_order_id = cartSharedPreference.getInt("localOrderId", -1);
                 int orderTypePosition = cartSharedPreference.getInt("orderTypePosition", -1);
                 if(current_order_id == -1){ //no order and no order_line(products)
                     Toast.makeText(contextpage, "Please proceed payment with at least 1 product", Toast.LENGTH_SHORT).show();
@@ -518,9 +519,10 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
     }
 
     private void getOrderLineFromRealm(){
-        int orderId = cartSharedPreference.getInt("orderId", -1);
-        if(orderId > -1) {
-            RealmResults<Order_Line> results = realm.where(Order_Line.class).equalTo("order.order_id", orderId).findAll();
+        int localOrderId = cartSharedPreference.getInt("localOrderId", -1);
+        if(localOrderId > -1) {
+            RealmResults<Order_Line> results = realm.where(Order_Line.class)
+                    .equalTo("order.local_order_id", localOrderId).findAll();
             order_lines.addAll(realm.copyFromRealm(results));
         }else{
             order_lines.clear();
@@ -1670,13 +1672,75 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
         binding.customerPageTitle.setText("Customer Details");
         customerFragment = false;
     }
+    public void setCurrentCustomer(Customer customer){
+
+        int customer_id = -1;
+        String name = null, email = null, phoneNo = null, identityNo = null, birthdate = null;
+
+        if(customer != null){
+            customer_id = customer.getCustomer_id();
+            name = customer.getCustomer_name();
+            email = customer.getCustomer_email();
+            phoneNo = customer.getCustomer_phoneNo();
+            identityNo = customer.getCustomer_identityNo();
+            birthdate = customer.getCustomer_birthdate();
+        }else{
+            if(currentOrder.getLocal_order_id() != -1) {
+                RealmResults results = realm.where(Order.class)
+                        .equalTo("customer.customer_id", currentOrder.getCustomer().getCustomer_id())
+                        .and().notEqualTo("local_order_id", currentOrder.getLocal_order_id()).findAll();
+                if (results.size() < 1) {
+                    Customer remove_Customer = realm.where(Customer.class)
+                            .equalTo("customer_id", currentOrder.getCustomer().getCustomer_id())
+                            .findFirst();
+                    realm.executeTransaction(new Realm.Transaction() {
+                        @Override
+                        public void execute(Realm realm) {
+                            remove_Customer.deleteFromRealm();
+                        }
+                    });
+                }
+                currentOrder.setPartner_id(-1);
+            }
+        }
+        customerSharedPreferenceEdit.putInt("customerID", customer_id);
+        customerSharedPreferenceEdit.putString("customerName", name);
+        customerSharedPreferenceEdit.putString("customerEmail", email);
+        customerSharedPreferenceEdit.putString("customerPhoneNo", phoneNo);
+        customerSharedPreferenceEdit.putString("customerIdentityNo", identityNo);
+        customerSharedPreferenceEdit.putString("customerBirthdate", birthdate);
+        customerSharedPreferenceEdit.commit();
+
+        if(currentOrder.getLocal_order_id() != -1) {
+            currentOrder.setCustomer(customer);
+
+            realm.executeTransaction(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+                    if (customer != null) {
+                        realm.insertOrUpdate(customer);
+                    }
+                    realm.insertOrUpdate(currentOrder);
+                }
+            });
+
+
+            if(customer == null){
+                customer_id = 0;
+            }
+            new SetOrderCustomer(contextpage, currentOrder.getOrder_id(),
+                    currentOrder.getLocal_order_id(), customer_id).execute();
+        }
+
+        refreshCartCurrentCustomer();
+    }
 
     @Override
     public void onResume() {
         super.onResume();
 
-        int currentOrderId = cartSharedPreference.getInt("orderId", -1);
-        Order order = realm.where(Order.class).equalTo("order_id", currentOrderId).findFirst();
+        int currentOrderId = cartSharedPreference.getInt("localOrderId", -1);
+        Order order = realm.where(Order.class).equalTo("local_order_id", currentOrderId).findFirst();
         if(order != null){
             currentOrder = realm.copyFromRealm(order);
         }

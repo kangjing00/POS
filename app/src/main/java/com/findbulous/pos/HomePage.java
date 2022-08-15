@@ -1747,26 +1747,27 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
     private void updateOrderLineConfig(Order_Line order_line, Product product, String attributesName,
                                        double price_extra, String customer_note,
                                        Attribute_Value[] allAttributes, EditText[] allAttributes_custom){
-        int index = order_lines.indexOf(order_line);//
+        int index = order_lines.indexOf(order_line);
         double price_unit = product.getList_price() + price_extra;
-        double price_unit_excl_tax = calculate_price_unit_excl_tax(product, price_unit);
+        double amount_discount = 0.0;
+        if(order_line.getDiscount_type() != null){
+            if(order_line.getDiscount_type().equalsIgnoreCase("percentage")){
+                amount_discount = price_unit * (order_line.getDiscount() / 100);
+            }else if(order_line.getDiscount_type().equalsIgnoreCase("fixed_amount")){
+                amount_discount = order_line.getDiscount();
+            }
+        }
+        double price_before_discount = calculate_price_unit_excl_tax(product, price_unit) * order_line.getQty();
+        //price_unit exclude tax include discount
+        double price_unit_excl_tax = calculate_price_unit_excl_tax(product, (price_unit - amount_discount));
         double price_subtotal = price_unit_excl_tax * order_line.getQty();
+
         ArrayList<Product_Tax> product_taxes = new ArrayList<>();
         RealmResults product_taxes_results = realm.where(Product_Tax.class)
                 .equalTo("product_tmpl_id", product.getProduct_tmpl_id()).findAll();
         product_taxes.addAll(realm.copyFromRealm(product_taxes_results));
         double price_subtotal_incl = calculate_price_subtotal_incl(product_taxes, price_subtotal);
-        double price_before_discount = price_subtotal_incl;
 
-        if(order_line.getDiscount_type() != null){
-            if(order_line.getDiscount_type().equalsIgnoreCase("percentage")){
-                price_subtotal = price_subtotal - (price_subtotal * (order_line.getDiscount() / 100));
-                price_subtotal_incl = price_subtotal_incl - (price_subtotal_incl * (order_line.getDiscount() / 100));
-            }else if(order_line.getDiscount_type().equalsIgnoreCase("fixed_amount")){
-                price_subtotal = price_subtotal - order_line.getDiscount();
-                price_subtotal_incl = price_subtotal_incl - order_line.getDiscount();
-            }
-        }
 
         String product_name = product.getName();
         if(attributesName != null){
@@ -2038,14 +2039,9 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                         //order_line created
                         for(int i = 0; i < ja_order_line.length(); i++){
                             JSONObject jo_order_line = ja_order_line.getJSONObject(i);
-//                                jo.getString(""), String.format("RM %.2f", price_before_discount),
-//                                jo.getString(""), jo.getString(""), discount_type,
-//                                jo.getDouble("discount"), jo.getString("display_discount"),
-//                                total_cost, jo.getString("display_total_cost"), jo.getDouble("price_extra"),
-//                                jo.getString("display_price_extra"), order, product, null);
 
                             if(update_order_lines.get(i).getOrder_line_id() != jo_order_line.getInt("order_line_id")){
-                                double price_before_discount = jo_order_line.getDouble("price_subtotal_incl");
+                                double price_before_discount = jo_order_line.getDouble("price_subtotal");
                                 update_order_lines.get(i).setPrice_before_discount(price_before_discount);
                                 update_order_lines.get(i).setDisplay_price_before_discount(String.format("$ .2f", price_before_discount));
                             }
@@ -2129,21 +2125,19 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         for(int i = 0; i < product_taxes.size(); i++){
             Product_Tax product_tax = product_taxes.get(i);
 
-            if(!product_tax.isPrice_included()) {
-                if (product_tax.getAmount_type().equalsIgnoreCase("fixed")) {
-                    tax = product_tax.getAmount();
-                } else if (product_tax.getAmount_type().equalsIgnoreCase("percent")) {
-                    tax = (price * (product_tax.getAmount() / 100));
-                } else if (product_tax.getAmount_type().equalsIgnoreCase("division")) {
-                    tax = ((price / (1 - (product_tax.getAmount() / 100))) - price);
-                }
-
-                if (product_tax.isInclude_base_amount()) {    //TRUE
-                    price += tax;
-                }
-
-                total_taxes += tax;
+            if (product_tax.getAmount_type().equalsIgnoreCase("fixed")) {
+                tax = product_tax.getAmount();
+            } else if (product_tax.getAmount_type().equalsIgnoreCase("percent")) {
+                tax = (price * (product_tax.getAmount() / 100));
+            } else if (product_tax.getAmount_type().equalsIgnoreCase("division")) {
+                tax = ((price / (1 - (product_tax.getAmount() / 100))) - price);
             }
+
+            if (product_tax.isInclude_base_amount()) {    //TRUE
+                price += tax;
+            }
+
+            total_taxes += tax;
         }
         price_subtotal_incl = price_subtotal + total_taxes;
 
@@ -2460,18 +2454,6 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
     }
     @Override
     public void discountUpdateOrderLine(int position, Order_Line updateOrderLine) {
-//        double subtotal;
-//        double price_total = order_lines.get(position).getPrice_total();
-//        subtotal = price_total - ((price_total * discount) / 100);
-//        subtotal = Double.valueOf(String.format("%.2f", subtotal));
-//        order_lines.get(position).setPrice_subtotal(subtotal);
-//        order_lines.get(position).setDiscount(discount);
-//        Order_Line updateOrderLine = order_lines.get(position);
-
-//       order_lines.get(position).setPrice_subtotal(updateOrderLine.getPrice_subtotal());
-//
-//       order_lines.get(position).setDiscount_type(updateOrderLine.getDiscount_type());
-//       order_lines.get(position).setDiscount(updateOrderLine.getDiscount());
         order_lines.get(position).setPrice_subtotal(updateOrderLine.getPrice_subtotal());
         order_lines.get(position).setDisplay_price_subtotal(updateOrderLine.getDisplay_price_subtotal());
         order_lines.get(position).setPrice_subtotal_incl(updateOrderLine.getPrice_subtotal_incl());
@@ -2518,17 +2500,6 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
     }
     @Override
     public void quantityUpdateOrderLine(int position, Order_Line updateOrderLine) {
-//        double price_total = quantity * order_lines.get(position).getProduct().getList_price();
-//        int discount = order_lines.get(position).getDiscount();
-//        double subtotal = price_total - ((price_total * discount) / 100);
-//        order_lines.get(position).setPrice_subtotal(subtotal);
-//        order_lines.get(position).setQty(quantity);
-//        order_lines.get(position).setPrice_total(price_total);
-//        Order_Line updateOrderLine = order_lines.get(position);
-//        order_lines.get(position).setPrice_subtotal(updateOrderLine.getPrice_subtotal());
-//        order_lines.get(position).setQty(updateOrderLine.getQty());
-//        order_lines.get(position).setPrice_before_discount(updateOrderLine.getPrice_before_discount());
-
         order_lines.get(position).setPrice_subtotal(updateOrderLine.getPrice_subtotal());
         order_lines.get(position).setDisplay_price_subtotal(updateOrderLine.getDisplay_price_subtotal());
         order_lines.get(position).setPrice_subtotal_incl(updateOrderLine.getPrice_subtotal_incl());

@@ -32,7 +32,7 @@ import javax.net.ssl.HttpsURLConnection;
 
 import io.realm.Realm;
 
-public class UpdateOrderCustomer extends AsyncTask<String, String, String> {
+public class SetOrderCustomer extends AsyncTask<String, String, String> {
     private ProgressDialog pd = null;
     private Context contextpage;
     private int order_id, local_order_id;
@@ -42,7 +42,7 @@ public class UpdateOrderCustomer extends AsyncTask<String, String, String> {
 
     private Order update_order;
 
-    public UpdateOrderCustomer(Context contextpage, int order_id, int local_order_id, int customer_id){
+    public SetOrderCustomer(Context contextpage, int order_id, int local_order_id, int customer_id){
         this.contextpage = contextpage;
         this.order_id = order_id;
         this.local_order_id = local_order_id;
@@ -58,7 +58,10 @@ public class UpdateOrderCustomer extends AsyncTask<String, String, String> {
         realm = Realm.getDefaultInstance();
 
         Order result = realm.where(Order.class).equalTo("local_order_id", local_order_id).findFirst();
-        update_order = realm.copyFromRealm(result);
+        if(result != null)
+            update_order = realm.copyFromRealm(result);
+        else
+            update_order = null;
     }
 
     @Override
@@ -69,7 +72,7 @@ public class UpdateOrderCustomer extends AsyncTask<String, String, String> {
         String urlParameters = "&order_id=" + order_id + "&customer_id=" + customer_id;
 
         //Testing (check error)
-//            urlParameters += "&dev=1";
+            urlParameters += "&dev=1";
 
         byte[] postData = urlParameters.getBytes(Charset.forName("UTF-8"));
         int postDataLength = postData.length;
@@ -125,7 +128,13 @@ public class UpdateOrderCustomer extends AsyncTask<String, String, String> {
                     JSONObject jo_order = jresult.getJSONObject("order");
 
                     //order
-                    //(jo_order.getInt("customer_id"));
+                    if(update_order != null) {
+                        if (jo_order.getString("partner_id").length() > 0) {
+                            update_order.setPartner_id(jo_order.getInt("partner_id"));
+                        } else {
+                            update_order.setPartner_id(-1);
+                        }
+                    }
                 }
             }catch (JSONException e) {
                 e.printStackTrace();
@@ -137,7 +146,7 @@ public class UpdateOrderCustomer extends AsyncTask<String, String, String> {
         }
 
         long timeAfter = Calendar.getInstance().getTimeInMillis();
-        System.out.println("Update order line time taken: " + (timeAfter - timeBefore) + "ms");
+        System.out.println("Set draft order's customer time taken: " + (timeAfter - timeBefore) + "ms");
         return null;
     }
 
@@ -147,12 +156,14 @@ public class UpdateOrderCustomer extends AsyncTask<String, String, String> {
         if(!NetworkUtils.isNetworkAvailable(contextpage)){
             Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
         }else{
-            realm.executeTransaction(new Realm.Transaction() {
-                @Override
-                public void execute(Realm realm) {
-                    realm.insertOrUpdate(update_order);
-                }
-            });
+            if(update_order != null) {
+                realm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        realm.insertOrUpdate(update_order);
+                    }
+                });
+            }
         }
 
         if (pd != null)

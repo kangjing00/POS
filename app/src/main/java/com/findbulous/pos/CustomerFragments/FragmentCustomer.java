@@ -93,15 +93,9 @@ public class FragmentCustomer extends Fragment implements CustomerAdapter.OnItem
         binding.customerCurrentRemoveBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //REMOVE CURRENT CUSTOMER /or/ CLEAR CURRENT CUSTOMER /or/ MAKE CURRENT CUSTOMER TO GENERAL CUSTOMER
-                customerSharedPreferenceEdit.putInt("customerID", -1);
-                customerSharedPreferenceEdit.putString("customerName", null);
-                customerSharedPreferenceEdit.putString("customerEmail", null);
-                customerSharedPreferenceEdit.putString("customerPhoneNo", null);
-                customerSharedPreferenceEdit.putString("customerIdentityNo", null);
-                customerSharedPreferenceEdit.putString("customerBirthdate", null);
-                customerSharedPreferenceEdit.commit();
-                ((CustomerPage)getActivity()).refreshCartCurrentCustomer();
+
+                ((CustomerPage)getActivity()).setCurrentCustomer(null);
+
                 if(customers.isEmpty())
                     binding.emptyCustomerImg.setVisibility(View.VISIBLE);
                 binding.customerCurrentCustomerRl.setVisibility(View.GONE);
@@ -126,7 +120,7 @@ public class FragmentCustomer extends Fragment implements CustomerAdapter.OnItem
                     binding.emptyCustomerImg.setVisibility(View.VISIBLE);
                 }else{
                     searchValue = searchEt;
-                    new getList().execute();
+                    new getCustomerList().execute();
 //                    RealmResults<Customer> results = realm.where(Customer.class).contains("customer_name", searchEt, Case.INSENSITIVE)
 //                            .or().contains("customer_email", searchEt, Case.INSENSITIVE).or().contains("customer_phoneNo", searchEt, Case.INSENSITIVE)
 //                            .findAll();
@@ -147,7 +141,7 @@ public class FragmentCustomer extends Fragment implements CustomerAdapter.OnItem
         return view;
     }
 
-    public class getList extends AsyncTask<String, String, String> {
+    public class getCustomerList extends AsyncTask<String, String, String> {
 
         @Override
         protected String doInBackground(String... strings) {
@@ -294,15 +288,8 @@ public class FragmentCustomer extends Fragment implements CustomerAdapter.OnItem
         add_current_customer_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                customerSharedPreferenceEdit.putInt("customerID", customer.getCustomer_id());
-                customerSharedPreferenceEdit.putString("customerName", customer.getCustomer_name());
-                customerSharedPreferenceEdit.putString("customerEmail", customer.getCustomer_email());
-                customerSharedPreferenceEdit.putString("customerPhoneNo", customer.getCustomer_phoneNo());
-                customerSharedPreferenceEdit.putString("customerIdentityNo", customer.getCustomer_identityNo());
-                customerSharedPreferenceEdit.putString("customerBirthdate", customer.getCustomer_birthdate());
-                customerSharedPreferenceEdit.commit();
+                ((CustomerPage)getActivity()).setCurrentCustomer(customer);
 
-                ((CustomerPage)getActivity()).refreshCartCurrentCustomer();
                 binding.customerCurrentCustomerName.setText(customer.getCustomer_name());
                 binding.customerCurrentCustomerEmail.setText(customer.getCustomer_email());
                 binding.customerCurrentCustomerId.setText("#" + customer.getCustomer_id());

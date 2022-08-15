@@ -13,7 +13,7 @@ public class Order_Line extends RealmObject {
     /*
     price subtotal = exclude tax, after discount, all qty
     price subtotal incl = include tax, after discount, all qty
-    price_before_discount = include tax, before discount, all qty
+    price_before_discount = exclude tax, before discount, all qty
     */
     private double price_unit, price_subtotal, price_subtotal_incl, price_before_discount, discount, total_cost, price_extra;
     private String discount_type, display_discount; // percentage /or/ fixed_amount

@@ -236,8 +236,7 @@ public class UpdateOneOrderLineConfig extends AsyncTask<String, String, String> 
 
                             double price_unit_excl_tax = calculate_price_unit_excl_tax(product, price_unit);
                             double price_subtotal_wo_discount = price_unit_excl_tax * qty;
-                            double price_subtotal_incl_wo_discount = calculate_price_subtotal_incl(product_taxes, price_subtotal_wo_discount);
-                            double price_before_discount = price_subtotal_incl_wo_discount;
+                            double price_before_discount = price_subtotal_wo_discount;
 
                             double total_cost = 0.0;
                             if (jo_order_line.getString("total_cost").length() > 0) {
@@ -314,33 +313,6 @@ public class UpdateOneOrderLineConfig extends AsyncTask<String, String, String> 
         double price_unit_excl_tax = ((price_unit  - fixed) / (1 + (percent / 100))) * (1 - (division / 100));
 
         return price_unit_excl_tax;
-    }
-    private double calculate_price_subtotal_incl(ArrayList<Product_Tax> product_taxes, double price_subtotal){
-        double price_subtotal_incl;
-        double total_taxes = 0.0, price = price_subtotal;
-        double tax = 0.0;
-
-        for(int i = 0; i < product_taxes.size(); i++){
-            Product_Tax product_tax = product_taxes.get(i);
-            if(!product_tax.isPrice_included()) {
-                if (product_tax.getAmount_type().equalsIgnoreCase("fixed")) {
-                    tax = product_tax.getAmount();
-                } else if (product_tax.getAmount_type().equalsIgnoreCase("percent")) {
-                    tax = (price * (product_tax.getAmount() / 100));
-                } else if (product_tax.getAmount_type().equalsIgnoreCase("division")) {
-                    tax = ((price / (1 - (product_tax.getAmount() / 100))) - price);
-                }
-
-                if (product_tax.isInclude_base_amount()) {    //TRUE
-                    price += tax;
-                }
-
-                total_taxes += tax;
-            }
-        }
-        price_subtotal_incl = price_subtotal + total_taxes;
-
-        return price_subtotal_incl;
     }
 
     public static ProgressDialog createProgressDialog(Context mContext) {

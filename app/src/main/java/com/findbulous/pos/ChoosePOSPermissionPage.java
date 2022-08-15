@@ -1000,11 +1000,15 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                                         found = true;
                                     }
                                 }
+                                int customer_count = 1;
+                                if(jo.getString("customer_count").length() > 0){
+                                    customer_count = jo.getInt("customer_count");
+                                }
                                 Order order = new Order(local_order_id, order_id, jo.getString("name"), jo.getString("date_order"),
                                         jo.getString("pos_reference"), jo.getString("state"), jo.getString("state_name"),
                                         jo.getDouble("amount_tax"), jo.getDouble("amount_total"), jo.getDouble("amount_paid"),
                                         jo.getDouble("amount_return"), jo.getDouble("amount_subtotal"), tip_amount, is_tipped,
-                                        table, customer, jo.getString("note"), discount, discount_type, jo.getInt("customer_count"),
+                                        table, customer, jo.getString("note"), discount, discount_type, customer_count,
                                         pos_session.getId(), pos_session.getUser_id(), pos_config.getCompany_id(), partner_id);
 
                                 if(found == false){ //not found in local db = new order from cloud db
