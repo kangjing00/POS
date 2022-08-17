@@ -1,7 +1,9 @@
 package com.findbulous.pos.API;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
@@ -32,21 +34,24 @@ import javax.net.ssl.HttpsURLConnection;
 
 import io.realm.Realm;
 
-public class SetOrderCustomer extends AsyncTask<String, String, String> {
+public class SetOrderNote extends AsyncTask<String, String, String> {
     private ProgressDialog pd = null;
     private Context contextpage;
-    private int order_id, local_order_id;
-    private int customer_id;
-
     private Realm realm;
+    private int order_id, local_order_id;
+    private String note;
+    private Intent intent;
+    private Activity activity;
 
     private Order update_order;
 
-    public SetOrderCustomer(Context contextpage, int order_id, int local_order_id, int customer_id){
+    public SetOrderNote(Context contextpage, int order_id, int local_order_id, String note, Intent intent, Activity activity){
         this.contextpage = contextpage;
         this.order_id = order_id;
         this.local_order_id = local_order_id;
-        this.customer_id = customer_id;
+        this.note = note;
+        this.intent = intent;
+        this.activity = activity;
     }
 
     @Override
@@ -69,10 +74,10 @@ public class SetOrderCustomer extends AsyncTask<String, String, String> {
         long timeBefore = Calendar.getInstance().getTimeInMillis();
         String connection_error = "";
 
-        String urlParameters = "&order_id=" + order_id + "&customer_id=" + customer_id;
+        String urlParameters = "&order_id=" + order_id + "&note=" + note;
 
         //Testing (check error)
-//            urlParameters += "&dev=1";
+//        urlParameters += "&dev=1";
 
         byte[] postData = urlParameters.getBytes(Charset.forName("UTF-8"));
         int postDataLength = postData.length;
@@ -129,11 +134,7 @@ public class SetOrderCustomer extends AsyncTask<String, String, String> {
 
                     //order
                     if(update_order != null) {
-                        if (jo_order.getString("partner_id").length() > 0) {
-                            update_order.setPartner_id(jo_order.getInt("partner_id"));
-                        } else {
-                            update_order.setPartner_id(-1);
-                        }
+                        update_order.setNote(jo_order.getString("note"));
                     }
                 }
             }catch (JSONException e) {
@@ -146,10 +147,9 @@ public class SetOrderCustomer extends AsyncTask<String, String, String> {
         }
 
         long timeAfter = Calendar.getInstance().getTimeInMillis();
-        System.out.println("Set draft order's customer time taken: " + (timeAfter - timeBefore) + "ms");
+        System.out.println("Set order note time taken: " + (timeAfter - timeBefore) + "ms");
         return null;
     }
-
 
     @Override
     protected void onPostExecute(String s) {
@@ -168,7 +168,13 @@ public class SetOrderCustomer extends AsyncTask<String, String, String> {
 
         if (pd != null)
             pd.dismiss();
+
+        if((activity != null) && (intent != null)){
+            activity.startActivity(intent);
+            activity.finish();
+        }
     }
+
 
     public static ProgressDialog createProgressDialog(Context mContext) {
         ProgressDialog dialog = new ProgressDialog(mContext);

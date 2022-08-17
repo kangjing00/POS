@@ -262,7 +262,7 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
 //                    System.out.println("CancelledIndexxxxxxxxxx: " + cancelledIndex);
 //                    cancelledIndex = -1;
                     System.out.println("Ppppppppppppppppppppp111111111: " + p);
-
+                    if(p > -1){
                     if(holder.binding.discountRadioBtnPercentage.isChecked()){  //Percentage
                         if ((!holder.binding.productOrderDiscountEt.getText().toString().equalsIgnoreCase(""))
                                 && (Double.valueOf(holder.binding.productOrderDiscountEt.getText().toString()) > 0.0)
@@ -299,7 +299,7 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
                         }
                     }
 
-                    if(p > -1) {
+
                         double price_unit_excl_tax, price_subtotal, price_subtotal_incl;
                         double amount_discount = 0.0;
                         String display_discount = null;

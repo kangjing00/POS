@@ -34,7 +34,15 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.findbulous.pos.API.DeleteOneDraftOrder;
+import com.findbulous.pos.API.DeleteOneOrderLine;
 import com.findbulous.pos.API.SetOrderCustomer;
+import com.findbulous.pos.API.SetOrderDiscount;
+import com.findbulous.pos.API.SetOrderNote;
+import com.findbulous.pos.API.SetOrderTable;
+import com.findbulous.pos.API.UpdateOneOrderLineConfig;
+import com.findbulous.pos.API.UpdateOneOrderLineQtyDisc;
+import com.findbulous.pos.API.UpdateOrderCustomerCount;
 import com.findbulous.pos.Adapters.CartOrderLineAdapter;
 import com.findbulous.pos.CustomerFragments.FragmentAddCustomer;
 import com.findbulous.pos.CustomerFragments.FragmentCustomer;
@@ -50,9 +58,11 @@ import com.findbulous.pos.databinding.ToolbarSyncPopupBinding;
 import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import io.realm.Realm;
+import io.realm.RealmList;
 import io.realm.RealmResults;
 
 public class CustomerPage extends CheckConnection implements CartOrderLineAdapter.OnItemClickListener{
@@ -78,6 +88,10 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
     private ArrayList<Order_Line> order_lines;
     //Number of Customer Popup
     private EditText number_customer_et;
+    //Product attribute
+    private Attribute_Value[] allAttributes;
+    //private String[] allAttributes_custom;
+    private EditText[] allAttributes_custom;
 
     private POS_Config pos_config;
     //Modifier popup color btn
@@ -116,6 +130,10 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
         refreshCartCurrentCustomer();
 
         //Body Settings
+        allAttributes_custom = null;
+        allAttributes = null;
+
+
         lastClickedColorBtn = null;
         pos_config = realm.where(POS_Config.class).findFirst();
         currentOrder = new Order();
@@ -135,7 +153,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
             currentOrder = realm.copyFromRealm(order);
         }
         //Cart Discount
-        if(currentOrder.getDiscount_type() != null) {
+        if((currentOrder.getDiscount_type() != null) && (currentOrder.getDiscount_type().length() > 0)) {
             if (currentOrder.getDiscount_type().equalsIgnoreCase("percentage")
                     || currentOrder.getDiscount_type().equalsIgnoreCase("fixed_amount")) {
 
@@ -147,10 +165,13 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                 }else if(currentOrder.getDiscount_type().equalsIgnoreCase("percentage")){
                     double total_price_subtotal_incl = 0.0;
                     double amount_discount = 0.0;
-//                    Order_Line order_lineForDiscount = realm.where(Order_Line.class).equalTo("order.order_id")
-                    System.out.println("Current order, order_line size ===========" + currentOrder.getOrder_lines().size());
-                    for(int i = 0; i < currentOrder.getOrder_lines().size(); i++){
-                        Order_Line order_line = currentOrder.getOrder_lines().get(i);
+                    RealmResults<Order_Line> results = realm.where(Order_Line.class)
+                            .equalTo("order.local_order_id", currentOrder.getLocal_order_id()).findAll();
+                    ArrayList<Order_Line> order_lineForDiscount = new ArrayList<>();
+                    order_lineForDiscount.addAll(results);
+                    System.out.println("Current order, order_line size ===========" + order_lineForDiscount.size());
+                    for(int i = 0; i < order_lineForDiscount.size(); i++){
+                        Order_Line order_line = order_lineForDiscount.get(i);
                         total_price_subtotal_incl += order_line.getPrice_subtotal_incl();
                     }
                     amount_discount = (total_price_subtotal_incl * currentOrder.getDiscount()) / 100;
@@ -161,6 +182,8 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
 
                 binding.cartInclude.cartOrderDiscountBtn.setTextColor(contextpage.getResources().getColor(R.color.green));
             }
+        }else{
+            binding.cartInclude.cartOrderSummaryDiscountRl.setVisibility(View.GONE);
         }
 
         //Fragment Settings
@@ -364,12 +387,12 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
         binding.cartInclude.cartOrderSummaryProceedBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                int current_order_id = cartSharedPreference.getInt("localOrderId", -1);
+                int current_local_order_id = cartSharedPreference.getInt("localOrderId", -1);
                 int orderTypePosition = cartSharedPreference.getInt("orderTypePosition", -1);
-                if(current_order_id == -1){ //no order and no order_line(products)
+                if(current_local_order_id == -1){ //no order and no order_line(products)
                     Toast.makeText(contextpage, "Please proceed payment with at least 1 product", Toast.LENGTH_SHORT).show();
                 }else {//got order
-                    RealmResults<Order_Line> results = realm.where(Order_Line.class).equalTo("order.order_id", current_order_id)
+                    RealmResults<Order_Line> results = realm.where(Order_Line.class).equalTo("order.local_order_id", current_local_order_id)
                             .findAll();
                     if(results.isEmpty()){//no order_line(products)
                         Toast.makeText(contextpage, "Please proceed payment with at least 1 product", Toast.LENGTH_SHORT).show();
@@ -460,20 +483,23 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                     RealmResults<Order> results = realm.where(Order.class)
                             .equalTo("table.table_id", currentOrder.getTable().getTable_id())
                             .and().notEqualTo("state", "paid").and()
-                            .notEqualTo("order_id", currentOrder.getOrder_id()).findAll();
+                            .notEqualTo("local_order_id", currentOrder.getLocal_order_id()).findAll();
                     if(results.size() == 0)
                         tableOccupiedToVacant(currentOrder.getTable());
 
-                    RealmResults<Order_Line> order_lines = realm.where(Order_Line.class).equalTo("order.order_id", currentOrder.getOrder_id())
+                    RealmResults<Order_Line> order_lines = realm.where(Order_Line.class).equalTo("order.local_order_id", currentOrder.getLocal_order_id())
                             .findAll();
                     if(order_lines.size() < 1){// when order_lines empty, delete the order
                         //delete order
                         Order deleteOrder = realm.where(Order.class)
-                                .equalTo("order_id", currentOrder.getOrder_id())
+                                .equalTo("local_order_id", currentOrder.getLocal_order_id())
                                 .findFirst();
                         cartSharedPreferenceEdit.putInt("orderingState", 0);
-                        cartSharedPreferenceEdit.putInt("orderId", -1);
+                        cartSharedPreferenceEdit.putInt("localOrderId", -1);
                         cartSharedPreferenceEdit.commit();
+                        if(NetworkUtils.isNetworkAvailable(contextpage)) {
+                            new DeleteOneDraftOrder(contextpage, currentOrder.getOrder_id()).execute();
+                        }
                         currentOrder = new Order();
                         binding.cartInclude.cartBtnNumberCustomer.setText("Guest(s)");
                         realm.executeTransaction(new Realm.Transaction() {
@@ -490,6 +516,12 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                                 realm.insertOrUpdate(currentOrder);
                             }
                         });
+                        if(!NetworkUtils.isNetworkAvailable(contextpage)){
+                            Toast.makeText(contextpage, "No Internet Connection.", Toast.LENGTH_SHORT).show();
+                        }else {
+                            new SetOrderTable(contextpage, currentOrder.getOrder_id(), currentOrder.getLocal_order_id(),
+                                    null, null, null).execute();
+                        }
                     }
                     resetPosType();
                 }
@@ -508,7 +540,16 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                 if(currentOrder.getDiscount_type() != null) {
                     currentOrder.setDiscount(0.0);
                     currentOrder.setDiscount_type(null);
+                    realm.executeTransaction(new Realm.Transaction() {
+                        @Override
+                        public void execute(Realm realm) {
+                            realm.insertOrUpdate(currentOrder);
+                        }
+                    });
                     updateOrderTotalAmount();
+
+                    new SetOrderDiscount(contextpage, currentOrder.getOrder_id(), currentOrder.getLocal_order_id(),
+                            null, 0).execute();
                 }
                 binding.cartInclude.cartOrderSummaryDiscount.setText("- RM 0.00");
                 binding.cartInclude.cartOrderSummaryDiscountRl.setVisibility(View.GONE);
@@ -540,7 +581,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
         if(current_customer_id != -1){
             customer = new Customer(current_customer_id, customer_name, customerEmail, customerPhoneNo, customerIdentityNo, customerBirthdate);
         }else{
-            customer = null;
+            customer = realm.where(Customer.class).equalTo("customer_id", 0).findFirst();
         }
 
         return customer;
@@ -788,7 +829,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                 if(currentOrder.getOrder_id() != -1) {
                     if (number_customer_et.getText().toString().equalsIgnoreCase("0")) {
                         binding.cartInclude.cartBtnNumberCustomer.setText("1 Guest(s)");
-                        currentOrder.setCustomer_count(Integer.valueOf(1));
+                        currentOrder.setCustomer_count(1);
                     } else {
                         binding.cartInclude.cartBtnNumberCustomer.setText(number_customer_et.getText().toString() + " Guest(s)");
                         currentOrder.setCustomer_count(Integer.valueOf(number_customer_et.getText().toString()));
@@ -800,6 +841,12 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                         }
                     });
                     refreshCustomerNumber();
+                    if(!NetworkUtils.isNetworkAvailable(contextpage)){
+                        Toast.makeText(contextpage, "No Internet Connection.", Toast.LENGTH_SHORT).show();
+                    }else {
+                        new UpdateOrderCustomerCount(contextpage, currentOrder.getOrder_id(),
+                                currentOrder.getLocal_order_id(), currentOrder.getCustomer_count()).execute();
+                    }
                 }
                 popup.dismiss();
             }
@@ -891,8 +938,14 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                             }
                         });
                         Intent intent = new Intent(contextpage, TablePage.class);
-                        startActivity(intent);
-                        finish();
+                        if(!NetworkUtils.isNetworkAvailable(contextpage)){  //no internet
+                            startActivity(intent);
+                            finish();
+                            Toast.makeText(contextpage, "No Internet Connection, product added into order stored in local", Toast.LENGTH_SHORT).show();
+                        }else {
+                            new SetOrderNote(contextpage, currentOrder.getOrder_id(), currentOrder.getLocal_order_id(),
+                                    note, intent, CustomerPage.this).execute();
+                        }
                         Toast.makeText(contextpage, "Choose a table for this order", Toast.LENGTH_SHORT).show();
                     }else {
                         onHoldCustomer = getCurrentCustomer();
@@ -924,7 +977,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                         customerSharedPreferenceEdit.putString("customerBirthdate", null);
                         customerSharedPreferenceEdit.commit();
                         cartSharedPreferenceEdit.putInt("orderingState", 0);
-                        cartSharedPreferenceEdit.putInt("orderId", -1);
+                        cartSharedPreferenceEdit.putInt("localOrderId", -1);
                         cartSharedPreferenceEdit.commit();
 
                         updateOrderTotalAmount();
@@ -953,6 +1006,12 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                             realm.insertOrUpdate(currentOrder);
                         }
                     });
+                    if(!NetworkUtils.isNetworkAvailable(contextpage)){  //no internet
+                        Toast.makeText(contextpage, "No Internet Connection, product added into order stored in local", Toast.LENGTH_SHORT).show();
+                    }else {
+                        new SetOrderNote(contextpage, currentOrder.getOrder_id(), currentOrder.getLocal_order_id(),
+                                note, null, null).execute();
+                    }
                     Toast.makeText(contextpage, "Added & Updated", Toast.LENGTH_SHORT).show();
                 }
                 popup.dismiss();
@@ -1022,26 +1081,29 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                 double discountInDouble = (!userInput.isEmpty())? Double.valueOf(userInput): 0.0;
                 if(discountInDouble > 0.0) {
                     String discount = String.format("%.2f", discountInDouble);
-
-                    if (popupBinding.addDiscountPopupRadioBtnAmount.isChecked()) {//fixed_amount
-                        currentOrder.setDiscount_type("fixed_amount");
+                    String discount_type = null;
+                    double amount_order_discount = 0.0;
+                    if (popupBinding.addDiscountPopupRadioBtnAmount.isChecked()) {  //fixed_amount
+                        discount_type = "fixed_amount";
+                        amount_order_discount = Double.parseDouble(discount);
                     } else {    //percentage
-                        currentOrder.setDiscount_type("percentage");
-                    }
-
-                    if(currentOrder.getDiscount_type().equalsIgnoreCase("percentage")){
+                        discount_type = "percentage";
                         int order_discount_percent = (int)(Double.parseDouble(discount));
                         double total_price_subtotal_incl = 0;
                         for(int i=0; i < order_lines.size(); i++){
                             total_price_subtotal_incl += order_lines.get(i).getPrice_subtotal_incl();
                         }
-                        double amount_order_discount = total_price_subtotal_incl * ((double)order_discount_percent / 100);
-                        discount = String.format("%.2f", amount_order_discount);
+                        amount_order_discount = total_price_subtotal_incl * ((double)order_discount_percent / 100);
                     }
-                    binding.cartInclude.cartOrderSummaryDiscount.setText("- RM " + discount);
 
+                    binding.cartInclude.cartOrderSummaryDiscount.setText(String.format("- RM %.2f", amount_order_discount));
+
+                    currentOrder.setDiscount_type(discount_type);
                     currentOrder.setDiscount(Double.valueOf(discount));
                     updateOrderTotalAmount();
+
+                    new SetOrderDiscount(contextpage, currentOrder.getOrder_id(), currentOrder.getLocal_order_id(),
+                            discount_type, Double.valueOf(discount)).execute();
                 }
                 popup.dismiss();
             }
@@ -1089,7 +1151,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
         customerFragment = false;
     }
 
-    private void showProductModifier(Product product){
+    private void showProductModifier(Order_Line order_line, Product product){
         PopupWindow popup = new PopupWindow(contextpage);
         ProductModifierPopupBinding popupBinding = ProductModifierPopupBinding.inflate(getLayoutInflater());
 //        View layout = getLayoutInflater().inflate(R.layout.product_modifier_popup, null);
@@ -1124,6 +1186,9 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                 popupBinding.productModifierLl.setVisibility(View.GONE);
             }
 
+            allAttributes_custom = new EditText[attributes.size()];
+            allAttributes = new Attribute_Value[attributes.size()];
+
             for(int i = 0; i < attributes.size(); i++){
                 Attribute attribute = attributes.get(i);
                 //Attribute Name
@@ -1155,21 +1220,36 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                         }else{
                             rb.setText(attribute_value.getName());
                         }
-                        if(x == 0){
-                            rb.setChecked(true);
-                        }
+
                         //IS_CUSTOM
                         EditText custom_et = new EditText(contextpage);
+                        int finalI = i;
                         rb.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
+                                allAttributes[finalI] = attribute_value;
+
                                 if(attribute_value.isIs_custom() && rb.isChecked()){
+                                    allAttributes_custom[finalI] = custom_et;
                                     custom_et.setVisibility(View.VISIBLE);
                                 }else{
+                                    allAttributes_custom[finalI] = null;
                                     custom_et.setVisibility(View.GONE);
                                 }
                             }
                         });
+
+                        if(x == 0){
+                            allAttributes[i] = attribute_value;
+                            if(attribute_value.isIs_custom()){
+                                allAttributes_custom[i] = custom_et;
+                            }else {
+                                allAttributes_custom[i] = null;
+                            }
+
+                            rb.setChecked(true);
+                        }
+
                         // Add Radio Button into RadioGroup
                         rg.addView(rb);
                         if(attribute_value.isIs_custom()){
@@ -1224,16 +1304,25 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                         spinner.setAdapter(itemAdapter);
                         spinner.setDropDownVerticalOffset(80);
                         spinner.setSelection(0);
+                        if(x == 0){
+                            allAttributes[i] = attribute_value;
+                        }
                         spinner.setPopupBackgroundDrawable(getResources().getDrawable(R.drawable.box_btm_corner_light_grey));
+                        int finalI = i;
                         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                             @Override
                             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long l) {
                                 int id = item_ids[position];
                                 //IS_CUSTOM
                                 Attribute_Value av = realm.where(Attribute_Value.class).equalTo("id", id).findFirst();
+
+                                allAttributes[finalI] = realm.copyFromRealm(av);
+
                                 if(av.isIs_custom()){
+                                    allAttributes_custom[finalI] = custom_et;
                                     custom_et.setVisibility(View.VISIBLE);
                                 }else{
+                                    allAttributes_custom[finalI] = null;
                                     custom_et.setVisibility(View.GONE);
                                 }
                             }
@@ -1241,18 +1330,21 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                             public void onNothingSelected(AdapterView<?> adapterView) {
                             }
                         });
+
                         custom_et.setHint(attribute_value.getName());
                     }
 
                     popupBinding.productModifierLl.addView(spinner);
                     //IS_CUSTOM
                     //First Selection if it IS_CUSTOM
-                    Attribute_Value av = realm.where(Attribute_Value.class)
-                            .equalTo("id", attribute_values.get(0).getId())
-                            .findFirst();
-                    if(av.isIs_custom()){
+//                    Attribute_Value av = realm.where(Attribute_Value.class)
+//                            .equalTo("id", attribute_values.get(0).getId())
+//                            .findFirst();
+                    if(attribute_values.get(0).isIs_custom()){
+                        allAttributes_custom[i] = custom_et;
                         custom_et.setVisibility(View.VISIBLE);
                     }else{
+                        allAttributes_custom[i] = null;
                         custom_et.setVisibility(View.GONE);
                     }
                     custom_et.setMaxWidth(500);
@@ -1280,12 +1372,17 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                             btn.setTooltipText(attribute_value.getName());
                         }
                         if(x == 0){
+                            allAttributes[i] = attribute_value;
+
                             btn.setBackground(select(btn.getId()));
                             lastClickedColorBtn = btn;
                         }
+                        int finalI = i;
                         btn.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
+                                allAttributes[finalI] = attribute_value;
+
                                 if(btn != lastClickedColorBtn) {
                                     btn.startAnimation(AnimationUtils.loadAnimation(getBaseContext(), android.R.anim.fade_in));
                                     lastClickedColorBtn.setBackground(unselect(lastClickedColorBtn.getId()));
@@ -1318,29 +1415,42 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                         rb.setTextColor(getResources().getColor(R.color.pills_text_color));
                         rb.setBackground(getResources().getDrawable(R.drawable.pills_selector));
                         rb.setButtonDrawable(null);
-                        if(x == 0){
-                            rb.setChecked(true);
-                        }
+
                         //IS_CUSTOM
                         EditText custom_et = new EditText(contextpage);
-                        if(attribute_value.isIs_custom() && rb.isChecked()){
-                            custom_et.setVisibility(View.VISIBLE);
-                        }else{
-                            custom_et.setVisibility(View.GONE);
-                        }
+                        int finalI = i;
                         rb.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
+                                allAttributes[finalI] = attribute_value;
+
                                 if(attribute_value.isIs_custom() && rb.isChecked()){
+                                    allAttributes_custom[finalI] = custom_et;
                                     custom_et.setVisibility(View.VISIBLE);
                                 }else{
+                                    allAttributes_custom[finalI] = null;
                                     custom_et.setVisibility(View.GONE);
                                 }
                             }
                         });
+
+                        if(x == 0){
+                            allAttributes[i] = attribute_value;
+                            if(attribute_value.isIs_custom()){
+                                allAttributes_custom[i] = custom_et;
+                            }else {
+                                allAttributes_custom[i] = null;
+                            }
+                            rb.setChecked(true);
+                        }
+
                         rg.addView(rb);
                         if(attribute_value.isIs_custom()){
-                            custom_et.setVisibility(View.GONE);
+                            if(rb.isChecked()){
+                                custom_et.setVisibility(View.VISIBLE);
+                            }else{
+                                custom_et.setVisibility(View.GONE);
+                            }
                             custom_et.setTextSize(15);
                             custom_et.setPadding(10, 10, 10, 10);
                             rg.addView(custom_et);
@@ -1388,8 +1498,77 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
         popupBinding.productModifierPopupPositiveBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                addOrUpdateProductToOrder(product);
-                popup.dismiss();
+                double price_extra = 0.0;
+                String product_attributesName = null;
+                String customer_note = null;
+                if(!pos_config.isIface_orderline_customer_notes()) {
+                    customer_note = popupBinding.productModifierNote.getText().toString().trim();
+                    if(customer_note.equalsIgnoreCase("")){
+                        customer_note = null;
+                    }
+                }
+
+                if(pos_config.isProduct_configurator()){
+                    for(int i = 0; i < allAttributes.length; i++){
+                        price_extra += allAttributes[i].getPrice_extra();
+                    }
+
+                    product_attributesName = "(";
+
+                    for(int i = 0; i < allAttributes.length; i++){
+                        product_attributesName += allAttributes[i].getName();
+                        if(allAttributes_custom[i] != null){
+                            product_attributesName += ": " + allAttributes_custom[i].getText().toString().trim();
+                        }
+                        if(i < (allAttributes.length - 1))
+                            product_attributesName += ", ";
+                    }
+
+                    product_attributesName += ")";
+                }
+
+                boolean empty_custom_et = true, empty_customer_note = true;
+
+                if(pos_config.isIface_orderline_customer_notes()){
+                    if(popupBinding.productModifierNote.getText().toString().trim().length() > 0){
+                        empty_customer_note = false;
+                    }
+                }else{
+                    empty_customer_note = false;
+                }
+
+                if(pos_config.isProduct_configurator()){
+                    boolean attribute_is_custom = false; //one of the attribute_value selected is custom
+                    for(int i = 0; i < allAttributes.length; i++){
+                        if(allAttributes[i].isIs_custom()){
+                            attribute_is_custom = true;
+                            if(allAttributes_custom[i] != null) {
+                                if (allAttributes_custom[i].getText().toString().trim().length() > 0) {
+                                    empty_custom_et = false;
+                                }
+                            }
+                        }
+                        System.out.println(allAttributes[i].getName() + " (is_custom): " + allAttributes[i].isIs_custom());
+                        System.out.println("ATTRIBUTE_IS_CUSTOM: " + attribute_is_custom);
+                    }
+
+                    if(!attribute_is_custom){
+                        empty_custom_et = false;
+                    }
+                }else{
+                    empty_custom_et = false;
+                }
+                System.out.println("EMPTY_CUSTOMER_NOTE: " + empty_customer_note + "\n"
+                        + "EMPTY_CUSTOM_ET: " + empty_custom_et);
+
+                if(!empty_customer_note && !empty_custom_et) {
+                    updateOrderLineConfig(order_line, product, product_attributesName,
+                            price_extra, customer_note,
+                            allAttributes, allAttributes_custom);
+                    popup.dismiss();
+                }else{
+                    Toast.makeText(contextpage, "Please fill in all of the requirements", Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }
@@ -1415,26 +1594,126 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
 
         return selected;
     }
-    //NOT YET DONE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!MODIFIER related
-    private void addOrUpdateProductToOrder(Product product){
+    //Update product to order
+    private void updateOrderLineConfig(Order_Line order_line, Product product, String attributesName,
+                                       double price_extra, String customer_note,
+                                       Attribute_Value[] allAttributes, EditText[] allAttributes_custom){
+        int index = order_lines.indexOf(order_line);
+        double price_unit = product.getList_price() + price_extra;
+        double amount_discount = 0.0;
+        if(order_line.getDiscount_type() != null){
+            if(order_line.getDiscount_type().equalsIgnoreCase("percentage")){
+                amount_discount = price_unit * (order_line.getDiscount() / 100);
+            }else if(order_line.getDiscount_type().equalsIgnoreCase("fixed_amount")){
+                amount_discount = order_line.getDiscount();
+            }
+        }
+        double price_before_discount = calculate_price_unit_excl_tax(product, price_unit) * order_line.getQty();
+        //price_unit exclude tax include discount
+        double price_unit_excl_tax = calculate_price_unit_excl_tax(product, (price_unit - amount_discount));
+        double price_subtotal = price_unit_excl_tax * order_line.getQty();
 
+        ArrayList<Product_Tax> product_taxes = new ArrayList<>();
+        RealmResults product_taxes_results = realm.where(Product_Tax.class)
+                .equalTo("product_tmpl_id", product.getProduct_tmpl_id()).findAll();
+        product_taxes.addAll(realm.copyFromRealm(product_taxes_results));
+        double price_subtotal_incl = calculate_price_subtotal_incl(product_taxes, price_subtotal);
+
+
+        String product_name = product.getName();
+        if(attributesName != null){
+            product_name += " " + attributesName;
+        }
+
+        RealmList<Attribute_Value> attributeValues = new RealmList<Attribute_Value>();
+        if(allAttributes != null) {
+            attributeValues.addAll(Arrays.asList(allAttributes));
+        }else{
+            attributeValues = null;
+        }
+
+        Order_Line updated_order_line = new Order_Line(order_line.getLocal_order_line_id(), order_line.getOrder_line_id(),
+                order_line.getName(), order_line.getQty(), price_unit, price_subtotal, price_subtotal_incl, price_before_discount,
+                String.format("$ .2f", price_unit), String.format("$ .2f", price_subtotal),
+                String.format("$ .2f", price_subtotal_incl), String.format("$ .2f", price_before_discount),
+                product_name, customer_note, order_line.getDiscount_type(), order_line.getDiscount(),
+                order_line.getDisplay_discount(), order_line.getTotal_cost(), order_line.getDisplay_total_cost(),
+                price_extra, String.format("$ .2f", price_extra), order_line.getOrder(), product, attributeValues);
+
+        realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.insertOrUpdate(updated_order_line);
+            }
+        });
+        order_lines.set(index, updated_order_line);
+        orderLineAdapter.notifyDataSetChanged();
+        updateOrderTotalAmount();
+
+        if(!NetworkUtils.isNetworkAvailable(contextpage)){  //no internet
+            Toast.makeText(contextpage, "No Internet Connection, product updated and stored in local", Toast.LENGTH_SHORT).show();
+        }else{
+            //call update order line api
+            new UpdateOneOrderLineConfig(contextpage, order_line.getOrder().getLocal_order_id(),
+                    order_line.getOrder().getOrder_id(), order_line.getLocal_order_line_id(), order_line.getOrder_line_id(),
+                    customer_note, allAttributes, allAttributes_custom).execute();
+        }
+    }
+
+    private double calculate_price_unit_excl_tax(Product product, double price_unit){
+        double fixed = product.getAmount_tax_incl_fixed(),
+                percent = product.getAmount_tax_incl_percent(),
+                division = product.getAmount_tax_incl_division();
+
+        double price_unit_excl_tax = ((price_unit  - fixed) / (1 + (percent / 100))) * (1 - (division / 100));
+
+        return price_unit_excl_tax;
+    }
+    private double calculate_price_subtotal_incl(ArrayList<Product_Tax> product_taxes, double price_subtotal){
+        double price_subtotal_incl;
+        double total_taxes = 0.0, price = price_subtotal;
+        double tax = 0.0;
+
+        for(int i = 0; i < product_taxes.size(); i++){
+            Product_Tax product_tax = product_taxes.get(i);
+
+            if (product_tax.getAmount_type().equalsIgnoreCase("fixed")) {
+                tax = product_tax.getAmount();
+            } else if (product_tax.getAmount_type().equalsIgnoreCase("percent")) {
+                tax = (price * (product_tax.getAmount() / 100));
+            } else if (product_tax.getAmount_type().equalsIgnoreCase("division")) {
+                tax = ((price / (1 - (product_tax.getAmount() / 100))) - price);
+            }
+
+            if (product_tax.isInclude_base_amount()) {    //TRUE
+                price += tax;
+            }
+
+            total_taxes += tax;
+        }
+        price_subtotal_incl = price_subtotal + total_taxes;
+
+        return price_subtotal_incl;
     }
 
     //Cart / order line
     @Override
     public void onOrderLineClick(int position) {
         //order_lines
-        showProductModifier(order_lines.get(position).getProduct());
+        if(pos_config.isProduct_configurator() || pos_config.isIface_orderline_customer_notes()) {
+            showProductModifier(order_lines.get(position), order_lines.get(position).getProduct());
+        }
+
         Toast.makeText(contextpage, "" + order_lines.get(position).getOrder_line_id(), Toast.LENGTH_SHORT).show();
     }
     @Override
     public void onOrderLineCancelClick(int position) {
         Order_Line deleteOrderLine = realm.where(Order_Line.class)
-                .equalTo("order_line_id", order_lines.get(position).getOrder_line_id())
-                .equalTo("order.order_id", currentOrder.getOrder_id())
+                .equalTo("local_order_line_id", order_lines.get(position).getLocal_order_line_id())
+                .equalTo("order.local_order_id", currentOrder.getLocal_order_id())
                 .findFirst();
         Order deleteOrder = realm.where(Order.class)
-                .equalTo("order_id", currentOrder.getOrder_id())
+                .equalTo("local_order_id", currentOrder.getLocal_order_id())
                 .findFirst();
 
         //popup
@@ -1451,14 +1730,18 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                                 RealmResults<Order> results = realm.where(Order.class)
                                         .equalTo("table.table_id", currentOrder.getTable().getTable_id())
                                         .and().notEqualTo("state", "paid").and()
-                                        .notEqualTo("order_id", currentOrder.getOrder_id()).findAll();
+                                        .notEqualTo("local_order_id", currentOrder.getLocal_order_id()).findAll();
                                 if(results.size() == 0)
                                     tableOccupiedToVacant(currentOrder.getTable());
                             }
                             //delete order
                             cartSharedPreferenceEdit.putInt("orderingState", 0);
-                            cartSharedPreferenceEdit.putInt("orderId", -1);
+                            cartSharedPreferenceEdit.putInt("localOrderId", -1);
                             cartSharedPreferenceEdit.commit();
+
+                            if(NetworkUtils.isNetworkAvailable(contextpage)){
+                                new DeleteOneDraftOrder(contextpage, currentOrder.getOrder_id()).execute();
+                            }
                             currentOrder = new Order();
                             refreshNote();
                             refreshCustomerNumber();
@@ -1477,17 +1760,24 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                         resetPosType();
                     }
                 }).setNegativeButton("No", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                Toast.makeText(contextpage, "Continue to order", Toast.LENGTH_SHORT).show();
-            }
-        }).setCancelable(false);
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        Toast.makeText(contextpage, "Continue to order", Toast.LENGTH_SHORT).show();
+                    }
+                }).setCancelable(false);
         AlertDialog alert = builder.create();
 
         if(order_lines.size() == 1){
             alert.show();
         }else {
             Toast.makeText(contextpage, "Cancel: " + order_lines.get(position).getOrder_line_id(), Toast.LENGTH_SHORT).show();
+
+            if(NetworkUtils.isNetworkAvailable(contextpage)) {
+                new DeleteOneOrderLine(contextpage, order_lines.get(position).getOrder().getLocal_order_id(),
+                        order_lines.get(position).getOrder().getOrder_id(),
+                        order_lines.get(position).getOrder_line_id()).execute();
+
+            }
             order_lines.remove(position);
             orderLineAdapter.notifyDataSetChanged();
 
@@ -1502,16 +1792,25 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
     }
     @Override
     public void discountUpdateOrderLine(int position, Order_Line updateOrderLine) {
-//        double subtotal;
-//        double price_total = order_lines.get(position).getPrice_total();
-//        subtotal = price_total - ((price_total * discount) / 100);
-//        subtotal = Double.valueOf(String.format("%.2f", subtotal));
-//        order_lines.get(position).setPrice_subtotal(subtotal);
-//        order_lines.get(position).setDiscount(discount);
-//        Order_Line updateOrderLine = order_lines.get(position);
         order_lines.get(position).setPrice_subtotal(updateOrderLine.getPrice_subtotal());
-        order_lines.get(position).setDiscount_type(updateOrderLine.getDiscount_type());
+        order_lines.get(position).setDisplay_price_subtotal(updateOrderLine.getDisplay_price_subtotal());
+        order_lines.get(position).setPrice_subtotal_incl(updateOrderLine.getPrice_subtotal_incl());
+        order_lines.get(position).setDisplay_price_subtotal_incl(updateOrderLine.getDisplay_price_subtotal_incl());
         order_lines.get(position).setDiscount(updateOrderLine.getDiscount());
+        order_lines.get(position).setDisplay_discount(updateOrderLine.getDisplay_discount());
+        String discount_type;
+        if(updateOrderLine.getDiscount_type() != null) {
+            if (updateOrderLine.getDiscount_type().equalsIgnoreCase("empty")) {
+                order_lines.get(position).setDiscount_type(null);
+                discount_type = "empty";
+            } else {
+                order_lines.get(position).setDiscount_type(updateOrderLine.getDiscount_type());
+                discount_type = updateOrderLine.getDiscount_type();
+            }
+        }else{
+            order_lines.get(position).setDiscount_type(null);
+            discount_type = "empty";
+        }
 
         realm.executeTransaction(new Realm.Transaction() {
             @Override
@@ -1526,19 +1825,24 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
 //            }
 //        });
         updateOrderTotalAmount();
+        Order_Line order_line = order_lines.get(position);
+        if(!NetworkUtils.isNetworkAvailable(contextpage)){  //no internet
+            Toast.makeText(contextpage, "No Internet Connection, product added into order stored in local", Toast.LENGTH_SHORT).show();
+        }else {
+            new UpdateOneOrderLineQtyDisc(contextpage, order_line.getOrder().getLocal_order_id(), order_line.getOrder().getOrder_id(),
+                    order_line.getLocal_order_line_id(), order_line.getOrder_line_id(), -1, discount_type,
+                    order_line.getDiscount()).execute();
+        }
     }
     @Override
     public void quantityUpdateOrderLine(int position, Order_Line updateOrderLine) {
-//        double price_total = quantity * order_lines.get(position).getProduct().getList_price();
-//        int discount = order_lines.get(position).getDiscount();
-//        double subtotal = price_total - ((price_total * discount) / 100);
-//        order_lines.get(position).setPrice_subtotal(subtotal);
-//        order_lines.get(position).setQty(quantity);
-//        order_lines.get(position).setPrice_total(price_total);
-//        Order_Line updateOrderLine = order_lines.get(position);
         order_lines.get(position).setPrice_subtotal(updateOrderLine.getPrice_subtotal());
+        order_lines.get(position).setDisplay_price_subtotal(updateOrderLine.getDisplay_price_subtotal());
+        order_lines.get(position).setPrice_subtotal_incl(updateOrderLine.getPrice_subtotal_incl());
+        order_lines.get(position).setDisplay_price_subtotal_incl(updateOrderLine.getDisplay_price_subtotal_incl());
         order_lines.get(position).setQty(updateOrderLine.getQty());
         order_lines.get(position).setPrice_before_discount(updateOrderLine.getPrice_before_discount());
+        order_lines.get(position).setDisplay_price_before_discount(updateOrderLine.getDisplay_price_before_discount());
 
         realm.executeTransaction(new Realm.Transaction() {
             @Override
@@ -1553,8 +1857,65 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
 //            }
 //        });
         updateOrderTotalAmount();
+
+        Order_Line order_line = order_lines.get(position);
+        if(!NetworkUtils.isNetworkAvailable(contextpage)){  //no internet
+            Toast.makeText(contextpage, "No Internet Connection, product updated in local", Toast.LENGTH_SHORT).show();
+        }else {
+            new UpdateOneOrderLineQtyDisc(contextpage, order_line.getOrder().getLocal_order_id(),
+                    order_line.getOrder().getOrder_id(), order_line.getLocal_order_line_id(),
+                    order_line.getOrder_line_id(), order_line.getQty(), null, -1).execute();
+        }
     }
 
+    private void updateOrderTotalAmount() {
+        int orderState = cartSharedPreference.getInt("orderingState", 0);
+        double order_subtotal = 0.0, total_price_subtotal_incl = 0.0, amount_total = 0.0, amount_order_discount = 0.0;
+        double total_tax_amount = 0.0;
+        if(orderState == 1) {
+            for(int i = 0; i < order_lines.size(); i++){
+                order_subtotal += order_lines.get(i).getPrice_subtotal();
+                total_price_subtotal_incl += order_lines.get(i).getPrice_subtotal_incl();
+            }
+            amount_total = total_price_subtotal_incl;
+            if(currentOrder.getDiscount_type() != null){
+                if(currentOrder.getDiscount_type().equalsIgnoreCase("percentage")){
+                    amount_order_discount = total_price_subtotal_incl * (currentOrder.getDiscount()/100);
+                }else if(currentOrder.getDiscount_type().equalsIgnoreCase("fixed_amount")){
+                    amount_order_discount = currentOrder.getDiscount();
+                }
+                amount_total -= amount_order_discount;
+            }
+
+            total_tax_amount = totalAllOrderLineTax();
+            // Tax without rounding up
+            total_tax_amount *= 100;  // moves two digits from right to left of dec point
+            total_tax_amount = Math.floor(total_tax_amount);  // removes all reminaing dec digits
+            total_tax_amount /= 100;  // moves two digits from left to right of dec point
+
+            currentOrder.setAmount_total(amount_total);
+            currentOrder.setAmount_tax(total_tax_amount);
+            currentOrder.setAmount_subtotal(order_subtotal);
+
+            realm.executeTransaction(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+                    realm.insertOrUpdate(currentOrder);
+                }
+            });
+        }
+
+        if((currentOrder.getDiscount_type() != null) && (orderState == 1)){
+            binding.cartInclude.cartOrderSummaryDiscount.setText(String.format("- RM %.2f", amount_order_discount));
+        }else{
+            binding.cartInclude.cartOrderSummaryDiscount.setText("- RM 0.00");
+            binding.cartInclude.cartOrderSummaryDiscountRl.setVisibility(View.GONE);
+            binding.cartInclude.cartOrderDiscountBtn.setTextColor(contextpage.getResources().getColor(R.color.darkOrange));
+        }
+        binding.cartInclude.cartOrderSummarySubtotal.setText(String.format("RM %.2f", order_subtotal));
+        binding.cartInclude.cartOrderSummaryTax.setText(String.format("RM %.2f", total_tax_amount));
+        binding.cartInclude.cartOrderSummaryPayableAmount.setText(String.format("RM %.2f", amount_total));
+    }
     private void tableOccupiedToVacant(Table table){
         table.setState("V");
         realm.executeTransaction(new Realm.Transaction() {
@@ -1576,49 +1937,6 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
         }else{
             binding.cartInclude.cartOrderNoteBtn.setTextColor(contextpage.getResources().getColor(R.color.darkOrange));
         }
-    }
-    private void updateOrderTotalAmount() {
-        int orderState = cartSharedPreference.getInt("orderingState", 0);
-        double order_subtotal = 0.0, total_price_subtotal_incl = 0.0, amount_total = 0.0, amount_order_discount = 0.0;
-        double total_tax_amount = 0.0;
-        if(orderState == 1) {
-            for(int i = 0; i < order_lines.size(); i++){
-                order_subtotal += order_lines.get(i).getPrice_subtotal();
-                total_price_subtotal_incl += order_lines.get(i).getPrice_subtotal_incl();
-            }
-            amount_total = total_price_subtotal_incl;
-            if(currentOrder.getDiscount_type() != null){
-                if(currentOrder.getDiscount_type().equalsIgnoreCase("percentage")){
-                    amount_order_discount = total_price_subtotal_incl * (currentOrder.getDiscount()/100);
-                }else if(currentOrder.getDiscount_type().equalsIgnoreCase("fixed_amount")){
-                    amount_order_discount = currentOrder.getDiscount();
-                }
-                amount_total -= amount_order_discount;
-            }
-
-            total_tax_amount = totalAllOrderLineTax();
-
-            currentOrder.setAmount_total(amount_total);
-            currentOrder.setAmount_tax(total_tax_amount);
-
-            realm.executeTransaction(new Realm.Transaction() {
-                @Override
-                public void execute(Realm realm) {
-                    realm.insertOrUpdate(currentOrder);
-                }
-            });
-        }
-
-        if((currentOrder.getDiscount_type() != null) && (orderState == 1)){
-            binding.cartInclude.cartOrderSummaryDiscount.setText(String.format("- RM %.2f", amount_order_discount));
-        }else{
-            binding.cartInclude.cartOrderSummaryDiscount.setText("- RM 0.00");
-            binding.cartInclude.cartOrderSummaryDiscountRl.setVisibility(View.GONE);
-            binding.cartInclude.cartOrderDiscountBtn.setTextColor(contextpage.getResources().getColor(R.color.darkOrange));
-        }
-        binding.cartInclude.cartOrderSummarySubtotal.setText(String.format("RM %.2f", order_subtotal));
-        binding.cartInclude.cartOrderSummaryTax.setText(String.format("RM %.2f", total_tax_amount));
-        binding.cartInclude.cartOrderSummaryPayableAmount.setText(String.format("RM %.2f", amount_total));
     }
     public void refreshCartCurrentCustomer(){
         int currentCustomerId = customerSharedPreference.getInt("customerID", -1);

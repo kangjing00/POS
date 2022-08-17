@@ -4,18 +4,25 @@ import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.EditText;
 import android.widget.PopupWindow;
 import android.widget.Toast;
 import com.findbulous.pos.Adapters.PaymentOrderLineAdapter;
 import com.findbulous.pos.Adapters.SplitBillOrderAdapter;
 import com.findbulous.pos.Network.CheckConnection;
+import com.findbulous.pos.Network.NetworkUtils;
 import com.findbulous.pos.PaymentTab.PaymentMethodPagerAdapter;
 import com.findbulous.pos.databinding.CashInOutPopupBinding;
 import com.findbulous.pos.databinding.PaymentAddTipPopupBinding;
@@ -24,8 +31,25 @@ import com.findbulous.pos.databinding.PaymentPageBinding;
 import com.findbulous.pos.databinding.SplitOrderPopupBinding;
 import com.findbulous.pos.databinding.ToolbarSyncPopupBinding;
 import com.google.android.material.tabs.TabLayoutMediator;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Calendar;
+
+import javax.net.ssl.HttpsURLConnection;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -84,8 +108,8 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
         currentOrderSharePreference = getSharedPreferences("CurrentOrder",MODE_MULTI_PROCESS);
         currentOrderSharePreferenceEdit = currentOrderSharePreference.edit();
         currentOrder = new Order();
-        int currentOrderId = currentOrderSharePreference.getInt("orderId", -1);
-        Order order = realm.where(Order.class).equalTo("order_id", currentOrderId).findFirst();
+        int currentLocalOrderId = currentOrderSharePreference.getInt("localOrderId", -1);
+        Order order = realm.where(Order.class).equalTo("local_order_id", currentLocalOrderId).findFirst();
         if(order != null) {
             currentOrder = realm.copyFromRealm(order);
         }
@@ -101,6 +125,8 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
         }else{
             binding.paymentBarAddTip.setVisibility(View.GONE);
         }
+        // Below line for testing purpose
+        binding.paymentBarAddTip.setVisibility(View.VISIBLE);
         //Customer Setting
         if(current_customer_id != -1) {
             binding.paymentBarCustomerName.setText(customer_name);
@@ -130,10 +156,12 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
         }
         binding.paymentSubtotal.setText(String.format("%.2f", order_subtotal));
         binding.paymentTax.setText(String.format("%.2f", currentOrder.getAmount_tax()));
-        if(currentOrder.getDiscount_type().equalsIgnoreCase("percentage")){
-            amount_order_discount = (total_price_subtotal_incl * currentOrder.getDiscount()) / 100;
-        }else if(currentOrder.getDiscount_type().equalsIgnoreCase("fixed_amount")){
-            amount_order_discount = currentOrder.getDiscount();
+        if(currentOrder.getDiscount_type() != null) {
+            if (currentOrder.getDiscount_type().equalsIgnoreCase("percentage")) {
+                amount_order_discount = (total_price_subtotal_incl * currentOrder.getDiscount()) / 100;
+            } else if (currentOrder.getDiscount_type().equalsIgnoreCase("fixed_amount")) {
+                amount_order_discount = currentOrder.getDiscount();
+            }
         }
         binding.paymentDiscount.setText(String.format("- %.2f", amount_order_discount));
 
@@ -245,12 +273,12 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
                     currentCustomerSharePreferenceEdit.putString("customerIdentityNo", null);
                     currentCustomerSharePreferenceEdit.putString("customerBirthdate", null);
                     currentCustomerSharePreferenceEdit.commit();
-                    int current_order_id = currentOrderSharePreference.getInt("orderId", -1);
+                    int current_local_order_id = currentOrderSharePreference.getInt("localOrderId", -1);
                     currentOrderSharePreferenceEdit.putInt("orderingState", 0);
-                    currentOrderSharePreferenceEdit.putInt("orderId", -1);
+                    currentOrderSharePreferenceEdit.putInt("localOrderId", -1);
                     currentOrderSharePreferenceEdit.commit();
 
-                    Order current_order = realm.where(Order.class).equalTo("order_id", current_order_id).findFirst();
+                    Order current_order = realm.where(Order.class).equalTo("local_order_id", current_local_order_id).findFirst();
                     Order updated_current_order = realm.copyFromRealm(current_order);
                     double amount_total = binding.getPaymentPageViewModel().getAmount_total();
                     double tip_amount = Double.valueOf(binding.getPaymentPageViewModel().getPayment_tip().getValue());
@@ -273,7 +301,7 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
                         RealmResults<Order> results = realm.where(Order.class)
                                 .equalTo("table.table_id", updated_current_order.getTable().getTable_id())
                                 .and().notEqualTo("state", "paid").and()
-                                .notEqualTo("order_id", updated_current_order.getOrder_id()).findAll();
+                                .notEqualTo("local_order_id", updated_current_order.getLocal_order_id()).findAll();
                         if(results.size() == 0)
                             tableOccupiedToVacant(updated_current_order.getTable());
                     }
@@ -335,8 +363,8 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
         popup.setBackgroundDrawable(null);
 
         //RecyclerView
-        int currentOrderId = currentOrderSharePreference.getInt("orderId", -1);
-        Order order = realm.where(Order.class).equalTo("order_id", currentOrderId).findFirst();
+        int currentLocalOrderId = currentOrderSharePreference.getInt("localOrderId", -1);
+        Order order = realm.where(Order.class).equalTo("local_order_id", currentLocalOrderId).findFirst();
 
         popupBinding.productsRv.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
         popupBinding.productsRv.setHasFixedSize(true);
@@ -558,5 +586,19 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
     @Override
     public void onSplitOrderLineClick(int position) {
 
+    }
+
+    public static ProgressDialog createProgressDialog(Context mContext) {
+        ProgressDialog dialog = new ProgressDialog(mContext);
+        try {
+            dialog.show();
+        } catch (WindowManager.BadTokenException e) {
+
+        }
+        dialog.setCancelable(false);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dialog.setContentView(R.layout.progress_dialog);
+        // dialog.setMessage(Message);
+        return dialog;
     }
 }

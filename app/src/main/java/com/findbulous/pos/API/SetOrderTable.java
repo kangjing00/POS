@@ -1,7 +1,9 @@
 package com.findbulous.pos.API;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
@@ -9,9 +11,12 @@ import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import com.findbulous.pos.HomePage;
 import com.findbulous.pos.Network.NetworkUtils;
 import com.findbulous.pos.Order;
 import com.findbulous.pos.R;
+import com.findbulous.pos.Table;
+import com.findbulous.pos.TablePage;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -32,21 +37,28 @@ import javax.net.ssl.HttpsURLConnection;
 
 import io.realm.Realm;
 
-public class SetOrderCustomer extends AsyncTask<String, String, String> {
+public class SetOrderTable extends AsyncTask<String, String, String> {
     private ProgressDialog pd = null;
     private Context contextpage;
-    private int order_id, local_order_id;
-    private int customer_id;
 
     private Realm realm;
 
+    private int order_id, local_order_id;
+    private Table table;
+    private int table_id;
+    private Intent intent;
+    private Activity activity;
+
     private Order update_order;
 
-    public SetOrderCustomer(Context contextpage, int order_id, int local_order_id, int customer_id){
+    public SetOrderTable(Context contextpage, int order_id, int local_order_id, Table table, Intent intent, Activity activity){
         this.contextpage = contextpage;
         this.order_id = order_id;
         this.local_order_id = local_order_id;
-        this.customer_id = customer_id;
+        this.table = table;
+        this.table_id = -1;
+        this.intent = intent;
+        this.activity = activity;
     }
 
     @Override
@@ -56,6 +68,7 @@ public class SetOrderCustomer extends AsyncTask<String, String, String> {
             pd.show();
         }
         realm = Realm.getDefaultInstance();
+        table_id = -1;
 
         Order result = realm.where(Order.class).equalTo("local_order_id", local_order_id).findFirst();
         if(result != null)
@@ -69,10 +82,15 @@ public class SetOrderCustomer extends AsyncTask<String, String, String> {
         long timeBefore = Calendar.getInstance().getTimeInMillis();
         String connection_error = "";
 
-        String urlParameters = "&order_id=" + order_id + "&customer_id=" + customer_id;
+        String urlParameters = "&order_id=" + order_id;
+        if(table != null){
+            urlParameters += "&table_id=" + table.getTable_id();
+        }else{
+            urlParameters += "&table_id=0";
+        }
 
         //Testing (check error)
-//            urlParameters += "&dev=1";
+//        urlParameters += "&dev=1";
 
         byte[] postData = urlParameters.getBytes(Charset.forName("UTF-8"));
         int postDataLength = postData.length;
@@ -127,13 +145,10 @@ public class SetOrderCustomer extends AsyncTask<String, String, String> {
                     JSONObject jresult = json.getJSONObject("result");
                     JSONObject jo_order = jresult.getJSONObject("order");
 
-                    //order
-                    if(update_order != null) {
-                        if (jo_order.getString("partner_id").length() > 0) {
-                            update_order.setPartner_id(jo_order.getInt("partner_id"));
-                        } else {
-                            update_order.setPartner_id(-1);
-                        }
+                    if(jo_order.getString("table_id").length() > 0) {
+                        table_id = jo_order.getInt("table_id");
+                    }else{
+                        table_id = -1;
                     }
                 }
             }catch (JSONException e) {
@@ -146,16 +161,30 @@ public class SetOrderCustomer extends AsyncTask<String, String, String> {
         }
 
         long timeAfter = Calendar.getInstance().getTimeInMillis();
-        System.out.println("Set draft order's customer time taken: " + (timeAfter - timeBefore) + "ms");
+        System.out.println("Set draft order's discount time taken: " + (timeAfter - timeBefore) + "ms");
         return null;
     }
-
 
     @Override
     protected void onPostExecute(String s) {
         if(!NetworkUtils.isNetworkAvailable(contextpage)){
             Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
         }else{
+            //order
+            if(update_order != null) {
+                if(table_id == -1){
+                    update_order.setTable(null);
+                }else{
+                    if(update_order.getTable() != null) {
+                        if (table_id != update_order.getTable().getTable_id()) {
+                            Table result = realm.where(Table.class).equalTo("table_id", table_id).findFirst();
+                            Table tableRetrieved = realm.copyFromRealm(result);
+                            update_order.setTable(tableRetrieved);
+                        }
+                    }
+                }
+            }
+
             if(update_order != null) {
                 realm.executeTransaction(new Realm.Transaction() {
                     @Override
@@ -168,7 +197,13 @@ public class SetOrderCustomer extends AsyncTask<String, String, String> {
 
         if (pd != null)
             pd.dismiss();
+
+        if((activity != null) && (intent != null)){
+            activity.startActivity(intent);
+            activity.finish();
+        }
     }
+
 
     public static ProgressDialog createProgressDialog(Context mContext) {
         ProgressDialog dialog = new ProgressDialog(mContext);

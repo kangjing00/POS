@@ -24,14 +24,21 @@ import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.findbulous.pos.API.SetOrderTable;
+import com.findbulous.pos.API.UpdateTableState;
 import com.findbulous.pos.Adapters.FloorAdapter;
 import com.findbulous.pos.Adapters.TableOrderAdapter;
 import com.findbulous.pos.Network.CheckConnection;
+import com.findbulous.pos.Network.NetworkUtils;
 import com.findbulous.pos.databinding.CashInOutPopupBinding;
 import com.findbulous.pos.databinding.TableAddonProceedPopupBinding;
 import com.findbulous.pos.databinding.TableOrderSelectionPopupBinding;
 import com.findbulous.pos.databinding.TablePageBinding;
 import com.findbulous.pos.databinding.ToolbarSyncPopupBinding;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -71,7 +78,6 @@ public class TablePage extends CheckConnection implements
 
     private ArrayList<Table> table_list;
     private ArrayList<Floor> floor_list;
-    private ArrayList<Table> update_table_state;
     private FloorAdapter floorAdapter;
     //Realm
     private Realm realm;
@@ -119,7 +125,6 @@ public class TablePage extends CheckConnection implements
         lastClickedTableView = null;
         tableOrders = new ArrayList<>();
         table_list = new ArrayList<Table>();
-        update_table_state = new ArrayList<Table>();
 
         //Floor Recycler view
         binding.floorRv.setLayoutManager(new LinearLayoutManager(contextpage, LinearLayoutManager.HORIZONTAL, false));
@@ -136,8 +141,8 @@ public class TablePage extends CheckConnection implements
         tableOrderAdapter = new TableOrderAdapter(tableOrders, this);
 
         if(currentOrderSharedPreference.getInt("orderingState", -1) == 1){ //ordering
-            int orderId = currentOrderSharedPreference.getInt("orderId", -1);
-            Order result = realm.where(Order.class).equalTo("order_id", orderId).findFirst();
+            int localOrderId = currentOrderSharedPreference.getInt("localOrderId", -1);
+            Order result = realm.where(Order.class).equalTo("local_order_id", localOrderId).findFirst();
             if(result.getTable() != null) {
                 binding.tableInformationTableName.setText(result.getTable().getFloor().getName()
                         + " / " + result.getTable().getName());
@@ -158,8 +163,8 @@ public class TablePage extends CheckConnection implements
                 if (tableSelecting) {
                     if (tableSelected != null) {
                         if (ordering) { // ordering [only vacant table can be selected]
-                            int orderId = currentOrderSharedPreference.getInt("orderId", -1);
-                            Order result = realm.where(Order.class).equalTo("order_id", orderId).findFirst();
+                            int localOrderId = currentOrderSharedPreference.getInt("localOrderId", -1);
+                            Order result = realm.where(Order.class).equalTo("local_order_id", localOrderId).findFirst();
                             Order currentOrder = realm.copyFromRealm(result);
 
                             if (currentOrder.getTable() != null) {
@@ -171,7 +176,7 @@ public class TablePage extends CheckConnection implements
                                             RealmResults<Order> results = realm.where(Order.class)
                                                     .equalTo("table.table_id", currentOrder.getTable().getTable_id())
                                                     .and().notEqualTo("state", "paid").and()
-                                                    .notEqualTo("order_id", currentOrder.getOrder_id()).findAll();
+                                                    .notEqualTo("local_order_id", currentOrder.getLocal_order_id()).findAll();
                                             if(results.size() == 0)
                                                 updateTableVacant(currentOrder.getTable());
                                             currentOrder.setTable(tableSelected);
@@ -183,38 +188,53 @@ public class TablePage extends CheckConnection implements
                                                     realm.insertOrUpdate(currentOrder);
                                                 }
                                             });
+
                                             Intent intent = new Intent(contextpage, HomePage.class);
-                                            startActivity(intent);
-                                            finish();
+
+                                            if(!NetworkUtils.isNetworkAvailable(contextpage)){  //no internet
+                                                Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
+                                                startActivity(intent);
+                                                finish();
+                                            }else {
+                                                new SetOrderTable(contextpage, currentOrder.getOrder_id(), currentOrder.getLocal_order_id(),
+                                                        tableSelected, intent, TablePage.this).execute();
+                                            }
                                         }
                                     }).setNegativeButton("No", null).create();
                                 alert.show();
                             } else {
-                                currentOrder.setTable(tableSelected);
-                                //update table status
-                                updateTableOccupied(tableSelected);
-                                realm.executeTransaction(new Realm.Transaction() {
-                                    @Override
-                                    public void execute(Realm realm) {
-                                        realm.insertOrUpdate(currentOrder);
-                                    }
-                                });
                                 Intent intent = new Intent(contextpage, HomePage.class);
-                                startActivity(intent);
-                                finish();
+
+                                if(currentOrderSharedPreference.getInt("orderTypePosition", -1) == 1) {
+                                    currentOrder.setTable(tableSelected);
+                                    //update table status
+                                    updateTableOccupied(tableSelected);
+                                    realm.executeTransaction(new Realm.Transaction() {
+                                        @Override
+                                        public void execute(Realm realm) {
+                                            realm.insertOrUpdate(currentOrder);
+                                        }
+                                    });
+                                    if (!NetworkUtils.isNetworkAvailable(contextpage)) {  //no internet
+                                        Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
+                                        startActivity(intent);
+                                        finish();
+                                    } else {
+                                        new SetOrderTable(contextpage, currentOrder.getOrder_id(), currentOrder.getLocal_order_id(),
+                                                tableSelected, intent, TablePage.this).execute();
+                                    }
+                                }else{
+                                    startActivity(intent);
+                                    finish();
+                                }
                             }
                         } else {
                             //select & place order
                             //add new order, update current orderingState and orderType
-                            addNewOrder(tableSelected);
+                            addNewDraftOrder(tableSelected);
                             currentOrderSharedPreferenceEdit.putInt("orderingState", 1);    //ordering
                             currentOrderSharedPreferenceEdit.putInt("orderTypePosition", 1); //dine-in
                             currentOrderSharedPreferenceEdit.commit();
-                            //update table status
-                            updateTableOccupied(tableSelected);
-                            Intent intent = new Intent(contextpage, HomePage.class);
-                            startActivity(intent);
-                            finish();
                         }
                     }
                     Toast.makeText(contextpage, "Select & Place Order", Toast.LENGTH_SHORT).show();
@@ -341,122 +361,6 @@ public class TablePage extends CheckConnection implements
         }
     }
 
-    //Update table state to online database
-    public class updateTable extends AsyncTask<String, String, String> {
-        boolean no_connection = false;
-        String connection_error = "";
-        ProgressDialog pd = null;
-
-        @Override
-        protected void onPreExecute() {
-            if(pd == null) {
-                pd = createProgressDialog(contextpage);
-                pd.show();
-            }
-        }
-
-        @Override
-        protected String doInBackground(String... strings) {
-            long timeBefore = Calendar.getInstance().getTimeInMillis();
-
-            String urlParameters = "";
-            for(int i =0; i < update_table_state.size(); i ++){
-                urlParameters += "&states[" + update_table_state.get(i).getTable_id() + "]=" + update_table_state.get(i).getState();
-            }
-            byte[] postData = urlParameters.getBytes(Charset.forName("UTF-8"));
-            int postDataLength = postData.length;
-
-            String agent = "c092dc89b7aac085a210824fb57625db";
-            String url = "https://www.c3rewards.com/api/merchant/?module=pos&action=restaurant_update_table_state";
-            url += "&agent=" + agent;
-
-            URL obj;
-            try{
-                obj = new URL(url);
-                HttpsURLConnection con = (HttpsURLConnection) obj.openConnection();
-                con.setRequestMethod("POST");
-                con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-                con.setRequestProperty("charset", "utf-8");
-                con.setRequestProperty("Content-Length", Integer.toString(postDataLength));
-
-                // Send post request
-                con.setDoOutput(true);
-                DataOutputStream wr = new DataOutputStream(con.getOutputStream());
-                wr.writeBytes(urlParameters);
-                wr.flush();
-                wr.close();
-
-                int responseCode = con.getResponseCode();
-                System.out.println("\nSending 'POST' request to URL : " + url);
-                System.out.println("Post parameters : " + urlParameters);
-                System.out.println("Response Code : " + responseCode);
-
-                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-                String inputLine;
-                StringBuilder response = new StringBuilder();
-
-                while ((inputLine = in.readLine()) != null) {
-                    response.append(inputLine);
-                }
-                in.close();
-
-                System.out.println("RESPONSE UPDATE : " + response.toString());
-                // {"status":"OK","message":"Success","result":[...]}
-                try {
-                    JSONObject json = new JSONObject(response.toString());
-                    String status = json.getString("status");
-
-                    if (status.equals("OK"))
-                    {
-                        update_table_state.clear();
-//                        JSONObject jresult = json.getJSONObject("result");
-//                        JSONArray jfloors = jresult.getJSONArray("floors");
-//
-//                        for (int a = 0; a < jfloors.length(); a++) {
-//                            JSONObject jf = jfloors.getJSONObject(a);
-//                            Floor floor = new Floor(jf.getInt("floor_id"), jf.getString("name"),
-//                                    jf.getInt("sequence"), jf.getString("active"));
-//
-//                            JSONArray jtables = jf.getJSONArray("tables");
-//                            for(int x = 0; x < jtables.length(); x++){
-//                                JSONObject jt = jtables.getJSONObject(x);
-//                                Table table = new Table(jt.getInt("table_id"), jt.getString("name"),
-//                                        jt.getDouble("position_h"), jt.getDouble("position_v"),
-//                                        jt.getDouble("width"), jt.getDouble("height"), jt.getInt("seats"),
-//                                        jt.getString("active"), jt.getString("state"), floor);
-//                                System.out.println("Floor: " + floor.getFloor_id() + "    Table: " + table.getTable_id() + " State: " + table.getState());
-//                            }
-//                        }
-                        long timeAfter = Calendar.getInstance().getTimeInMillis();
-                        System.out.println("Update Time: " + (timeAfter - timeBefore) + "ms");
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            } catch (IOException e) {
-                Log.e("error", "cannot fetch data 1" + e);
-
-                no_connection = true;
-                connection_error = e.getMessage();
-
-            }
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            super.onPostExecute(result);
-
-            if(no_connection){
-                System.out.println("Connection Error Message: " + connection_error);
-            }else{
-                System.out.println("Internet Reconnected!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-            }
-            if (pd != null)
-                pd.dismiss();
-        }
-    }
     private ProgressDialog createProgressDialog(Context mContext) {
         ProgressDialog dialog = new ProgressDialog(mContext);
         try {
@@ -470,8 +374,24 @@ public class TablePage extends CheckConnection implements
         // dialog.setMessage(Message);
         return dialog;
     }
-    //Create new order
-    private void addNewOrder(Table vacantTableSelected){
+    private Customer getCurrentCustomer(){
+        Customer customer = null;
+        int current_customer_id = currentCustomerSharedPreference.getInt("customerID", -1);
+        String customer_name = currentCustomerSharedPreference.getString("customerName", null);
+        String customerPhoneNo = currentCustomerSharedPreference.getString("customerPhoneNo", null);
+        String customerEmail = currentCustomerSharedPreference.getString("customerEmail", null);
+        String customerIdentityNo = currentCustomerSharedPreference.getString("customerIdentityNo", null);
+        String customerBirthdate = currentCustomerSharedPreference.getString("customerBirthdate", null);
+        if(current_customer_id != -1){
+            customer = new Customer(current_customer_id, customer_name, customerEmail, customerPhoneNo, customerIdentityNo, customerBirthdate);
+        }else{
+            customer = realm.where(Customer.class).equalTo("customer_id", 0).findFirst();
+        }
+
+        return customer;
+    }
+    //Create new draft order
+    private void addNewDraftOrder(Table vacantTableSelected){
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         df.setTimeZone(TimeZone.getTimeZone("Asia/Kuala_Lumpur"));
         Date today = new Date();
@@ -492,6 +412,7 @@ public class TablePage extends CheckConnection implements
         order.setState_name("Ongoing");
         order.setTable(vacantTableSelected);
         order.setCustomer_count(1);
+        order.setCustomer(getCurrentCustomer());
 
         realm.executeTransaction(new Realm.Transaction() {
             @Override
@@ -499,9 +420,182 @@ public class TablePage extends CheckConnection implements
                 realm.insertOrUpdate(order);
             }
         });
-        currentOrderSharedPreferenceEdit.putInt("orderId", order.getOrder_id());
+        currentOrderSharedPreferenceEdit.putInt("localOrderId", order.getLocal_order_id());
         currentOrderSharedPreferenceEdit.commit();
+
+        //update table status
+        updateTableOccupied(vacantTableSelected);
+
+        Intent intent = new Intent(contextpage, HomePage.class);
+
+        if(!NetworkUtils.isNetworkAvailable(contextpage)){  //no internet
+            Toast.makeText(contextpage, "No Internet Connection, order created stored in local", Toast.LENGTH_SHORT).show();
+            startActivity(intent);
+            finish();
+        }else{
+            Customer customer = getCurrentCustomer();
+            if(getCurrentCustomer().getCustomer_id() == 0){
+                customer = realm.copyFromRealm(getCurrentCustomer());
+            }
+            new apiAddNewDraftOrderWithTable(order.getLocal_order_id(), customer,
+                    vacantTableSelected, intent).execute();
+        }
     }
+    //Add New Draft Order (While user add any product from homepage menu)
+    public class apiAddNewDraftOrderWithTable extends AsyncTask<String, String, String> {
+        private ProgressDialog pd = null;
+
+        private int localOrderId;
+        private Customer customer;
+        private Table table;
+        private Order createdOrder = null;
+        private Intent intent;
+
+        public apiAddNewDraftOrderWithTable(int localOrderId, Customer customer, Table table, Intent intent){
+            this.customer = customer;
+            this.localOrderId = localOrderId;
+            this.table = table;
+            this.intent = intent;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            if(pd == null) {
+                pd = createProgressDialog(contextpage);
+                pd.show();
+            }
+        }
+
+        @Override
+        protected String doInBackground(String... strings) {
+            long timeBefore = Calendar.getInstance().getTimeInMillis();
+            String connection_error = "";
+
+            int customer_id = customer.getCustomer_id();
+            String urlParameters = "&table_id=" + table.getTable_id() + "&customer_count=1";
+            if(customer_id != 0){
+                urlParameters += "&customer_id=" + customer_id;
+            }
+
+            byte[] postData = urlParameters.getBytes(Charset.forName("UTF-8"));
+            int postDataLength = postData.length;
+
+            String url = "https://www.c3rewards.com/api/merchant/?module=pos&action=save_order";
+            String agent = "c092dc89b7aac085a210824fb57625db";
+            String jsonUrl =url + "&agent=" + agent;
+            System.out.println(jsonUrl);
+
+            URL obj;
+            try{
+                obj = new URL(jsonUrl);
+                HttpsURLConnection con = (HttpsURLConnection) obj.openConnection();
+                con.setRequestMethod("POST");
+                con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                con.setRequestProperty("charset", "utf-8");
+                con.setRequestProperty("Content-Length", Integer.toString(postDataLength));
+
+                // Send post request
+                con.setDoOutput(true);
+                DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+                wr.writeBytes(urlParameters);
+                wr.flush();
+                wr.close();
+
+                int responseCode = con.getResponseCode();
+                System.out.println("\nSending 'POST' request to URL : " + jsonUrl);
+                System.out.println("Post parameters : " + urlParameters);
+                System.out.println("Response Code : " + responseCode);
+
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                JsonElement je = JsonParser.parseString(String.valueOf(response));
+                String prettyJsonString = gson.toJson(je);
+                System.out.println(prettyJsonString);
+                System.out.println("Post parameters : " + urlParameters);
+                System.out.println(response);
+                String data = response.toString();
+                try{
+                    JSONObject json = new JSONObject(data);
+                    String status = json.getString("status");
+
+
+                    if (status.equals("OK")) {
+                        JSONObject jresult = json.getJSONObject("result");
+                        JSONObject jo_order = jresult.getJSONObject("order");
+                        double tip_amount = 0;
+                        boolean is_tipped = false;
+                        int partner_id = 0;
+                        String discount_type = null;
+                        if(jo_order.getString("tip_amount").length() > 0){
+                            tip_amount = jo_order.getDouble("tip_amount");
+                        }
+                        if(jo_order.getString("is_tipped").length() > 0){
+                            is_tipped = jo_order.getBoolean("is_tipped");
+                        }
+                        if(jo_order.getString("partner_id").length() > 0){
+                            partner_id = jo_order.getInt("partner_id");
+                        }
+                        if(jo_order.getString("discount_type").length() > 0){
+                            discount_type = jo_order.getString("discount_type");
+                        }
+                        createdOrder = new Order(localOrderId, jo_order.getInt("order_id"), jo_order.getString("name"),
+                                jo_order.getString("date_order"), jo_order.getString("pos_reference"),
+                                jo_order.getString("state"), jo_order.getString("state_name"),
+                                jo_order.getDouble("amount_tax"), jo_order.getDouble("amount_total"),
+                                jo_order.getDouble("amount_paid"), jo_order.getDouble("amount_return"),
+                                jo_order.getDouble("amount_subtotal"), tip_amount, is_tipped, table, customer,
+                                jo_order.getString("note"), jo_order.getDouble("discount"),
+                                discount_type, jo_order.getInt("customer_count"), jo_order.getInt("session_id"),
+                                jo_order.getInt("user_id"), jo_order.getInt("company_id"),
+                                partner_id);
+                    }
+                }catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }catch (IOException e){
+                Log.e("error", "cannot fetch data");
+                connection_error = e.getMessage() + "";
+                System.out.println(connection_error);
+            }
+
+            long timeAfter = Calendar.getInstance().getTimeInMillis();
+            System.out.println("Add new draft order time taken: " + (timeAfter - timeBefore) + "ms");
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            if(!NetworkUtils.isNetworkAvailable(contextpage)){
+                Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
+            }else{
+                realm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        realm.insertOrUpdate(createdOrder);
+                    }
+                });
+                currentOrderSharedPreferenceEdit.putInt("localOrderId", createdOrder.getLocal_order_id());
+                currentOrderSharedPreferenceEdit.commit();
+
+            }
+            if (pd != null)
+                pd.dismiss();
+
+            if(intent != null) {
+                startActivity(intent);
+                finish();
+            }
+        }
+    }
+
     //Update table occupied
     private void updateTableOccupied(Table table){
         table.setState("O");
@@ -511,6 +605,11 @@ public class TablePage extends CheckConnection implements
                 realm.insertOrUpdate(table);
             }
         });
+        if(!NetworkUtils.isNetworkAvailable(contextpage)){  //no internet
+            Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
+        }else {
+            new UpdateTableState(contextpage, table).execute();
+        }
     }
     //Update table occupied to vacant
     private void updateTableVacant(Table table){
@@ -521,6 +620,11 @@ public class TablePage extends CheckConnection implements
                 realm.insertOrUpdate(table);
             }
         });
+        if(!NetworkUtils.isNetworkAvailable(contextpage)){  //no internet
+            Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
+        }else {
+            new UpdateTableState(contextpage, table).execute();
+        }
     }
     //OnHold and Occupied table popup
     private void showAddonAndProceed(View view, Table clickedTable) {
@@ -544,7 +648,7 @@ public class TablePage extends CheckConnection implements
         Order order = realm.where(Order.class).equalTo("table.table_id", clickedTable.getTable_id()).
                 and().notEqualTo("state", "paid").findFirst();
         Customer customer = (order == null)? null : realm.where(Customer.class).equalTo("customer_id", order.getCustomer().getCustomer_id()).findFirst();
-        int current_order_id = currentOrderSharedPreference.getInt("orderId", -1);
+        int current_local_order_id = currentOrderSharedPreference.getInt("localOrderId", -1);
 
         if(order != null){
 //            popupBinding.tableAddonProceedPopupOrderId.setText("#" + order.getOrder_id());
@@ -576,7 +680,7 @@ public class TablePage extends CheckConnection implements
         popupBinding.tableAddonBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(current_order_id == -1) { //no current order
+                if(current_local_order_id == -1) { //no current order
                     if(order != null) { //the table has an order
                         currentCustomerSharedPreferenceEdit.putInt("customerID", customer.getCustomer_id());
                         currentCustomerSharedPreferenceEdit.putString("customerName", customer.getCustomer_name());
@@ -587,7 +691,7 @@ public class TablePage extends CheckConnection implements
                         currentCustomerSharedPreferenceEdit.commit();
 
                         currentOrderSharedPreferenceEdit.putInt("orderingState", 1);
-                        currentOrderSharedPreferenceEdit.putInt("orderId", order.getOrder_id());
+                        currentOrderSharedPreferenceEdit.putInt("localOrderId", order.getLocal_order_id());
                         currentOrderSharedPreferenceEdit.putInt("orderTypePosition", 1);
                         currentOrderSharedPreferenceEdit.commit();
 
@@ -614,7 +718,7 @@ public class TablePage extends CheckConnection implements
         popupBinding.tableProceedBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(current_order_id == -1) { //no current order
+                if(current_local_order_id == -1) { //no current order
                     if(order != null) { //the table has an order
                         currentCustomerSharedPreferenceEdit.putInt("customerID", customer.getCustomer_id());
                         currentCustomerSharedPreferenceEdit.putString("customerName", customer.getCustomer_name());
@@ -625,7 +729,7 @@ public class TablePage extends CheckConnection implements
                         currentCustomerSharedPreferenceEdit.commit();
 
                         currentOrderSharedPreferenceEdit.putInt("orderingState", 1);
-                        currentOrderSharedPreferenceEdit.putInt("orderId", order.getOrder_id());
+                        currentOrderSharedPreferenceEdit.putInt("localOrderId", order.getLocal_order_id());
                         currentOrderSharedPreferenceEdit.putInt("orderTypePosition", 1);
                         currentOrderSharedPreferenceEdit.commit();
 
@@ -699,8 +803,8 @@ public class TablePage extends CheckConnection implements
             @Override
             public void onClick(View view) {
                 if (ordering) { // ordering
-                    int orderId = currentOrderSharedPreference.getInt("orderId", -1);
-                    Order result = realm.where(Order.class).equalTo("order_id", orderId).findFirst();
+                    int localOrderId = currentOrderSharedPreference.getInt("localOrderId", -1);
+                    Order result = realm.where(Order.class).equalTo("local_order_id", localOrderId).findFirst();
                     Order currentOrder = realm.copyFromRealm(result);
 
                     currentOrder.setTable(clickedTable);
@@ -712,19 +816,18 @@ public class TablePage extends CheckConnection implements
                             realm.insertOrUpdate(currentOrder);
                         }
                     });
+
+                    Intent intent = new Intent(contextpage, HomePage.class);
+                    startActivity(intent);
+                    finish();
                 }else{
                     //select & place order
                     //add new order, update current orderingState and orderType
-                    addNewOrder(clickedTable);
+                    addNewDraftOrder(clickedTable);
                     currentOrderSharedPreferenceEdit.putInt("orderingState", 1);    //ordering
                     currentOrderSharedPreferenceEdit.putInt("orderTypePosition", 1); //dine-in
                     currentOrderSharedPreferenceEdit.commit();
-                    //update table status
-                    updateTableOccupied(clickedTable);
                 }
-                Intent intent = new Intent(contextpage, HomePage.class);
-                startActivity(intent);
-                finish();
                 popup.dismiss();
             }
         });
@@ -747,8 +850,8 @@ public class TablePage extends CheckConnection implements
             @Override
             public void onClick(View view) {
                 if(tableOrderSelected != null) {
-                    int current_order_id = currentOrderSharedPreference.getInt("orderId", -1);
-                    if (current_order_id == -1) { //no current order
+                    int current_local_order_id = currentOrderSharedPreference.getInt("localOrderId", -1);
+                    if (current_local_order_id == -1) { //no current order
                         currentCustomerSharedPreferenceEdit.putInt("customerID", tableOrderSelected.getCustomer().getCustomer_id());
                         currentCustomerSharedPreferenceEdit.putString("customerName", tableOrderSelected.getCustomer().getCustomer_name());
                         currentCustomerSharedPreferenceEdit.putString("customerEmail", tableOrderSelected.getCustomer().getCustomer_email());
@@ -758,7 +861,7 @@ public class TablePage extends CheckConnection implements
                         currentCustomerSharedPreferenceEdit.commit();
 
                         currentOrderSharedPreferenceEdit.putInt("orderingState", 1);
-                        currentOrderSharedPreferenceEdit.putInt("orderId", tableOrderSelected.getOrder_id());
+                        currentOrderSharedPreferenceEdit.putInt("localOrderId", tableOrderSelected.getLocal_order_id());
                         currentOrderSharedPreferenceEdit.putInt("orderTypePosition", 1);
                         currentOrderSharedPreferenceEdit.commit();
 
@@ -779,7 +882,7 @@ public class TablePage extends CheckConnection implements
             @Override
             public void onClick(View view) {
                 if(tableOrderSelected != null) {
-                    int current_order_id = currentOrderSharedPreference.getInt("orderId", -1);
+                    int current_order_id = currentOrderSharedPreference.getInt("localOrderId", -1);
                     if (current_order_id == -1) { //no current order
                         currentCustomerSharedPreferenceEdit.putInt("customerID", tableOrderSelected.getCustomer().getCustomer_id());
                         currentCustomerSharedPreferenceEdit.putString("customerName", tableOrderSelected.getCustomer().getCustomer_name());
@@ -790,12 +893,12 @@ public class TablePage extends CheckConnection implements
                         currentCustomerSharedPreferenceEdit.commit();
 
                         currentOrderSharedPreferenceEdit.putInt("orderingState", 1);
-                        currentOrderSharedPreferenceEdit.putInt("orderId", tableOrderSelected.getOrder_id());
+                        currentOrderSharedPreferenceEdit.putInt("localOrderId", tableOrderSelected.getLocal_order_id());
                         currentOrderSharedPreferenceEdit.putInt("orderTypePosition", 1);
                         currentOrderSharedPreferenceEdit.commit();
 
                         RealmResults<Order_Line> order_lines = realm.where(Order_Line.class)
-                                .equalTo("order.order_id", tableOrderSelected.getOrder_id()).findAll();
+                                .equalTo("order.local_order_id", tableOrderSelected.getLocal_order_id()).findAll();
 
                         if (order_lines.size() == 0) { //empty cart
                             Toast.makeText(TablePage.this, "Please proceed payment with at least 1 product", Toast.LENGTH_SHORT).show();
@@ -821,14 +924,14 @@ public class TablePage extends CheckConnection implements
             public void onClick(View view) {
                 if(tableOrderSelected != null) {
                     Order orderRemove = realm.where(Order.class)
-                            .equalTo("order_id", tableOrderSelected.getOrder_id()).findFirst();
+                            .equalTo("local_order_id", tableOrderSelected.getLocal_order_id()).findFirst();
                     RealmResults<Order_Line> orderLineRemove = realm.where(Order_Line.class)
-                            .equalTo("order.order_id", tableOrderSelected.getOrder_id()).findAll();
+                            .equalTo("order.local_order_id", tableOrderSelected.getLocal_order_id()).findAll();
 
                     RealmResults<Order> ordersInTable = realm.where(Order.class)
                             .equalTo("table.table_id", tableOrderSelected.getTable().getTable_id())
                             .and().notEqualTo("state", "paid")
-                            .and().notEqualTo("order_id", tableOrderSelected.getOrder_id()).findAll();
+                            .and().notEqualTo("local_order_id", tableOrderSelected.getLocal_order_id()).findAll();
 
 
                     tableOrders.remove(tableOrderSelected);
@@ -1058,8 +1161,8 @@ public class TablePage extends CheckConnection implements
                     tableSelecting = true;
                 }
 
-                int currentOrderId = currentOrderSharedPreference.getInt("orderId", -1);
-                Order order = realm.where(Order.class).equalTo("order_id", currentOrderId).findFirst();
+                int currentLocalOrderId = currentOrderSharedPreference.getInt("localOrderId", -1);
+                Order order = realm.where(Order.class).equalTo("local_order_id", currentLocalOrderId).findFirst();
                 Order currentOrder = null;
                 if(order != null) {
                     currentOrder = realm.copyFromRealm(order);
@@ -1178,11 +1281,11 @@ public class TablePage extends CheckConnection implements
             tableTransferTo = clickedTable;
             RealmResults<Order> ordersOfTableTransferFrom = realm.where(Order.class).equalTo("table.table_id", tableTransferFrom.getTable_id())
                     .and().notEqualTo("state", "paid")
-                    .and().notEqualTo("order_id", tableOrderSelected.getOrder_id()).findAll();
+                    .and().notEqualTo("local_order_id", tableOrderSelected.getLocal_order_id()).findAll();
 
             Order orderOfTableTransferFrom = realm.where(Order.class).equalTo("table.table_id", tableTransferFrom.getTable_id())
                     .and().notEqualTo("state", "paid").and()
-                    .equalTo("order_id", tableOrderSelected.getOrder_id()).findFirst();
+                    .equalTo("local_order_id", tableOrderSelected.getLocal_order_id()).findFirst();
             orderForTransfer = realm.copyFromRealm(orderOfTableTransferFrom);
 
             //popup
@@ -1275,11 +1378,10 @@ public class TablePage extends CheckConnection implements
                     realm.insertOrUpdate(longClickOccupiedTable);
                 }
             });
-            update_table_state.add(clickedTable);
 
             //displayTables(floor);
             //API
-            new updateTable().execute();
+            new UpdateTableState(contextpage, clickedTable).execute();
         }else{      //Table has an order
             Toast.makeText(TablePage.this, "This table has an order", Toast.LENGTH_SHORT).show();
         }

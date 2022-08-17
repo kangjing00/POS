@@ -14,7 +14,7 @@ public class Order  extends RealmObject {
     private double amount_tax, amount_total, amount_paid, amount_return, amount_subtotal, tip_amount, discount;
     private boolean is_tipped;
     private int customer_count;
-    private String discount_type;
+    private String discount_type;   //percentage /or/ fixed_amount
     private int session_id, user_id, company_id, partner_id;
 
     private Table table;
