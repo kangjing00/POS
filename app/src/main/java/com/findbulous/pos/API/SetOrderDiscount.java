@@ -138,6 +138,7 @@ public class SetOrderDiscount extends AsyncTask<String, String, String> {
                         update_order.setDiscount_type(jo_order.getString("discount_type"));
                         update_order.setDiscount(jo_order.getDouble("discount"));
                         update_order.setAmount_total(jo_order.getDouble("amount_total"));
+                        update_order.setDisplay_amount_total(jo_order.getString("display_amount_total"));
                     }
                 }
             }catch (JSONException e) {

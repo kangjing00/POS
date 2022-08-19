@@ -17,6 +17,9 @@ public class Order  extends RealmObject {
     private String discount_type;   //percentage /or/ fixed_amount
     private int session_id, user_id, company_id, partner_id;
 
+    private String display_amount_tax, display_amount_total, display_amount_paid, display_amount_return,
+                    display_amount_subtotal, display_tip_amount;
+
     private Table table;
     private Customer customer;
 
@@ -27,7 +30,9 @@ public class Order  extends RealmObject {
     //Dine-in
     public Order(int local_order_id, int order_id, String name, String date_order, String pos_reference, String state, String state_name,
                  double amount_tax, double amount_total, double amount_paid, double amount_return, double amount_subtotal,
-                 double tip_amount, boolean is_tipped, Table table, Customer customer, String note, double discount,
+                 double tip_amount, String display_amount_tax, String display_amount_total, String display_amount_paid,
+                 String display_amount_return, String display_amount_subtotal, String display_tip_amount,
+                 boolean is_tipped, Table table, Customer customer, String note, double discount,
                  String discount_type, int customer_count, int session_id, int user_id, int company_id, int partner_id){
         this.local_order_id = local_order_id;
         this.order_id = order_id;
@@ -42,6 +47,12 @@ public class Order  extends RealmObject {
         this.amount_return = amount_return;
         this.amount_subtotal = amount_subtotal;
         this.tip_amount = tip_amount;
+        this.display_amount_tax = display_amount_tax;
+        this.display_amount_total = display_amount_total;
+        this.display_amount_paid = display_amount_paid;
+        this.display_amount_return = display_amount_return;
+        this.display_amount_subtotal = display_amount_subtotal;
+        this.display_tip_amount = display_tip_amount;
         this.is_tipped = is_tipped;
         this.table = table;
         this.customer = customer;
@@ -68,6 +79,12 @@ public class Order  extends RealmObject {
         amount_paid = 0.0;
         amount_return = 0.0;
         tip_amount = 0.0;
+        display_amount_tax = null;
+        display_amount_total = null;
+        display_amount_paid = null;
+        display_amount_return = null;
+        display_amount_subtotal = null;
+        display_tip_amount = null;
         is_tipped = false;
         table = null;
         customer = null;
@@ -273,5 +290,53 @@ public class Order  extends RealmObject {
 
     public void setAmount_subtotal(double amount_subtotal) {
         this.amount_subtotal = amount_subtotal;
+    }
+
+    public String getDisplay_amount_tax() {
+        return display_amount_tax;
+    }
+
+    public void setDisplay_amount_tax(String display_amount_tax) {
+        this.display_amount_tax = display_amount_tax;
+    }
+
+    public String getDisplay_amount_total() {
+        return display_amount_total;
+    }
+
+    public void setDisplay_amount_total(String display_amount_total) {
+        this.display_amount_total = display_amount_total;
+    }
+
+    public String getDisplay_amount_paid() {
+        return display_amount_paid;
+    }
+
+    public void setDisplay_amount_paid(String display_amount_paid) {
+        this.display_amount_paid = display_amount_paid;
+    }
+
+    public String getDisplay_amount_return() {
+        return display_amount_return;
+    }
+
+    public void setDisplay_amount_return(String display_amount_return) {
+        this.display_amount_return = display_amount_return;
+    }
+
+    public String getDisplay_amount_subtotal() {
+        return display_amount_subtotal;
+    }
+
+    public void setDisplay_amount_subtotal(String display_amount_subtotal) {
+        this.display_amount_subtotal = display_amount_subtotal;
+    }
+
+    public String getDisplay_tip_amount() {
+        return display_tip_amount;
+    }
+
+    public void setDisplay_tip_amount(String display_tip_amount) {
+        this.display_tip_amount = display_tip_amount;
     }
 }

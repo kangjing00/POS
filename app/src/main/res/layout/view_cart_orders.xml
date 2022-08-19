@@ -83,7 +83,7 @@
                 android:id="@+id/product_order_product_subtotal"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text='@{String.format("RM %.2f", orderLine.price_subtotal)}'
+                android:text='@{orderLine.display_price_subtotal}'
                 android:layout_marginTop="10dp"
                 android:layout_marginRight="20dp"
                 app:layout_constraintEnd_toStartOf="@+id/product_order_cancel_product"
@@ -94,7 +94,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginRight="20dp"
-                android:text='@{String.format("RM %.2f", orderLine.price_before_discount)}'
+                android:text='@{orderLine.display_price_before_discount}'
                 android:textSize="8dp"
                 android:background="@drawable/strike_through"
                 android:textColor="@color/darkGrey"

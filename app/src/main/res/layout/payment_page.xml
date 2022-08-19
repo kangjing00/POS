@@ -274,7 +274,7 @@
                 android:layout_marginLeft="30dp"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
-                android:text="Grand Total (RM)"
+                android:text='@{String.format("Grand Total (%s)", paymentPageViewModel.symbol)}'
                 android:textSize="18dp" />
 
             <TextView
@@ -304,7 +304,7 @@
                     android:id="@+id/textView3"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Credit (RM)"
+                    android:text='@{String.format("Credit (%s)", paymentPageViewModel.symbol)}'
                     android:textSize="18dp" />
 
                 <TextView
@@ -321,7 +321,7 @@
                     android:layout_height="wrap_content"
                     android:layout_below="@+id/textView3"
                     android:layout_marginTop="5dp"
-                    android:text="Balance (RM)"
+                    android:text='@{String.format("Balance (%s)", paymentPageViewModel.symbol)}'
                     android:textSize="18dp" />
 
                 <TextView

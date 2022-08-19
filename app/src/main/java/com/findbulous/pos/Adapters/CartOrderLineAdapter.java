@@ -9,6 +9,7 @@ import android.widget.Toast;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.findbulous.pos.Currency;
 import com.findbulous.pos.Order_Line;
 import com.findbulous.pos.POS_Config;
 import com.findbulous.pos.Product;
@@ -26,6 +27,7 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
     private OnItemClickListener listener;
     private Context context;
     private POS_Config pos_config;
+    private Currency currency;
 //    private ArrayList<Attribute> attributes;
 //    private ArrayList<Attribute_Value> attribute_values;
     private Realm realm;
@@ -58,15 +60,21 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
         this.context = c;
         this.cancelledIndex = -1;
         this.pos_config = null;
+        this.currency = null;
 //        this.attributes = new ArrayList<>();
 //        this.attribute_values = new ArrayList<>();
         realm = Realm.getDefaultInstance();
         setPOSConfig();
+        setCurrency();
     }
 
     private void setPOSConfig(){
         POS_Config temp = realm.where(POS_Config.class).findFirst();
         this.pos_config = realm.copyFromRealm(temp);
+    }
+    private void setCurrency(){
+        Currency temp = realm.where(Currency.class).findFirst();
+        this.currency = realm.copyFromRealm(temp);
     }
 
     @Override
@@ -134,9 +142,9 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
                 price_subtotal_incl = calculate_price_subtotal_incl(product_taxes, price_subtotal);
 
                 order_lines.get(p).setPrice_subtotal(price_subtotal);
-                order_lines.get(p).setDisplay_price_subtotal(String.format("$ .2f", price_subtotal));
+                order_lines.get(p).setDisplay_price_subtotal(currencyDisplayFormat(price_subtotal));
                 order_lines.get(p).setPrice_subtotal_incl(price_subtotal_incl);
-                order_lines.get(p).setDisplay_price_subtotal_incl(String.format("$ .2f", price_subtotal_incl));
+                order_lines.get(p).setDisplay_price_subtotal_incl(currencyDisplayFormat(price_subtotal_incl));
                 order_lines.get(p).setDiscount(0.0);
                 order_lines.get(p).setDisplay_discount(null);
                 order_lines.get(p).setDiscount_type("empty");
@@ -165,9 +173,9 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
                 price_subtotal_incl = calculate_price_subtotal_incl(product_taxes, price_subtotal);
 
                 order_lines.get(p).setPrice_subtotal(price_subtotal);
-                order_lines.get(p).setDisplay_price_subtotal(String.format("$ .2f", price_subtotal));
+                order_lines.get(p).setDisplay_price_subtotal(currencyDisplayFormat(price_subtotal));
                 order_lines.get(p).setPrice_subtotal_incl(price_subtotal_incl);
-                order_lines.get(p).setDisplay_price_subtotal_incl(String.format("$ .2f", price_subtotal_incl));
+                order_lines.get(p).setDisplay_price_subtotal_incl(currencyDisplayFormat(price_subtotal_incl));
                 order_lines.get(p).setDiscount(0.0);
                 order_lines.get(p).setDisplay_discount(null);
                 order_lines.get(p).setDiscount_type("empty");
@@ -227,12 +235,12 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
 
 
                         order_lines.get(p).setPrice_subtotal(price_subtotal);
-                        order_lines.get(p).setDisplay_price_subtotal(String.format("$ .2f", price_subtotal));
+                        order_lines.get(p).setDisplay_price_subtotal(currencyDisplayFormat(price_subtotal));
                         order_lines.get(p).setPrice_subtotal_incl(price_subtotal_incl);
-                        order_lines.get(p).setDisplay_price_subtotal_incl(String.format("$ .2f", price_subtotal_incl));
+                        order_lines.get(p).setDisplay_price_subtotal_incl(currencyDisplayFormat(price_subtotal_incl));
                         order_lines.get(p).setQty(qty);
                         order_lines.get(p).setPrice_before_discount(price_before_discount);
-                        order_lines.get(p).setDisplay_price_before_discount(String.format("$ .2f", price_before_discount));
+                        order_lines.get(p).setDisplay_price_before_discount(currencyDisplayFormat(price_before_discount));
 
                         Order_Line updateOrderLine = order_lines.get(p);
                         holder.binding.setOrderLine(updateOrderLine);
@@ -307,7 +315,12 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
 
                         if(discount_type != null) { //fixed_amount
                             amount_discount = discount;
-                            display_discount = discount + "$";
+                            if(currency.getPosition().equalsIgnoreCase("after")){
+                                display_discount = discount + currency.getSymbol();
+                            }else if(currency.getPosition().equalsIgnoreCase("before")){
+                                display_discount = currency.getSymbol() + discount;
+                            }
+
                             if (discount_type.equalsIgnoreCase("percentage")) { //percentage
                                 amount_discount = (price_unit * discount) / 100;
                                 display_discount = discount + "%";
@@ -327,9 +340,9 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
 
 
                         order_lines.get(p).setPrice_subtotal(price_subtotal);
-                        order_lines.get(p).setDisplay_price_subtotal(String.format("$ .2f", price_subtotal));
+                        order_lines.get(p).setDisplay_price_subtotal(currencyDisplayFormat(price_subtotal));
                         order_lines.get(p).setPrice_subtotal_incl(price_subtotal_incl);
-                        order_lines.get(p).setDisplay_price_subtotal_incl(String.format("$ .2f", price_subtotal_incl));
+                        order_lines.get(p).setDisplay_price_subtotal_incl(currencyDisplayFormat(price_subtotal_incl));
                         order_lines.get(p).setDiscount(discount);
                         order_lines.get(p).setDisplay_discount(display_discount);
                         order_lines.get(p).setDiscount_type(discount_type);
@@ -418,6 +431,21 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
         price_subtotal_incl = price_subtotal + total_taxes;
 
         return price_subtotal_incl;
+    }
+
+    private String currencyDisplayFormat(double value){
+        String valueFormatted = null;
+        int decimal_place = currency.getDecimal_places();
+        String currencyPosition = currency.getPosition();
+        String symbol = currency.getSymbol();
+
+        if(currencyPosition.equalsIgnoreCase("after")){
+            valueFormatted = String.format("%." + decimal_place + "f", value) + symbol;
+        }else if(currencyPosition.equalsIgnoreCase("before")){
+            valueFormatted = symbol + String.format("%." + decimal_place + "f", value);
+        }
+
+        return valueFormatted;
     }
 
     public interface OnItemClickListener{

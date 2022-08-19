@@ -49,7 +49,7 @@
             android:id="@+id/payment_product_product_subtotal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text='@{String.format("RM %.2f", orderLine.price_subtotal)}'
+            android:text='@{orderLine.display_price_subtotal}'
             android:layout_marginRight="10dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -59,7 +59,7 @@
             android:id="@+id/payment_product_product_discount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text='@{orderLine.discount_type.equalsIgnoreCase("percentage")? (String.format("%d%%  Disc  •", (int)orderLine.discount)) : (orderLine.discount_type.equalsIgnoreCase("fixed_amount")? (String.format("RM %.2f  Disc  •", orderLine.discount)) : "null") }'
+            android:text='@{String.format("%s  Disc  •", orderLine.display_discount)}'
             android:textSize="8dp"
             android:textColor="@color/darkGrey"
             android:layout_marginRight="5dp"
@@ -71,7 +71,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginRight="10dp"
-            android:text='@{String.format("RM %.2f", orderLine.price_before_discount)}'
+            android:text='@{orderLine.display_price_before_discount}'
             android:textSize="8dp"
             android:background="@drawable/strike_through"
             android:textColor="@color/darkGrey"

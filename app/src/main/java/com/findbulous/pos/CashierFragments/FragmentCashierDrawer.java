@@ -19,6 +19,8 @@ import androidx.fragment.app.Fragment;
 
 import com.findbulous.pos.Attribute;
 import com.findbulous.pos.Attribute_Value;
+import com.findbulous.pos.ChoosePOSPermissionPage;
+import com.findbulous.pos.Currency;
 import com.findbulous.pos.Network.NetworkUtils;
 import com.findbulous.pos.Order;
 import com.findbulous.pos.POS_Category;
@@ -53,12 +55,14 @@ import java.util.TimeZone;
 import javax.net.ssl.HttpsURLConnection;
 
 import io.realm.Realm;
+import io.realm.RealmResults;
 
 public class FragmentCashierDrawer extends Fragment {
 
     private FragmentCashierDrawerBinding binding;
     private Realm realm;
     private POS_Session posSession;
+    private Currency currency;
     //viewmodel
 
     @Override
@@ -71,6 +75,14 @@ public class FragmentCashierDrawer extends Fragment {
 
         posSession = realm.copyFromRealm(realm.where(POS_Session.class)
                 .equalTo("state", "opened").findFirst());
+        currency = realm.copyFromRealm(realm.where(Currency.class).findFirst());
+
+        //Set Amount + currency
+        binding.openingDrawerAmount.setText(currencyDisplayFormat(0.00));
+        binding.cashPaymentSale.setText(currencyDisplayFormat(0.00));
+        binding.otherPaymentSale.setText(currencyDisplayFormat(0.00));
+        binding.expectedDrawerAmount.setText(currencyDisplayFormat(0.00));
+        binding.differenceAmount.setText(currencyDisplayFormat(0.00));
 
         binding.closeDrawerBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -99,8 +111,24 @@ public class FragmentCashierDrawer extends Fragment {
         }
     }
 
+    private String currencyDisplayFormat(double value){
+        String valueFormatted = null;
+        int decimal_place = currency.getDecimal_places();
+        String currencyPosition = currency.getPosition();
+        String symbol = currency.getSymbol();
+
+        if(currencyPosition.equalsIgnoreCase("after")){
+            valueFormatted = String.format("%." + decimal_place + "f", value) + symbol;
+        }else if(currencyPosition.equalsIgnoreCase("before")){
+            valueFormatted = symbol + String.format("%." + decimal_place + "f", value);
+        }
+
+        return valueFormatted;
+    }
+
     public class apiEndSession extends AsyncTask<String, String, String>{
         private ProgressDialog pd;
+        private boolean sessionClosed = false;
 
         @Override
         protected void onPreExecute() {
@@ -108,6 +136,7 @@ public class FragmentCashierDrawer extends Fragment {
                 pd = createProgressDialog(getContext());
                 pd.show();
             }
+            sessionClosed = false;
         }
 
         @Override
@@ -118,6 +147,10 @@ public class FragmentCashierDrawer extends Fragment {
             String url = "https://www.c3rewards.com/api/merchant/?module=pos&action=end_session";
             String agent = "c092dc89b7aac085a210824fb57625db";
             String jsonUrl =url + "&agent=" + agent;
+
+            //Temporary (bug fixing)
+//            jsonUrl += "&dev=1";
+
             System.out.println(jsonUrl);
 
             URL obj;
@@ -148,6 +181,7 @@ public class FragmentCashierDrawer extends Fragment {
 
                         if (status.equals("OK")) {
                             JSONObject jresult = json.getJSONObject("result");
+                            sessionClosed = true;
                         }
                     }catch (JSONException e) {
                         e.printStackTrace();
@@ -170,6 +204,20 @@ public class FragmentCashierDrawer extends Fragment {
             }else{
 
             }
+            if(sessionClosed){
+                RealmResults<POS_Session> all_pos_sessions = realm.where(POS_Session.class).findAll();
+                realm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        all_pos_sessions.deleteAllFromRealm();
+                    }
+                });
+
+                Intent intent = new Intent(getContext(), ChoosePOSPermissionPage.class);
+                getActivity().startActivity(intent);
+                getActivity().finish();
+            }
+
             if (pd != null)
                 pd.dismiss();
         }

@@ -94,6 +94,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
     private EditText[] allAttributes_custom;
 
     private POS_Config pos_config;
+    private Currency currency;
     //Modifier popup color btn
     private ImageButton lastClickedColorBtn;
 
@@ -136,6 +137,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
 
         lastClickedColorBtn = null;
         pos_config = realm.where(POS_Config.class).findFirst();
+        currency = realm.copyFromRealm(realm.where(Currency.class).findFirst());
         currentOrder = new Order();
         updateTableOnHold = new Table();
         onHoldCustomer = null;
@@ -161,7 +163,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
 
                 if(currentOrder.getDiscount_type().equalsIgnoreCase("fixed_amount")) {
                     binding.cartInclude.cartOrderSummaryDiscount.setText(
-                            "- RM " + String.format("%.2f", currentOrder.getDiscount()));
+                            "- " + currencyDisplayFormat(currentOrder.getDiscount()));
                 }else if(currentOrder.getDiscount_type().equalsIgnoreCase("percentage")){
                     double total_price_subtotal_incl = 0.0;
                     double amount_discount = 0.0;
@@ -176,7 +178,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                     }
                     amount_discount = (total_price_subtotal_incl * currentOrder.getDiscount()) / 100;
                     binding.cartInclude.cartOrderSummaryDiscount.setText(
-                            "- RM " + String.format("%.2f", amount_discount));
+                            "- " + currencyDisplayFormat(amount_discount));
                 }
 
 
@@ -551,7 +553,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                     new SetOrderDiscount(contextpage, currentOrder.getOrder_id(), currentOrder.getLocal_order_id(),
                             null, 0).execute();
                 }
-                binding.cartInclude.cartOrderSummaryDiscount.setText("- RM 0.00");
+                binding.cartInclude.cartOrderSummaryDiscount.setText("- " + currencyDisplayFormat(0.00));
                 binding.cartInclude.cartOrderSummaryDiscountRl.setVisibility(View.GONE);
                 binding.cartInclude.cartOrderDiscountBtn.setTextColor(contextpage.getResources().getColor(R.color.darkOrange));
             }
@@ -1096,7 +1098,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                         amount_order_discount = total_price_subtotal_incl * ((double)order_discount_percent / 100);
                     }
 
-                    binding.cartInclude.cartOrderSummaryDiscount.setText(String.format("- RM %.2f", amount_order_discount));
+                    binding.cartInclude.cartOrderSummaryDiscount.setText("- " + currencyDisplayFormat(amount_order_discount));
 
                     currentOrder.setDiscount_type(discount_type);
                     currentOrder.setDiscount(Double.valueOf(discount));
@@ -1634,11 +1636,11 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
 
         Order_Line updated_order_line = new Order_Line(order_line.getLocal_order_line_id(), order_line.getOrder_line_id(),
                 order_line.getName(), order_line.getQty(), price_unit, price_subtotal, price_subtotal_incl, price_before_discount,
-                String.format("$ .2f", price_unit), String.format("$ .2f", price_subtotal),
-                String.format("$ .2f", price_subtotal_incl), String.format("$ .2f", price_before_discount),
+                currencyDisplayFormat(price_unit), currencyDisplayFormat(price_subtotal),
+                currencyDisplayFormat(price_subtotal_incl), currencyDisplayFormat(price_before_discount),
                 product_name, customer_note, order_line.getDiscount_type(), order_line.getDiscount(),
                 order_line.getDisplay_discount(), order_line.getTotal_cost(), order_line.getDisplay_total_cost(),
-                price_extra, String.format("$ .2f", price_extra), order_line.getOrder(), product, attributeValues);
+                price_extra, currencyDisplayFormat(price_extra), order_line.getOrder(), product, attributeValues);
 
         realm.executeTransaction(new Realm.Transaction() {
             @Override
@@ -1888,14 +1890,13 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
             }
 
             total_tax_amount = totalAllOrderLineTax();
-            // Tax without rounding up
-            total_tax_amount *= 100;  // moves two digits from right to left of dec point
-            total_tax_amount = Math.floor(total_tax_amount);  // removes all reminaing dec digits
-            total_tax_amount /= 100;  // moves two digits from left to right of dec point
 
             currentOrder.setAmount_total(amount_total);
+            currentOrder.setDisplay_amount_total(currencyDisplayFormat(amount_total));
             currentOrder.setAmount_tax(total_tax_amount);
+            currentOrder.setDisplay_amount_tax(currencyDisplayFormat(total_tax_amount));
             currentOrder.setAmount_subtotal(order_subtotal);
+            currentOrder.setDisplay_amount_subtotal(currencyDisplayFormat(order_subtotal));
 
             realm.executeTransaction(new Realm.Transaction() {
                 @Override
@@ -1906,15 +1907,19 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
         }
 
         if((currentOrder.getDiscount_type() != null) && (orderState == 1)){
-            binding.cartInclude.cartOrderSummaryDiscount.setText(String.format("- RM %.2f", amount_order_discount));
+            binding.cartInclude.cartOrderSummaryDiscount.setText(currencyDisplayFormat(amount_order_discount));
         }else{
-            binding.cartInclude.cartOrderSummaryDiscount.setText("- RM 0.00");
+            binding.cartInclude.cartOrderSummaryDiscount.setText("- " + currencyDisplayFormat(0.00));
             binding.cartInclude.cartOrderSummaryDiscountRl.setVisibility(View.GONE);
             binding.cartInclude.cartOrderDiscountBtn.setTextColor(contextpage.getResources().getColor(R.color.darkOrange));
         }
-        binding.cartInclude.cartOrderSummarySubtotal.setText(String.format("RM %.2f", order_subtotal));
-        binding.cartInclude.cartOrderSummaryTax.setText(String.format("RM %.2f", total_tax_amount));
-        binding.cartInclude.cartOrderSummaryPayableAmount.setText(String.format("RM %.2f", amount_total));
+        binding.cartInclude.cartOrderSummarySubtotal.setText(currencyDisplayFormat(order_subtotal));
+        // Tax without rounding up
+        total_tax_amount *= 100;  // moves two digits from right to left of dec point
+        total_tax_amount = Math.floor(total_tax_amount);  // removes all reminaing dec digits
+        total_tax_amount /= 100;  // moves two digits from left to right of dec point
+        binding.cartInclude.cartOrderSummaryTax.setText(currencyDisplayFormat(total_tax_amount));
+        binding.cartInclude.cartOrderSummaryPayableAmount.setText(currencyDisplayFormat(amount_total));
     }
     private void tableOccupiedToVacant(Table table){
         table.setState("V");
@@ -1975,6 +1980,21 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
         }
 
         return total_tax_amount;
+    }
+
+    private String currencyDisplayFormat(double value){
+        String valueFormatted = null;
+        int decimal_place = currency.getDecimal_places();
+        String currencyPosition = currency.getPosition();
+        String symbol = currency.getSymbol();
+
+        if(currencyPosition.equalsIgnoreCase("after")){
+            valueFormatted = String.format("%." + decimal_place + "f", value) + symbol;
+        }else if(currencyPosition.equalsIgnoreCase("before")){
+            valueFormatted = symbol + String.format("%." + decimal_place + "f", value);
+        }
+
+        return valueFormatted;
     }
 
     public void viewCustomerDetail(int customer_id){
@@ -2071,6 +2091,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
         refreshCustomerNumber();
 
         pos_config = realm.where(POS_Config.class).findFirst();
+        currency = realm.copyFromRealm(realm.where(Currency.class).findFirst());
         //is_table_management?
         if(!pos_config.isIs_table_management()){
             binding.navbarLayoutInclude.navBarTables.setVisibility(View.GONE);

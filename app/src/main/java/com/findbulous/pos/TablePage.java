@@ -551,11 +551,13 @@ public class TablePage extends CheckConnection implements
                                 jo_order.getString("state"), jo_order.getString("state_name"),
                                 jo_order.getDouble("amount_tax"), jo_order.getDouble("amount_total"),
                                 jo_order.getDouble("amount_paid"), jo_order.getDouble("amount_return"),
-                                jo_order.getDouble("amount_subtotal"), tip_amount, is_tipped, table, customer,
-                                jo_order.getString("note"), jo_order.getDouble("discount"),
+                                jo_order.getDouble("amount_subtotal"), tip_amount,
+                                jo_order.getString("display_amount_tax"), jo_order.getString("display_amount_total"),
+                                jo_order.getString("display_amount_paid"), jo_order.getString("display_amount_return"),
+                                jo_order.getString("display_amount_subtotal"), jo_order.getString("display_tip_amount"),
+                                is_tipped, table, customer, jo_order.getString("note"), jo_order.getDouble("discount"),
                                 discount_type, jo_order.getInt("customer_count"), jo_order.getInt("session_id"),
-                                jo_order.getInt("user_id"), jo_order.getInt("company_id"),
-                                partner_id);
+                                jo_order.getInt("user_id"), jo_order.getInt("company_id"), partner_id);
                     }
                 }catch (JSONException e) {
                     e.printStackTrace();

@@ -85,7 +85,6 @@ public class FragmentOrderHistory extends Fragment implements OrderHistoryAdapte
 
                 orderHistoryAdapter.notifyDataSetChanged();
             }
-
         });
 
         return view;

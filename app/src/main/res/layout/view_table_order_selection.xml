@@ -44,7 +44,7 @@
             android:padding="5dp"
             android:layout_weight="1"
             android:textAlignment="viewEnd"
-            android:text='@{String.format("RM %.2f", order.amount_total)}'/>
+            android:text='@{order.display_amount_total}'/>
 
 
         <TextView

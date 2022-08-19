@@ -75,6 +75,7 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
     private SharedPreferences.Editor currentOrderSharePreferenceEdit, currentCustomerSharePreferenceEdit;
 
     private POS_Config pos_config;
+    private Currency currency;
 
     String statuslogin;
     Context contextpage;
@@ -125,8 +126,12 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
         }else{
             binding.paymentBarAddTip.setVisibility(View.GONE);
         }
-        // Below line for testing purpose
-        binding.paymentBarAddTip.setVisibility(View.VISIBLE);
+
+//        // Below line for testing purpose
+//        binding.paymentBarAddTip.setVisibility(View.VISIBLE);
+        //Currency setting
+        currency = realm.copyFromRealm(realm.where(Currency.class).findFirst());
+
         //Customer Setting
         if(current_customer_id != -1) {
             binding.paymentBarCustomerName.setText(customer_name);
@@ -166,7 +171,7 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
         binding.paymentDiscount.setText(String.format("- %.2f", amount_order_discount));
 
         binding.paymentGrandTotal.setText(String.format("%.2f", currentOrder.getAmount_total()));
-        binding.paymentBarPayableAmount.setText(String.format("RM %.2f", currentOrder.getAmount_total()));
+        binding.paymentBarPayableAmount.setText(currencyDisplayFormat(currentOrder.getAmount_total()));
         viewModel.setAmount_total(currentOrder.getAmount_total());
 
         binding.paymentOrderDetailOrderId.setText("#" + currentOrder.getOrder_id());
@@ -228,8 +233,9 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
                 binding.getPaymentPageViewModel().setPayment_tip("0.00");
                 double amount_total = binding.getPaymentPageViewModel().getAmount_total();
                 binding.paymentGrandTotal.setText(String.format("%.2f", amount_total));
-                binding.paymentBarPayableAmount.setText(String.format("RM %.2f", amount_total));
+                binding.paymentBarPayableAmount.setText(currencyDisplayFormat(amount_total));
                 currentOrder.setAmount_total(amount_total);
+                currentOrder.setDisplay_amount_total(currencyDisplayFormat(amount_total));
                 binding.paymentTipCancelBtn.setVisibility(View.GONE);
             }
         });
@@ -261,6 +267,7 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
                 binding.paymentOrderDetailCustomerName.setVisibility(View.GONE);
             }
         });
+        //wait for api to make / confirm payment
         binding.paymentOrderDetailConfirmBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -368,6 +375,9 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
 
         popupBinding.productsRv.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
         popupBinding.productsRv.setHasFixedSize(true);
+
+        popupBinding.paymentGrandTotal.setText(currencyDisplayFormat(0.00));
+
         splitting_order_lines = new ArrayList<>();
         splittingOrderLineAdapter = new SplitBillOrderAdapter(splitting_order_lines, this);
         splitting_order_lines.addAll(order.getOrder_lines());
@@ -533,8 +543,9 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
                 binding.getPaymentPageViewModel().setPayment_tip(tip_amount);
                 double amount_total = binding.getPaymentPageViewModel().getAmount_total();
                 binding.paymentGrandTotal.setText(String.format("%.2f", amount_total));
-                binding.paymentBarPayableAmount.setText(String.format("RM %.2f", amount_total));
+                binding.paymentBarPayableAmount.setText(currencyDisplayFormat(amount_total));
                 currentOrder.setAmount_total(amount_total);
+                currentOrder.setDisplay_amount_total(currencyDisplayFormat(amount_total));
                 popup.dismiss();
                 Toast.makeText(contextpage, "Tip Added", Toast.LENGTH_SHORT).show();
             }
@@ -586,6 +597,21 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
     @Override
     public void onSplitOrderLineClick(int position) {
 
+    }
+
+    private String currencyDisplayFormat(double value){
+        String valueFormatted = null;
+        int decimal_place = currency.getDecimal_places();
+        String currencyPosition = currency.getPosition();
+        String symbol = currency.getSymbol();
+
+        if(currencyPosition.equalsIgnoreCase("after")){
+            valueFormatted = String.format("%." + decimal_place + "f", value) + symbol;
+        }else if(currencyPosition.equalsIgnoreCase("before")){
+            valueFormatted = symbol + String.format("%." + decimal_place + "f", value);
+        }
+
+        return valueFormatted;
     }
 
     public static ProgressDialog createProgressDialog(Context mContext) {

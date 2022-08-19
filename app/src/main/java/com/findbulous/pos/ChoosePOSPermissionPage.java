@@ -59,6 +59,7 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
     //POS Session and POS Configuration
     private POS_Config pos_config;
     private POS_Session pos_session;
+    private Currency currency;
     //Products (including product tax) and Categories
     private ArrayList<POS_Category> product_categories;
     private ArrayList<Product> products;
@@ -95,6 +96,7 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         openedSessionExist = false;
         pos_config = null;
         pos_session = null;
+        currency = null;
         product_categories = new ArrayList<>();
         products = new ArrayList<>();
         attributes = new ArrayList<>();
@@ -111,10 +113,14 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
 //        finishApiLoad = false;
         pd = null;
 
-        new getCheckOpenedSession().execute();
-
-        new loadProduct().execute();//<<<<<<<<<<<<<<<<<<<<<<<
-        new loadFloorAndTable().execute();//<<<<<<<<<<<<<<<<<<<
+        if (!NetworkUtils.isNetworkAvailable(contextpage)) {
+            Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
+        }else {
+            new getCheckOpenedSession().execute();
+            new loadProduct().execute();//<<<<<<<<<<<<<<<<<<<<<<<
+            new loadFloorAndTable().execute();//<<<<<<<<<<<<<<<<<<<
+            new loadPaymentMethods().execute();
+        }
 
         Customer guestAccInRealm = realm.where(Customer.class).equalTo("customer_id", 0).findFirst();
         if(guestAccInRealm == null) {
@@ -130,7 +136,6 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         }
 
 
-
         SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
         Date todayDate = new Date();
         binding.todayDate.setText(dateFormatter.format(todayDate));
@@ -138,21 +143,13 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         binding.orderOnlyBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //Temporarily
-//                if(finishApiLoad)
                     goToHomePage();
-//                else
-//                    Toast.makeText(contextpage, "Please click again later, API is loading", Toast.LENGTH_SHORT).show();
             }
         });
         binding.cashierBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //Temporarily
-//                if(finishApiLoad)
                     goToHomePage();
-//                else
-//                    Toast.makeText(contextpage, "Please click again later, API is loading", Toast.LENGTH_SHORT).show();
             }
         });
         binding.kdsBtn.setOnClickListener(new View.OnClickListener() {
@@ -219,8 +216,12 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
             public void onClick(View view) {
                 if(validateOpeningCash(opening_cash_et.getText().toString())){
                     double opening_cash = Double.valueOf(opening_cash_et.getText().toString());
-                    new openNewSession(opening_cash, opening_note_et.getText().toString()).execute();
-                    new loadProduct().execute();
+                    if(!NetworkUtils.isNetworkAvailable(contextpage)){
+                        Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
+                    }else {
+                        new openNewSession(opening_cash, opening_note_et.getText().toString()).execute();
+                    }
+                    popup.dismiss();
                 }else{
                     Toast.makeText(contextpage, "Please provide a valid opening cash amount", Toast.LENGTH_SHORT).show();
                 }
@@ -237,11 +238,12 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
     }
 
     public class openNewSession extends AsyncTask<String, String, String> {
-        boolean no_connection = false;
-        String connection_error = "";
+        private boolean no_connection = false;
+        private String connection_error = "";
 
-        double cash_opening = 0.0;
-        String openingNotes = "";
+        private boolean sessionExist = false;
+        private double cash_opening = 0.0;
+        private String openingNotes = "";
 
         public openNewSession(double cash_opening, String openingNotes){
             this.cash_opening = cash_opening;
@@ -249,8 +251,15 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         }
 
         @Override
-        protected String doInBackground(String... strings) {
+        protected void onPreExecute() {
+            if(pd == null) {
+                pd = createProgressDialog(contextpage);
+                pd.show();
+            }
+        }
 
+        @Override
+        protected String doInBackground(String... strings) {
             String urlParameters = "&opening_notes=" + openingNotes;
             byte[] postData = urlParameters.getBytes(Charset.forName("UTF-8"));
             int postDataLength = postData.length;
@@ -297,7 +306,49 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
 
                     if (status.equals("OK"))
                     {
+                        JSONObject jresult = json.getJSONObject("result");
+                        JSONObject jpos_session = jresult.getJSONObject("pos_session");
+                        JSONObject jpos_config = jresult.getJSONObject("pos_config");
+                        JSONObject jcurrency = jresult.getJSONObject("currency");
 
+                        if(jpos_session.getString("state").equalsIgnoreCase("opened")){
+                            sessionExist = true;
+                        }
+
+                        int start_categ_id = -1;
+                        if((!jpos_config.getString("iface_start_categ_id").isEmpty()) &&
+                                (jpos_config.getString("iface_start_categ_id") != null)){
+                            start_categ_id = jpos_config.getInt("iface_start_categ_id");
+                        }
+
+                        boolean product_configurator = false, iface_tipproduct = false,
+                                iface_orderline_customer_notes = false;
+                        if(jpos_config.getString("product_configurator").length() > 0) {
+                            product_configurator = jpos_config.getBoolean("product_configurator");
+                        }
+                        if(jpos_config.getString("iface_tipproduct").length() > 0){
+                            iface_tipproduct = jpos_config.getBoolean("iface_tipproduct");
+                        }
+                        if(jpos_config.getString("iface_orderline_customer_notes").length() > 0){
+                            iface_orderline_customer_notes = jpos_config.getBoolean("iface_orderline_customer_notes");
+                        }
+
+                        pos_config = new POS_Config(jpos_config.getInt("id"), jpos_config.getString("name"),
+                                jpos_config.getBoolean("is_table_management"), iface_tipproduct,
+                                iface_orderline_customer_notes, start_categ_id,
+                                jpos_config.getBoolean("iface_orderline_notes"), jpos_config.getBoolean("manual_discount"),
+                                product_configurator, jpos_config.getInt("company_id"));
+
+                        pos_session = new POS_Session(jpos_session.getInt("id"), jpos_session.getString("name"),
+                                jpos_session.getString("start_at"), jpos_session.getString("stop_at"),
+                                jpos_session.getString("state"), jpos_session.getString("opening_notes"),
+                                jpos_session.getInt("login_number"), pos_config, jpos_session.getInt("user_id"));
+
+                        currency = new Currency(jcurrency.getInt("id"), jcurrency.getString("name"),
+                                jcurrency.getString("symbol"), jcurrency.getString("full_name"),
+                                jcurrency.getDouble("rounding"), jcurrency.getInt("decimal_places"),
+                                jcurrency.getBoolean("active"), jcurrency.getString("position"),
+                                jcurrency.getString("currency_unit_label"), jcurrency.getString("currency_subunit_label"));
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -315,12 +366,36 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         @Override
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
-
+            openedSessionExist = sessionExist;
             if(no_connection){
                 System.out.println("Connection Error Message: " + connection_error);
             }else{
+                new loadProduct().execute();
+                new loadFloorAndTable().execute();
+                new loadPaymentMethods().execute();
 
+                RealmResults<Currency> currencies = realm.where(Currency.class).findAll();
+
+                realm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        if(pos_config != null)
+                            realm.insertOrUpdate(pos_config);
+                        if(pos_session != null)
+                            realm.insertOrUpdate(pos_session);
+                        if(currency != null) {
+                            currencies.deleteAllFromRealm();
+                            realm.insertOrUpdate(currency);
+                        }
+                    }
+                });
+
+                //Go to homepage
+                goToHomePage();
             }
+
+            if (pd != null)
+                pd.dismiss();
         }
     }
 
@@ -381,6 +456,7 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                         JSONObject jresult = json.getJSONObject("result");
                         JSONObject jpos_session = jresult.getJSONObject("pos_session");
                         JSONObject jpos_config = jresult.getJSONObject("pos_config");
+                        JSONObject jcurrency = jresult.getJSONObject("currency");
                         String session_exist = jresult.getString("opened_session_exist");
 
                         if(session_exist.equalsIgnoreCase("Y")){
@@ -417,6 +493,12 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                                 jpos_session.getString("start_at"), jpos_session.getString("stop_at"),
                                 jpos_session.getString("state"), jpos_session.getString("opening_notes"),
                                 jpos_session.getInt("login_number"), pos_config, jpos_session.getInt("user_id"));
+
+                        currency = new Currency(jcurrency.getInt("id"), jcurrency.getString("name"),
+                                jcurrency.getString("symbol"), jcurrency.getString("full_name"),
+                                jcurrency.getDouble("rounding"), jcurrency.getInt("decimal_places"),
+                                jcurrency.getBoolean("active"), jcurrency.getString("position"),
+                                jcurrency.getString("currency_unit_label"), jcurrency.getString("currency_subunit_label"));
                     }
                 }catch (JSONException e) {
                     e.printStackTrace();
@@ -439,29 +521,31 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         @Override
         protected void onPostExecute(String s) {
             if(!NetworkUtils.isNetworkAvailable(contextpage)){
-                if (pd != null)
-                    pd.dismiss();
                 Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
             }else{
                 if(error){
                   System.out.println("Error Message: " + error_msg);
                 }else {
                     openedSessionExist = sessionExist;
+                    RealmResults<Currency> currencies = realm.where(Currency.class).findAll();
+
                     realm.executeTransaction(new Realm.Transaction() {
                         @Override
                         public void execute(Realm realm) {
-                            realm.insertOrUpdate(pos_config);
-                            realm.insertOrUpdate(pos_session);
+                            if(pos_config != null)
+                                realm.insertOrUpdate(pos_config);
+                            if(pos_session != null)
+                                realm.insertOrUpdate(pos_session);
+                            if(currency != null) {
+                                currencies.deleteAllFromRealm();
+                                realm.insertOrUpdate(currency);
+                            }
                         }
                     });
                 }
-//                long timeBefore = Calendar.getInstance().getTimeInMillis();
-//
-//
-//
-//                long timeAfter = Calendar.getInstance().getTimeInMillis();
-//                System.out.println("Get Opened Session Exist time: " + (timeAfter - timeBefore) + "ms");
             }
+            if (pd != null)
+                pd.dismiss();
         }
     }
 
@@ -629,8 +713,6 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         @Override
         protected void onPostExecute(String s) {
             if(!NetworkUtils.isNetworkAvailable(contextpage)){
-                if (pd != null)
-                    pd.dismiss();
                 Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
             }else{
                 long timeBefore = Calendar.getInstance().getTimeInMillis();
@@ -647,6 +729,8 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                 long timeAfter = Calendar.getInstance().getTimeInMillis();
                 System.out.println("Update product & category to realm time: " + (timeAfter - timeBefore) + "ms");
             }
+            if (pd != null)
+                pd.dismiss();
         }
     }
     //Recursive retrieve category and sub-category and subsub-category and subsubsub...
@@ -779,8 +863,6 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         @Override
         protected void onPostExecute(String s) {
             if(!NetworkUtils.isNetworkAvailable(contextpage)){
-                if (pd != null)
-                    pd.dismiss();
                 Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
             }else{
                 realm.executeTransaction(new Realm.Transaction() {
@@ -794,6 +876,8 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
 
                 new loadOrder().execute();
             }
+            if (pd != null)
+                pd.dismiss();
         }
     }
 //    public class getCustomer extends AsyncTask<String, String, String> {
@@ -883,6 +967,10 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
 
         @Override
         protected void onPreExecute(){
+            if(pd == null) {
+                pd = createProgressDialog(contextpage);
+                pd.show();
+            }
             RealmResults<Order> results = realm.where(Order.class).findAll();
             orderInRealm = new ArrayList<>();
             orderInRealm.addAll(realm.copyFromRealm(results));
@@ -1007,8 +1095,11 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                                 Order order = new Order(local_order_id, order_id, jo.getString("name"), jo.getString("date_order"),
                                         jo.getString("pos_reference"), jo.getString("state"), jo.getString("state_name"),
                                         jo.getDouble("amount_tax"), jo.getDouble("amount_total"), jo.getDouble("amount_paid"),
-                                        jo.getDouble("amount_return"), jo.getDouble("amount_subtotal"), tip_amount, is_tipped,
-                                        table, customer, jo.getString("note"), discount, discount_type, customer_count,
+                                        jo.getDouble("amount_return"), jo.getDouble("amount_subtotal"), tip_amount,
+                                        jo.getString("display_amount_tax"), jo.getString("display_amount_total"),
+                                        jo.getString("display_amount_paid"), jo.getString("display_amount_return"),
+                                        jo.getString("display_amount_subtotal"), jo.getString("display_tip_amount"),
+                                        is_tipped, table, customer, jo.getString("note"), discount, discount_type, customer_count,
                                         pos_session.getId(), pos_session.getUser_id(), pos_config.getCompany_id(), partner_id);
 
                                 if(found == false){ //not found in local db = new order from cloud db
@@ -1109,6 +1200,108 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                 });
                 long timeAfter = Calendar.getInstance().getTimeInMillis();
                 System.out.println("Update orders to realm time: " + (timeAfter - timeBefore) + "ms");
+            }
+            if (pd != null)
+                pd.dismiss();
+        }
+    }
+
+    public class loadPaymentMethods extends AsyncTask<String, String, String>{
+        private ArrayList<Payment_Method> payment_methods;
+
+        @Override
+        protected void onPreExecute(){
+            if(pd == null) {
+                pd = createProgressDialog(contextpage);
+                pd.show();
+            }
+            payment_methods = new ArrayList<>();
+        }
+
+        @Override
+        protected String doInBackground(String... strings) {
+            long timeBefore = Calendar.getInstance().getTimeInMillis();
+
+            String url = "https://www.c3rewards.com/api/merchant/?module=pos&action=payment_methods";
+            String agent = "c092dc89b7aac085a210824fb57625db";
+            String jsonUrl = url + "&agent=" + agent;
+            System.out.println(jsonUrl);
+
+
+            String jsonUrlPage = jsonUrl;
+            URL obj;
+            try {
+                obj = new URL(jsonUrlPage);
+                HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+                // optional default is GET
+                con.setRequestMethod("GET");
+                //add request header
+                int responseCode = con.getResponseCode();
+                System.out.println("\nSending 'GET' request to URL : " + jsonUrlPage);
+                System.out.println("Response Code : " + responseCode);
+
+                BufferedReader in = new BufferedReader(
+                        new InputStreamReader(con.getInputStream()));
+                String inputLine;
+
+                StringBuilder response = new StringBuilder();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                System.out.println(response);
+                String data = response.toString();
+
+                try {
+                        JSONObject json = new JSONObject(data);
+                        String status = json.getString("status");
+
+                        if (status.equals("OK")) {
+                            JSONObject jresult = json.getJSONObject("result");
+                            JSONArray jpaymentMethods = jresult.getJSONArray("payment_methods");
+
+                            //Orders
+                            for (int i = 0; i < jpaymentMethods.length(); i++) {
+                                JSONObject jo = jpaymentMethods.getJSONObject(i);
+
+                                Payment_Method paymentMethod = new Payment_Method(jo.getInt("id"),
+                                    jo.getString("name"), jo.getBoolean("is_cash_count"),
+                                    jo.getBoolean("split_transactions"), jo.getBoolean("active"),
+                                    jo.getInt("payment_method_id"));
+
+                                payment_methods.add(paymentMethod);
+                            }
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+            } catch (IOException e) {
+                Log.e("error", "cannot fetch data");
+            }
+
+            long timeAfter = Calendar.getInstance().getTimeInMillis();
+            System.out.println("Load payment methods time: " + (timeAfter - timeBefore) + "ms");
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String s){
+            if(!NetworkUtils.isNetworkAvailable(contextpage)){
+                Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
+            }else {
+                long timeBefore = Calendar.getInstance().getTimeInMillis();
+                RealmResults<Payment_Method> results = realm.where(Payment_Method.class).findAll();
+                realm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        results.deleteAllFromRealm();
+                        realm.insertOrUpdate(payment_methods);
+                    }
+                });
+                long timeAfter = Calendar.getInstance().getTimeInMillis();
+                System.out.println("Load payment methods to realm time: " + (timeAfter - timeBefore) + "ms");
             }
             if (pd != null)
                 pd.dismiss();

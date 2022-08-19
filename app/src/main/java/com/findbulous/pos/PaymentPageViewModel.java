@@ -3,10 +3,14 @@ package com.findbulous.pos;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import io.realm.Realm;
+
 public class PaymentPageViewModel extends ViewModel {
 
     private MutableLiveData<String> payment_order_detail_credit, cash_amount_et, payment_tip, payment_order_detail_balance;
     private double amount_total;
+    private String symbol;
+    private Realm realm;
 
     public PaymentPageViewModel() {
        payment_order_detail_credit = new MutableLiveData<String>("0.00");
@@ -14,6 +18,9 @@ public class PaymentPageViewModel extends ViewModel {
        payment_tip = new MutableLiveData<String>("0.00");
        amount_total = 0.0;
        payment_order_detail_balance = new MutableLiveData<String>("0.00");
+       realm = Realm.getDefaultInstance();
+       Currency currency = realm.where(Currency.class).findFirst();
+       symbol = currency.getSymbol();
     }
 
     public void setAmount_total(double amount_total){
@@ -114,5 +121,9 @@ public class PaymentPageViewModel extends ViewModel {
 
     public void setPayment_order_detail_balance(String payment_order_detail_balance) {
         this.payment_order_detail_balance.setValue(payment_order_detail_balance);
+    }
+
+    public String getSymbol() {
+        return symbol;
     }
 }

@@ -10,6 +10,7 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.findbulous.pos.Attribute_Value;
+import com.findbulous.pos.Currency;
 import com.findbulous.pos.Customer;
 import com.findbulous.pos.Network.NetworkUtils;
 import com.findbulous.pos.Order;
@@ -59,6 +60,7 @@ public class UpdateOneOrderLineQtyDisc extends AsyncTask<String, String, String>
     private ArrayList<Product_Tax> product_taxes;
 
     private Realm realm;
+    private Currency currency;
 
     public UpdateOneOrderLineQtyDisc(Context contextpage, int local_order_id, int order_id,
                                      int local_order_line_id, int order_line_id, int qty,
@@ -80,6 +82,7 @@ public class UpdateOneOrderLineQtyDisc extends AsyncTask<String, String, String>
             pd.show();
         }
         realm = Realm.getDefaultInstance();
+        setCurrency();
 
         Order order = realm.where(Order.class).equalTo("local_order_id", local_order_id).findFirst();
         if(order.getTable() != null) {
@@ -208,8 +211,11 @@ public class UpdateOneOrderLineQtyDisc extends AsyncTask<String, String, String>
                             jo_order.getString("state"), jo_order.getString("state_name"),
                             jo_order.getDouble("amount_tax"), jo_order.getDouble("amount_total"),
                             jo_order.getDouble("amount_paid"), jo_order.getDouble("amount_return"),
-                            jo_order.getDouble("amount_subtotal"), tip_amount, is_tipped,
-                            table, customer, jo_order.getString("note"),
+                            jo_order.getDouble("amount_subtotal"), tip_amount,
+                            jo_order.getString("display_amount_tax"), jo_order.getString("display_amount_total"),
+                            jo_order.getString("display_amount_paid"), jo_order.getString("display_amount_return"),
+                            jo_order.getString("display_amount_subtotal"), jo_order.getString("display_tip_amount"),
+                            is_tipped, table, customer, jo_order.getString("note"),
                             jo_order.getDouble("discount"), discount_type,
                             jo_order.getInt("customer_count"), jo_order.getInt("session_id"),
                             jo_order.getInt("user_id"), jo_order.getInt("company_id"),
@@ -252,7 +258,7 @@ public class UpdateOneOrderLineQtyDisc extends AsyncTask<String, String, String>
                                 qty, price_unit, jo_order_line.getDouble("price_subtotal"),
                                 jo_order_line.getDouble("price_subtotal_incl"), price_before_discount,
                                 jo_order_line.getString("display_price_unit"), jo_order_line.getString("display_price_subtotal"),
-                                jo_order_line.getString("display_price_subtotal_incl"), String.format("$ .2f", price_before_discount),
+                                jo_order_line.getString("display_price_subtotal_incl"), currencyDisplayFormat(price_before_discount),
                                 jo_order_line.getString("full_product_name"), jo_order_line.getString("customer_note"),
                                 order_line_discount_type, order_line_discount, order_line_display_discount, total_cost,
                                 jo_order_line.getString("display_total_cost"), price_extra,
@@ -283,8 +289,10 @@ public class UpdateOneOrderLineQtyDisc extends AsyncTask<String, String, String>
             realm.executeTransaction(new Realm.Transaction() {
                 @Override
                 public void execute(Realm realm) {
-                    realm.insertOrUpdate(update_order_line);
-                    realm.insertOrUpdate(update_order);
+                    if(update_order_line != null)
+                        realm.insertOrUpdate(update_order_line);
+                    if(update_order != null)
+                        realm.insertOrUpdate(update_order);
                 }
             });
         }
@@ -301,6 +309,25 @@ public class UpdateOneOrderLineQtyDisc extends AsyncTask<String, String, String>
         double price_unit_excl_tax = ((price_unit  - fixed) / (1 + (percent / 100))) * (1 - (division / 100));
 
         return price_unit_excl_tax;
+    }
+
+    private void setCurrency(){
+        Currency temp = realm.where(Currency.class).findFirst();
+        this.currency = realm.copyFromRealm(temp);
+    }
+    private String currencyDisplayFormat(double value){
+        String valueFormatted = null;
+        int decimal_place = currency.getDecimal_places();
+        String currencyPosition = currency.getPosition();
+        String symbol = currency.getSymbol();
+
+        if(currencyPosition.equalsIgnoreCase("after")){
+            valueFormatted = String.format("%." + decimal_place + "f", value) + symbol;
+        }else if(currencyPosition.equalsIgnoreCase("before")){
+            valueFormatted = symbol + String.format("%." + decimal_place + "f", value);
+        }
+
+        return valueFormatted;
     }
 
     public static ProgressDialog createProgressDialog(Context mContext) {

@@ -58,6 +58,7 @@ public class OrderPage extends CheckConnection {
     private Realm realm;
     //POS config
     private POS_Config pos_config;
+    private Currency currency;
     //Fragments
 //    private FragmentOrderHistory fragmentOrderHistory;
 //    private FragmentOrderOnHold fragmentOrderOnHold;
@@ -399,7 +400,7 @@ public class OrderPage extends CheckConnection {
                                 jo.getInt("order_line_id"), jo.getString("name"), jo.getInt("qty"),
                                 jo.getDouble("price_unit"), jo.getDouble("price_subtotal"), jo.getDouble("price_subtotal_incl"),
                                 price_before_discount, jo.getString("display_price_unit"), jo.getString("display_price_subtotal"),
-                                jo.getString("display_price_subtotal_incl"), String.format("RM %.2f", price_before_discount),
+                                jo.getString("display_price_subtotal_incl"), currencyDisplayFormat(price_before_discount),
                                 jo.getString("full_product_name"), jo.getString("customer_note"), discount_type,
                                 jo.getDouble("discount"), jo.getString("display_discount"),
                                 total_cost, jo.getString("display_total_cost"), jo.getDouble("price_extra"),
@@ -523,10 +524,26 @@ public class OrderPage extends CheckConnection {
         binding.orderDetailCustomerName.setText("[Customer Name]");
     }
 
+    private String currencyDisplayFormat(double value){
+        String valueFormatted = null;
+        int decimal_place = currency.getDecimal_places();
+        String currencyPosition = currency.getPosition();
+        String symbol = currency.getSymbol();
+
+        if(currencyPosition.equalsIgnoreCase("after")){
+            valueFormatted = String.format("%." + decimal_place + "f", value) + symbol;
+        }else if(currencyPosition.equalsIgnoreCase("before")){
+            valueFormatted = symbol + String.format("%." + decimal_place + "f", value);
+        }
+
+        return valueFormatted;
+    }
+
     @Override
     public void onResume() {
         super.onResume();
         pos_config = realm.where(POS_Config.class).findFirst();
+        currency = realm.copyFromRealm(realm.where(Currency.class).findFirst());
         //is_table_management?
         if(!pos_config.isIs_table_management()){
             binding.navbarLayoutInclude.navBarTables.setVisibility(View.GONE);
