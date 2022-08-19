@@ -83,19 +83,19 @@
             android:padding="10dp">
 
             <TextView
-                android:id="@+id/textView1"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Order ID"
-                android:textStyle="bold" />
-
-            <TextView
                 android:id="@+id/textView2"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Date"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/textView1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Order ID"
                 android:textStyle="bold" />
 
             <TextView
@@ -134,7 +134,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/order_on_going_title_ll"
             android:scrollbars="vertical"
-            tools:listitem=""
+            tools:listitem="@layout/view_order_ongoing_list"
             app:layout_constraintBottom_toBottomOf="parent"/>
 
         <RelativeLayout

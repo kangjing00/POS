@@ -76,6 +76,7 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
 
     private POS_Config pos_config;
     private Currency currency;
+    private ArrayList<Payment_Method> payment_method;
 
     String statuslogin;
     Context contextpage;
@@ -131,6 +132,8 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
 //        binding.paymentBarAddTip.setVisibility(View.VISIBLE);
         //Currency setting
         currency = realm.copyFromRealm(realm.where(Currency.class).findFirst());
+        payment_method = new ArrayList<>();
+        payment_method.addAll(realm.copyFromRealm(realm.where(Payment_Method.class).findAll()));
 
         //Customer Setting
         if(current_customer_id != -1) {

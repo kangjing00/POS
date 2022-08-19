@@ -89,7 +89,7 @@
             android:layout_height="wrap_content"
             android:text="Resume"
             android:textAllCaps="false"
-            app:icon="@drawable/ic_proceed_cart"
+            app:icon="@drawable/ic_proceed"
             android:paddingTop="15dp"
             android:paddingBottom="15dp"
             android:layout_marginRight="5dp"

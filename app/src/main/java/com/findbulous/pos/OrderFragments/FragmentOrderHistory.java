@@ -109,7 +109,7 @@ public class FragmentOrderHistory extends Fragment implements OrderHistoryAdapte
     }
 
     @Override
-    public void onOrderHistoryOrderClick(int position) {
+    public void onOrderHistoryOrderSelect(int position) {
         ((OrderPage)getActivity()).setOrderSelected(orders.get(position));
     }
 }

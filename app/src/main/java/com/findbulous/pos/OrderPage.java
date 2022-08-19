@@ -25,6 +25,7 @@ import com.findbulous.pos.Network.CheckConnection;
 import com.findbulous.pos.Network.NetworkUtils;
 import com.findbulous.pos.OrderFragments.FragmentOfflineOrder;
 import com.findbulous.pos.OrderFragments.FragmentOrderHistory;
+import com.findbulous.pos.OrderFragments.FragmentOrderOnGoing;
 import com.findbulous.pos.OrderFragments.FragmentOrderOnHold;
 import com.findbulous.pos.databinding.CashInOutPopupBinding;
 import com.findbulous.pos.databinding.OrderPageBinding;
@@ -109,6 +110,8 @@ public class OrderPage extends CheckConnection {
             public void onClick(View view) {
                 ft = fm.beginTransaction();
                 ft.replace(binding.orderFragmentFl.getId(), new FragmentOrderHistory()).commit();
+                binding.orderDetailBtnLl.setVisibility(View.VISIBLE);
+                binding.orderOnGoingBtnLl.setVisibility(View.GONE);
                 binding.syncOrderBtn.setVisibility(View.GONE);
                 binding.orderRelativeLayout.setVisibility(View.VISIBLE);
                 resetOrderSelected();
@@ -119,6 +122,8 @@ public class OrderPage extends CheckConnection {
             public void onClick(View view) {
                 ft = fm.beginTransaction();
                 ft.replace(binding.orderFragmentFl.getId(), new FragmentOfflineOrder()).commit();
+                binding.orderDetailBtnLl.setVisibility(View.VISIBLE);
+                binding.orderOnGoingBtnLl.setVisibility(View.GONE);
                 binding.syncOrderBtn.setVisibility(View.VISIBLE);
                 binding.orderRelativeLayout.setVisibility(View.VISIBLE);
                 resetOrderSelected();
@@ -133,6 +138,20 @@ public class OrderPage extends CheckConnection {
                 resetOrderSelected();
             }
         });
+        binding.orderOnGoingRb.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                ft = fm.beginTransaction();
+                ft.replace(binding.orderFragmentFl.getId(), new FragmentOrderOnGoing()).commit();
+                binding.orderDetailBtnLl.setVisibility(View.GONE);
+                binding.orderOnGoingBtnLl.setVisibility(View.VISIBLE);
+                resetOrderSelected();
+            }
+        });
+
+
+
+
         }
         //Toolbar buttons
         {

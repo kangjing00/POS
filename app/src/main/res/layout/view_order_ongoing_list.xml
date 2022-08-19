@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android">
-
     <data>
         <variable
-            name="orderHistory"
+            name="orderOnGoing"
             type="com.findbulous.pos.Order" />
     </data>
 
     <LinearLayout
-        android:id="@+id/view_order_history_ll"
+        android:id="@+id/view_order_on_going_title_ll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/box_corner_nopadding"
@@ -19,21 +18,35 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@{orderHistory.date_order}" />
+            android:text="@{orderOnGoing.date_order}" />
 
         <TextView
             android:id="@+id/order_id"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text='@{"#" + orderHistory.order_id}' />
+            android:text='@{"#" + orderOnGoing.order_id}' />
+
+        <TextView
+            android:id="@+id/customer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text='@{orderOnGoing.customer.customer_name}'/>
+
+        <TextView
+            android:id="@+id/table"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text='@{(orderOnGoing.table == null)? "-" : orderOnGoing.table.floor.name + " / " + orderOnGoing.table.name}' />
 
         <TextView
             android:id="@+id/total_sales"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text='@{orderHistory.display_amount_total}'
+            android:text='@{orderOnGoing.display_amount_total}'
             android:textAlignment="viewEnd"/>
     </LinearLayout>
 </layout>

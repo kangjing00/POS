@@ -99,7 +99,7 @@
             android:paddingBottom="12dp"
             android:textAllCaps="false"
             android:textColor="@color/white"
-            app:icon="@drawable/ic_proceed_cart"
+            app:icon="@drawable/ic_proceed"
             app:iconGravity="textStart"
             android:layout_marginTop="20dp"
             android:layout_marginStart="10dp"
