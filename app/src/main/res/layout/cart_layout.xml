@@ -357,24 +357,24 @@
                 android:layout_below="@+id/textView3"
                 android:orientation="horizontal">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/cart_order_summary_hold_btn"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginRight="10dp"
-                    android:layout_marginLeft="5dp"
-                    android:layout_marginTop="10dp"
-                    android:layout_weight="1"
-                    android:backgroundTint="@color/darkOrange"
-                    android:drawablePadding="12dp"
-                    android:drawableTint="@color/white"
-                    android:paddingTop="12dp"
-                    android:paddingBottom="12dp"
-                    android:text="Hold Cart"
-                    android:textAllCaps="false"
-                    android:textColor="@color/white"
-                    app:icon="@drawable/ic_hold_cart"
-                    app:iconGravity="textStart" />
+<!--                <com.google.android.material.button.MaterialButton-->
+<!--                    android:id="@+id/cart_order_summary_hold_btn"-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_marginRight="10dp"-->
+<!--                    android:layout_marginLeft="5dp"-->
+<!--                    android:layout_marginTop="10dp"-->
+<!--                    android:layout_weight="1"-->
+<!--                    android:backgroundTint="@color/darkOrange"-->
+<!--                    android:drawablePadding="12dp"-->
+<!--                    android:drawableTint="@color/white"-->
+<!--                    android:paddingTop="12dp"-->
+<!--                    android:paddingBottom="12dp"-->
+<!--                    android:text="Hold Cart"-->
+<!--                    android:textAllCaps="false"-->
+<!--                    android:textColor="@color/white"-->
+<!--                    app:icon="@drawable/ic_hold_cart"-->
+<!--                    app:iconGravity="textStart" />-->
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/cart_order_summary_proceed_btn"

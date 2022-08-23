@@ -372,20 +372,20 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                 finish();
             }
         });
-        binding.cartInclude.cartOrderSummaryHoldBtn.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View view) {
-                if(currentOrder.getOrder_id() == -1){
-                    Toast.makeText(contextpage, "No order to hold", Toast.LENGTH_SHORT).show();
-                }
-//                else if(customerSharedPreference.getInt("customerID", -1) == -1){
-//                    Toast.makeText(contextpage, "Please add a customer to this order before hold", Toast.LENGTH_SHORT).show();
+//        binding.cartInclude.cartOrderSummaryHoldBtn.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View view) {
+//                if(currentOrder.getOrder_id() == -1){
+//                    Toast.makeText(contextpage, "No order to hold", Toast.LENGTH_SHORT).show();
 //                }
-                else {
-                    showCartOrderAddNotePopup(binding.cartInclude.cartOrderSummaryHoldBtn.getId());
-                }
-            }
-        });
+////                else if(customerSharedPreference.getInt("customerID", -1) == -1){
+////                    Toast.makeText(contextpage, "Please add a customer to this order before hold", Toast.LENGTH_SHORT).show();
+////                }
+//                else {
+//                    showCartOrderAddNotePopup(binding.cartInclude.cartOrderSummaryHoldBtn.getId());
+//                }
+//            }
+//        });
         binding.cartInclude.cartOrderSummaryProceedBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
@@ -904,11 +904,12 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
         }else{
             popupBinding.addNotePopupEt.setText("");
         }
-        if(btnID == binding.cartInclude.cartOrderNoteBtn.getId()){
-            popupBinding.addNotePopupPositiveBtn.setText("Add & Update");
-        }else if(btnID == binding.cartInclude.cartOrderSummaryHoldBtn.getId()){
-            popupBinding.addNotePopupPositiveBtn.setText("Proceed");
-        }
+        popupBinding.addNotePopupPositiveBtn.setText("Add & Update");
+//        if(btnID == binding.cartInclude.cartOrderNoteBtn.getId()){
+//            popupBinding.addNotePopupPositiveBtn.setText("Add & Update");
+//        }else if(btnID == binding.cartInclude.cartOrderSummaryHoldBtn.getId()){
+//            popupBinding.addNotePopupPositiveBtn.setText("Proceed");
+//        }
 
         popupBinding.addNotePopupNegativeBtn.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -922,84 +923,84 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
             public void onClick(View view) {
                 String note = popupBinding.addNotePopupEt.getText().toString();
                 if(!note.isEmpty()){
-                    if(btnID != binding.cartInclude.cartOrderSummaryHoldBtn.getId()) {
+//                    if(btnID != binding.cartInclude.cartOrderSummaryHoldBtn.getId()) {
                         binding.cartInclude.cartOrderNoteBtn.setTextColor(contextpage.getResources().getColor(R.color.green));
-                    }
+//                    }
                 }else{
                     binding.cartInclude.cartOrderNoteBtn.setTextColor(contextpage.getResources().getColor(R.color.darkOrange));
                 }
 
-                if(btnID == binding.cartInclude.cartOrderSummaryHoldBtn.getId()){//Proceed
-                    if((currentOrder.getTable() == null) && (cartSharedPreference.getInt("orderTypePosition", -1) == 1)) {
-                        // the order has no table + it is dine-in
-                        currentOrder.setNote(note);
-                        realm.executeTransaction(new Realm.Transaction() {
-                            @Override
-                            public void execute(Realm realm) {
-                                realm.insertOrUpdate(currentOrder);
-                            }
-                        });
-                        Intent intent = new Intent(contextpage, TablePage.class);
-                        if(!NetworkUtils.isNetworkAvailable(contextpage)){  //no internet
-                            startActivity(intent);
-                            finish();
-                            Toast.makeText(contextpage, "No Internet Connection, product added into order stored in local", Toast.LENGTH_SHORT).show();
-                        }else {
-                            new SetOrderNote(contextpage, currentOrder.getOrder_id(), currentOrder.getLocal_order_id(),
-                                    note, intent, CustomerPage.this).execute();
-                        }
-                        Toast.makeText(contextpage, "Choose a table for this order", Toast.LENGTH_SHORT).show();
-                    }else {
-                        onHoldCustomer = getCurrentCustomer();
-                        currentOrder.setCustomer(onHoldCustomer);
-                        currentOrder.setState("onHold");
-                        currentOrder.setState_name("Onhold");
-                        currentOrder.setNote(note);
-
-                        if (currentOrder.getTable() != null) {
-                            Table result = realm.where(Table.class).equalTo("table_id", currentOrder.getTable().getTable_id()).findFirst();
-                            updateTableOnHold = realm.copyFromRealm(result);
-                            updateTableOnHold.setState("O"); //before edit is H
-                        }
-                        //update
-                        realm.executeTransaction(new Realm.Transaction() {
-                            @Override
-                            public void execute(Realm realm) {
-                                realm.insertOrUpdate(currentOrder);
-                                realm.insertOrUpdate(onHoldCustomer);
-                                if (currentOrder.getTable() != null)
-                                    realm.insertOrUpdate(updateTableOnHold);
-                            }
-                        });
-                        customerSharedPreferenceEdit.putInt("customerID", -1);
-                        customerSharedPreferenceEdit.putString("customerName", null);
-                        customerSharedPreferenceEdit.putString("customerEmail", null);
-                        customerSharedPreferenceEdit.putString("customerPhoneNo", null);
-                        customerSharedPreferenceEdit.putString("customerIdentityNo", null);
-                        customerSharedPreferenceEdit.putString("customerBirthdate", null);
-                        customerSharedPreferenceEdit.commit();
-                        cartSharedPreferenceEdit.putInt("orderingState", 0);
-                        cartSharedPreferenceEdit.putInt("localOrderId", -1);
-                        cartSharedPreferenceEdit.commit();
-
-                        updateOrderTotalAmount();
-                        refreshCartCurrentCustomer();
-                        currentOrder = new Order();
-                        updateTableOnHold = new Table();
-                        order_lines.clear();
-                        orderLineAdapter.notifyDataSetChanged();
-                        refreshNote();
-                        refreshCustomerNumber();
-                        resetPosType();
-                        FragmentCustomer fragmentCustomer = (FragmentCustomer)getSupportFragmentManager().findFragmentByTag("Customers");
-                        if(fragmentCustomer != null){
-                            fragmentCustomer.updateCurrentCustomer();
-                        }else{
-                            System.out.println("currently is not FragmentCustomer");
-                        }
-                        Toast.makeText(contextpage, "Proceed", Toast.LENGTH_SHORT).show();
-                    }
-                }else{//Add Note or Update
+//                if(btnID == binding.cartInclude.cartOrderSummaryHoldBtn.getId()){//Proceed
+//                    if((currentOrder.getTable() == null) && (cartSharedPreference.getInt("orderTypePosition", -1) == 1)) {
+//                        // the order has no table + it is dine-in
+//                        currentOrder.setNote(note);
+//                        realm.executeTransaction(new Realm.Transaction() {
+//                            @Override
+//                            public void execute(Realm realm) {
+//                                realm.insertOrUpdate(currentOrder);
+//                            }
+//                        });
+//                        Intent intent = new Intent(contextpage, TablePage.class);
+//                        if(!NetworkUtils.isNetworkAvailable(contextpage)){  //no internet
+//                            startActivity(intent);
+//                            finish();
+//                            Toast.makeText(contextpage, "No Internet Connection, product added into order stored in local", Toast.LENGTH_SHORT).show();
+//                        }else {
+//                            new SetOrderNote(contextpage, currentOrder.getOrder_id(), currentOrder.getLocal_order_id(),
+//                                    note, intent, CustomerPage.this).execute();
+//                        }
+//                        Toast.makeText(contextpage, "Choose a table for this order", Toast.LENGTH_SHORT).show();
+//                    }else {
+//                        onHoldCustomer = getCurrentCustomer();
+//                        currentOrder.setCustomer(onHoldCustomer);
+//                        currentOrder.setState("onHold");
+//                        currentOrder.setState_name("Onhold");
+//                        currentOrder.setNote(note);
+//
+//                        if (currentOrder.getTable() != null) {
+//                            Table result = realm.where(Table.class).equalTo("table_id", currentOrder.getTable().getTable_id()).findFirst();
+//                            updateTableOnHold = realm.copyFromRealm(result);
+//                            updateTableOnHold.setState("O"); //before edit is H
+//                        }
+//                        //update
+//                        realm.executeTransaction(new Realm.Transaction() {
+//                            @Override
+//                            public void execute(Realm realm) {
+//                                realm.insertOrUpdate(currentOrder);
+//                                realm.insertOrUpdate(onHoldCustomer);
+//                                if (currentOrder.getTable() != null)
+//                                    realm.insertOrUpdate(updateTableOnHold);
+//                            }
+//                        });
+//                        customerSharedPreferenceEdit.putInt("customerID", -1);
+//                        customerSharedPreferenceEdit.putString("customerName", null);
+//                        customerSharedPreferenceEdit.putString("customerEmail", null);
+//                        customerSharedPreferenceEdit.putString("customerPhoneNo", null);
+//                        customerSharedPreferenceEdit.putString("customerIdentityNo", null);
+//                        customerSharedPreferenceEdit.putString("customerBirthdate", null);
+//                        customerSharedPreferenceEdit.commit();
+//                        cartSharedPreferenceEdit.putInt("orderingState", 0);
+//                        cartSharedPreferenceEdit.putInt("localOrderId", -1);
+//                        cartSharedPreferenceEdit.commit();
+//
+//                        updateOrderTotalAmount();
+//                        refreshCartCurrentCustomer();
+//                        currentOrder = new Order();
+//                        updateTableOnHold = new Table();
+//                        order_lines.clear();
+//                        orderLineAdapter.notifyDataSetChanged();
+//                        refreshNote();
+//                        refreshCustomerNumber();
+//                        resetPosType();
+//                        FragmentCustomer fragmentCustomer = (FragmentCustomer)getSupportFragmentManager().findFragmentByTag("Customers");
+//                        if(fragmentCustomer != null){
+//                            fragmentCustomer.updateCurrentCustomer();
+//                        }else{
+//                            System.out.println("currently is not FragmentCustomer");
+//                        }
+//                        Toast.makeText(contextpage, "Proceed", Toast.LENGTH_SHORT).show();
+//                    }
+//                }else{//Add Note or Update
                     currentOrder.setNote(note);
                     //update note
                     realm.executeTransaction(new Realm.Transaction() {
@@ -1015,7 +1016,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                                 note, null, null).execute();
                     }
                     Toast.makeText(contextpage, "Added & Updated", Toast.LENGTH_SHORT).show();
-                }
+//                }
                 popup.dismiss();
             }
         });

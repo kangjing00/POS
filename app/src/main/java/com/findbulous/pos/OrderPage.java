@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
@@ -20,6 +21,7 @@ import android.view.WindowManager;
 import android.widget.PopupWindow;
 import android.widget.Toast;
 
+import com.findbulous.pos.API.DeleteOneDraftOrder;
 import com.findbulous.pos.Adapters.OrderOrderLineAdapter;
 import com.findbulous.pos.Network.CheckConnection;
 import com.findbulous.pos.Network.NetworkUtils;
@@ -30,17 +32,30 @@ import com.findbulous.pos.OrderFragments.FragmentOrderOnHold;
 import com.findbulous.pos.databinding.CashInOutPopupBinding;
 import com.findbulous.pos.databinding.OrderPageBinding;
 import com.findbulous.pos.databinding.ToolbarSyncPopupBinding;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
+
+import javax.net.ssl.HttpsURLConnection;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -57,6 +72,9 @@ public class OrderPage extends CheckConnection {
     private ArrayList<Order_Line> order_lines;
     //Realm
     private Realm realm;
+    private SharedPreferences currentOrderSharedPreference, currentCustomerSharedPreference;
+    // Creating an Editor object to edit(write to the file)
+    private SharedPreferences.Editor currentOrderSharedPreferenceEdit, currentCustomerSharedPreferenceEdit;
     //POS config
     private POS_Config pos_config;
     private Currency currency;
@@ -87,6 +105,14 @@ public class OrderPage extends CheckConnection {
         binding.navbarLayoutInclude.navBarOrders.setChecked(true);
 
         //Body Settings
+        //CurrentOrder Settings
+        currentOrderSharedPreference = getSharedPreferences("CurrentOrder",MODE_MULTI_PROCESS);
+        currentOrderSharedPreferenceEdit = currentOrderSharedPreference.edit();
+        //CurrentCustomer Settings
+        currentCustomerSharedPreference = getSharedPreferences("CurrentCustomer",MODE_MULTI_PROCESS);
+        currentCustomerSharedPreferenceEdit = currentCustomerSharedPreference.edit();
+
+        binding.toolbarLayoutIncl.addNewOrderBtn.setVisibility(View.VISIBLE);
         binding.orderHistoryRb.setChecked(true);
         orderSelected = new Order();
         //Recyclerview
@@ -105,28 +131,17 @@ public class OrderPage extends CheckConnection {
         //OnClickListener
         //Body
         {
+        //Fragment Changing Button
         binding.orderHistoryRb.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ft = fm.beginTransaction();
-                ft.replace(binding.orderFragmentFl.getId(), new FragmentOrderHistory()).commit();
-                binding.orderDetailBtnLl.setVisibility(View.VISIBLE);
-                binding.orderOnGoingBtnLl.setVisibility(View.GONE);
-                binding.syncOrderBtn.setVisibility(View.GONE);
-                binding.orderRelativeLayout.setVisibility(View.VISIBLE);
-                resetOrderSelected();
+                fragmentOrderHistory();
             }
         });
         binding.offlineOrderRb.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ft = fm.beginTransaction();
-                ft.replace(binding.orderFragmentFl.getId(), new FragmentOfflineOrder()).commit();
-                binding.orderDetailBtnLl.setVisibility(View.VISIBLE);
-                binding.orderOnGoingBtnLl.setVisibility(View.GONE);
-                binding.syncOrderBtn.setVisibility(View.VISIBLE);
-                binding.orderRelativeLayout.setVisibility(View.VISIBLE);
-                resetOrderSelected();
+                fragmentOrderOffline();
             }
         });
         binding.orderOnHoldRb.setOnClickListener(new View.OnClickListener() {
@@ -135,26 +150,55 @@ public class OrderPage extends CheckConnection {
                 ft = fm.beginTransaction();
                 ft.replace(binding.orderFragmentFl.getId(), new FragmentOrderOnHold()).commit();
                 binding.orderRelativeLayout.setVisibility(View.GONE);
+                visibleTipCashBalance();
                 resetOrderSelected();
             }
         });
         binding.orderOnGoingRb.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                ft = fm.beginTransaction();
-                ft.replace(binding.orderFragmentFl.getId(), new FragmentOrderOnGoing()).commit();
-                binding.orderDetailBtnLl.setVisibility(View.GONE);
-                binding.orderOnGoingBtnLl.setVisibility(View.VISIBLE);
-                resetOrderSelected();
+                fragmentOrderOnGoing();
             }
         });
 
+        //Action button
+        binding.removeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(orderSelected != null){
+                    if(orderSelected.getLocal_order_id() != -1){
+                        removeOrder(orderSelected);
+                    }
+                }else{
+                    Toast.makeText(contextpage, "Please select an order for removing", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        binding.resumeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(orderSelected != null){
+                    if(orderSelected.getLocal_order_id() != -1) {
+                        resumeOrder(orderSelected);
+                    }
+                }else{
+                    Toast.makeText(contextpage, "Please select an order for resuming", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
 
 
 
         }
         //Toolbar buttons
         {
+        binding.toolbarLayoutIncl.addNewOrderBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                addNewDraftOrder();
+            }
+        });
+
         binding.toolbarLayoutIncl.toolbarRefresh.setOnClickListener(new View.OnClickListener(){
                 @Override
                 public void onClick(View view) {
@@ -260,6 +304,346 @@ public class OrderPage extends CheckConnection {
            }
         );
         }
+    }
+
+    private void fragmentOrderHistory(){
+        ft = fm.beginTransaction();
+        ft.replace(binding.orderFragmentFl.getId(), new FragmentOrderHistory()).commit();
+        binding.orderDetailBtnLl.setVisibility(View.VISIBLE);
+        binding.orderOnGoingBtnLl.setVisibility(View.GONE);
+        binding.syncOrderBtn.setVisibility(View.GONE);
+        binding.orderRelativeLayout.setVisibility(View.VISIBLE);
+        visibleTipCashBalance();
+        resetOrderSelected();
+    }
+    private void fragmentOrderOffline(){
+        ft = fm.beginTransaction();
+        ft.replace(binding.orderFragmentFl.getId(), new FragmentOfflineOrder()).commit();
+        binding.orderDetailBtnLl.setVisibility(View.VISIBLE);
+        binding.orderOnGoingBtnLl.setVisibility(View.GONE);
+        binding.syncOrderBtn.setVisibility(View.VISIBLE);
+        binding.orderRelativeLayout.setVisibility(View.VISIBLE);
+        visibleTipCashBalance();
+        resetOrderSelected();
+    }
+    private void fragmentOrderOnGoing(){
+        ft = fm.beginTransaction();
+        ft.replace(binding.orderFragmentFl.getId(), new FragmentOrderOnGoing()).commit();
+        binding.orderDetailBtnLl.setVisibility(View.GONE);
+        binding.orderOnGoingBtnLl.setVisibility(View.VISIBLE);
+        invisibleTipCashBalance();
+        resetOrderSelected();
+    }
+
+    private void removeOrder(Order orderSelected){
+        int local_order_id = orderSelected.getLocal_order_id();
+        Order orderRemove = realm.where(Order.class).equalTo("local_order_id", local_order_id).findFirst();
+        RealmResults<Order_Line> orderLineRemove = realm.where(Order_Line.class)
+                                        .equalTo("order.local_order_id", local_order_id).findAll();
+
+        if(local_order_id == currentOrderSharedPreference.getInt("localOrderId", -1)){
+            currentOrderSharedPreferenceEdit.putInt("orderingState", 0);
+            currentOrderSharedPreferenceEdit.putInt("localOrderId", -1);
+            currentOrderSharedPreferenceEdit.commit();
+
+            currentCustomerSharedPreferenceEdit.putInt("customerID", -1);
+            currentCustomerSharedPreferenceEdit.putString("customerName", null);
+            currentCustomerSharedPreferenceEdit.putString("customerEmail", null);
+            currentCustomerSharedPreferenceEdit.putString("customerPhoneNo", null);
+            currentCustomerSharedPreferenceEdit.putString("customerIdentityNo", null);
+            currentCustomerSharedPreferenceEdit.putString("customerBirthdate", null);
+            currentCustomerSharedPreferenceEdit.commit();
+        }
+
+        Table tableUpdate = null;
+        if(orderRemove.getTable() != null){
+            tableUpdate = realm.copyFromRealm(orderRemove.getTable());
+
+            RealmResults<Order> results = realm.where(Order.class)
+                    .equalTo("table.table_id", orderRemove.getTable().getTable_id())
+                    .and().notEqualTo("state", "paid").and()
+                    .notEqualTo("local_order_id", orderRemove.getLocal_order_id()).findAll();
+            if(results.size() == 0)
+                tableUpdate.setState("V");
+        }
+
+        Table finalTableUpdate = tableUpdate;
+        realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                if(finalTableUpdate != null){
+                    realm.insertOrUpdate(finalTableUpdate);
+                }
+                orderLineRemove.deleteAllFromRealm();
+                orderRemove.deleteFromRealm();
+            }
+        });
+
+        if(!NetworkUtils.isNetworkAvailable(contextpage)){  //no internet
+            Toast.makeText(contextpage, "No Internet Connection, order created stored in local", Toast.LENGTH_SHORT).show();
+        }else{
+            new DeleteOneDraftOrder(contextpage, orderSelected.getOrder_id()).execute();
+        }
+
+        fragmentOrderOnGoing();
+
+        Toast.makeText(contextpage, "An order has been removed", Toast.LENGTH_SHORT).show();
+    }
+
+    private void resumeOrder(Order orderSelected){
+        //set current order to the order Selected
+        if(orderSelected.getCustomer() != null) {
+            currentCustomerSharedPreferenceEdit.putInt("customerID", orderSelected.getCustomer().getCustomer_id());
+            currentCustomerSharedPreferenceEdit.putString("customerName", orderSelected.getCustomer().getCustomer_name());
+            currentCustomerSharedPreferenceEdit.putString("customerEmail", orderSelected.getCustomer().getCustomer_email());
+            currentCustomerSharedPreferenceEdit.putString("customerPhoneNo", orderSelected.getCustomer().getCustomer_phoneNo());
+            currentCustomerSharedPreferenceEdit.putString("customerIdentityNo", orderSelected.getCustomer().getCustomer_identityNo());
+            currentCustomerSharedPreferenceEdit.putString("customerBirthdate", orderSelected.getCustomer().getCustomer_birthdate());
+            currentCustomerSharedPreferenceEdit.commit();
+        }
+
+        currentOrderSharedPreferenceEdit.putInt("orderingState", 1);
+        currentOrderSharedPreferenceEdit.putInt("localOrderId", orderSelected.getLocal_order_id());
+        if(orderSelected.getTable() != null) {
+            currentOrderSharedPreferenceEdit.putInt("orderTypePosition", 1);
+        }else{
+            currentOrderSharedPreferenceEdit.putInt("orderTypePosition", 0);
+        }
+        currentOrderSharedPreferenceEdit.commit();
+
+
+        //go HomePage
+        Intent intent = new Intent(contextpage, HomePage.class);
+        startActivity(intent);
+        finish();
+
+    }
+
+    private Customer getCurrentCustomer(){
+        Customer customer = null;
+        int current_customer_id = currentCustomerSharedPreference.getInt("customerID", -1);
+        String customer_name = currentCustomerSharedPreference.getString("customerName", null);
+        String customerPhoneNo = currentCustomerSharedPreference.getString("customerPhoneNo", null);
+        String customerEmail = currentCustomerSharedPreference.getString("customerEmail", null);
+        String customerIdentityNo = currentCustomerSharedPreference.getString("customerIdentityNo", null);
+        String customerBirthdate = currentCustomerSharedPreference.getString("customerBirthdate", null);
+        if(current_customer_id != -1){
+            customer = new Customer(current_customer_id, customer_name, customerEmail, customerPhoneNo, customerIdentityNo, customerBirthdate);
+        }else{
+            customer = realm.where(Customer.class).equalTo("customer_id", 0).findFirst();
+        }
+
+        return customer;
+    }
+    //Create new draft order
+    private void addNewDraftOrder(){
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        df.setTimeZone(TimeZone.getTimeZone("Asia/Kuala_Lumpur"));
+        Date today = new Date();
+        Order order = new Order();
+        Number id = realm.where(Order.class).max("local_order_id");
+
+        int nextID = -1;
+        System.out.println(id);
+        if(id == null){
+            nextID = 1;
+        }else{
+            nextID = id.intValue() + 1;
+        }
+
+        order.setLocal_order_id(nextID);
+        order.setDate_order(df.format(today));
+        order.setState("draft");
+        order.setState_name("Ongoing");
+        order.setCustomer_count(1);
+
+        realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.insertOrUpdate(order);
+            }
+        });
+
+        Intent intent = new Intent(contextpage, HomePage.class);
+
+        if(!NetworkUtils.isNetworkAvailable(contextpage)){  //no internet
+            Toast.makeText(contextpage, "No Internet Connection, order created stored in local", Toast.LENGTH_SHORT).show();
+            startActivity(intent);
+            finish();
+        }else{
+            new apiAddNewDraftOrder(order.getLocal_order_id(), intent).execute();
+        }
+
+        currentOrderSharedPreferenceEdit.putInt("orderingState", 1);    //ordering
+        currentOrderSharedPreferenceEdit.putInt("localOrderId", order.getLocal_order_id());
+        currentOrderSharedPreferenceEdit.commit();
+    }
+    //Add New Draft Order
+    public class apiAddNewDraftOrder extends AsyncTask<String, String, String> {
+        private ProgressDialog pd = null;
+
+        private int localOrderId;
+        private Order createdOrder = null;
+        private Intent intent;
+
+        public apiAddNewDraftOrder(int localOrderId, Intent intent){
+            this.localOrderId = localOrderId;
+            this.intent = intent;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            if(pd == null) {
+                pd = createProgressDialog(contextpage);
+                pd.show();
+            }
+        }
+
+        @Override
+        protected String doInBackground(String... strings) {
+            long timeBefore = Calendar.getInstance().getTimeInMillis();
+            String connection_error = "";
+
+            String urlParameters = "&customer_count=1";
+
+            byte[] postData = urlParameters.getBytes(Charset.forName("UTF-8"));
+            int postDataLength = postData.length;
+
+            String url = "https://www.c3rewards.com/api/merchant/?module=pos&action=save_order";
+            String agent = "c092dc89b7aac085a210824fb57625db";
+            String jsonUrl =url + "&agent=" + agent;
+            System.out.println(jsonUrl);
+
+            URL obj;
+            try{
+                obj = new URL(jsonUrl);
+                HttpsURLConnection con = (HttpsURLConnection) obj.openConnection();
+                con.setRequestMethod("POST");
+                con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                con.setRequestProperty("charset", "utf-8");
+                con.setRequestProperty("Content-Length", Integer.toString(postDataLength));
+
+                // Send post request
+                con.setDoOutput(true);
+                DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+                wr.writeBytes(urlParameters);
+                wr.flush();
+                wr.close();
+
+                int responseCode = con.getResponseCode();
+                System.out.println("\nSending 'POST' request to URL : " + jsonUrl);
+                System.out.println("Post parameters : " + urlParameters);
+                System.out.println("Response Code : " + responseCode);
+
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                JsonElement je = JsonParser.parseString(String.valueOf(response));
+                String prettyJsonString = gson.toJson(je);
+                System.out.println(prettyJsonString);
+                System.out.println("Post parameters : " + urlParameters);
+                System.out.println(response);
+                String data = response.toString();
+                try{
+                    JSONObject json = new JSONObject(data);
+                    String status = json.getString("status");
+
+
+                    if (status.equals("OK")) {
+                        JSONObject jresult = json.getJSONObject("result");
+                        JSONObject jo_order = jresult.getJSONObject("order");
+                        double tip_amount = 0;
+                        boolean is_tipped = false;
+                        int partner_id = 0;
+                        String discount_type = null;
+                        if(jo_order.getString("tip_amount").length() > 0){
+                            tip_amount = jo_order.getDouble("tip_amount");
+                        }
+                        if(jo_order.getString("is_tipped").length() > 0){
+                            is_tipped = jo_order.getBoolean("is_tipped");
+                        }
+                        if(jo_order.getString("partner_id").length() > 0){
+                            partner_id = jo_order.getInt("partner_id");
+                        }
+                        if(jo_order.getString("discount_type").length() > 0){
+                            discount_type = jo_order.getString("discount_type");
+                        }
+                        createdOrder = new Order(localOrderId, jo_order.getInt("order_id"), jo_order.getString("name"),
+                                jo_order.getString("date_order"), jo_order.getString("pos_reference"),
+                                jo_order.getString("state"), jo_order.getString("state_name"),
+                                jo_order.getDouble("amount_tax"), jo_order.getDouble("amount_total"),
+                                jo_order.getDouble("amount_paid"), jo_order.getDouble("amount_return"),
+                                jo_order.getDouble("amount_subtotal"), tip_amount,
+                                jo_order.getString("display_amount_tax"), jo_order.getString("display_amount_total"),
+                                jo_order.getString("display_amount_paid"), jo_order.getString("display_amount_return"),
+                                jo_order.getString("display_amount_subtotal"), jo_order.getString("display_tip_amount"),
+                                is_tipped, null, null, jo_order.getString("note"), jo_order.getDouble("discount"),
+                                discount_type, jo_order.getInt("customer_count"), jo_order.getInt("session_id"),
+                                jo_order.getInt("user_id"), jo_order.getInt("company_id"), partner_id);
+                    }
+                }catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }catch (IOException e){
+                Log.e("error", "cannot fetch data");
+                connection_error = e.getMessage() + "";
+                System.out.println(connection_error);
+            }
+
+            long timeAfter = Calendar.getInstance().getTimeInMillis();
+            System.out.println("Add new draft order time taken: " + (timeAfter - timeBefore) + "ms");
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            if(!NetworkUtils.isNetworkAvailable(contextpage)){
+                Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
+            }else{
+                realm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        realm.insertOrUpdate(createdOrder);
+                    }
+                });
+                currentOrderSharedPreferenceEdit.putInt("localOrderId", createdOrder.getLocal_order_id());
+                currentOrderSharedPreferenceEdit.commit();
+
+            }
+            if (pd != null)
+                pd.dismiss();
+
+            if(intent != null) {
+                startActivity(intent);
+                finish();
+            }
+        }
+    }
+
+
+    private void visibleTipCashBalance(){
+        binding.tipTv.setVisibility(View.VISIBLE);
+        binding.orderDetailTip.setVisibility(View.VISIBLE);
+        binding.cashTv.setVisibility(View.VISIBLE);
+        binding.orderDetailCash.setVisibility(View.VISIBLE);
+        binding.balanceTv.setVisibility(View.VISIBLE);
+        binding.orderDetailBalance.setVisibility(View.VISIBLE);
+    }
+
+    private void invisibleTipCashBalance(){
+        binding.tipTv.setVisibility(View.GONE);
+        binding.orderDetailTip.setVisibility(View.GONE);
+        binding.cashTv.setVisibility(View.GONE);
+        binding.orderDetailCash.setVisibility(View.GONE);
+        binding.balanceTv.setVisibility(View.GONE);
+        binding.orderDetailBalance.setVisibility(View.GONE);
     }
 
     private void showCashInOut() {
@@ -415,14 +799,22 @@ public class OrderPage extends CheckConnection {
                             if(jo.getString("total_cost").length() > 0){
                                 total_cost = jo.getDouble("total_cost");
                             }
+                            double discount = 0;
+                            if(jo.getString("discount").length() > 0){
+                                discount = jo.getDouble("discount");
+                            }
+                            double price_extra = 0;
+                            if(jo.getString("price_extra").length() > 0){
+                                price_extra = jo.getDouble("price_extra");
+                            }
                             Order_Line orderLine = new Order_Line((i +1),
                                 jo.getInt("order_line_id"), jo.getString("name"), jo.getInt("qty"),
                                 jo.getDouble("price_unit"), jo.getDouble("price_subtotal"), jo.getDouble("price_subtotal_incl"),
                                 price_before_discount, jo.getString("display_price_unit"), jo.getString("display_price_subtotal"),
                                 jo.getString("display_price_subtotal_incl"), currencyDisplayFormat(price_before_discount),
                                 jo.getString("full_product_name"), jo.getString("customer_note"), discount_type,
-                                jo.getDouble("discount"), jo.getString("display_discount"),
-                                total_cost, jo.getString("display_total_cost"), jo.getDouble("price_extra"),
+                                discount, jo.getString("display_discount"),
+                                total_cost, jo.getString("display_total_cost"), price_extra,
                                 jo.getString("display_price_extra"), order, product, null);
 
                             order_lines.add(orderLine);
@@ -463,6 +855,7 @@ public class OrderPage extends CheckConnection {
         // dialog.setMessage(Message);
         return dialog;
     }
+
     public void setOrderSelected(Order order){
         orderSelected = order;
         RealmResults<Order_Line> results = realm.where(Order_Line.class).equalTo("order.order_id", orderSelected.getOrder_id()).findAll();
@@ -526,7 +919,9 @@ public class OrderPage extends CheckConnection {
             binding.orderDetailCustomerName.setText("[Customer]");
         }
     }
+
     public void resetOrderSelected(){
+        orderSelected = null;
         order_lines.clear();
         orderOrderLineAdapter.notifyDataSetChanged();
         binding.orderDetailTax.setText("0.00");

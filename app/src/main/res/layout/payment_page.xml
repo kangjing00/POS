@@ -233,7 +233,7 @@
                 android:id="@+id/textView9"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_above="@+id/textView5"
+                android:layout_above="@+id/tip_tv"
                 android:layout_marginLeft="30dp"
                 android:layout_marginTop="5dp"
                 android:fontFamily="@font/roboto_regular"
@@ -267,7 +267,7 @@
                 app:tint="@color/darkGrey" />
 
             <TextView
-                android:id="@+id/textView5"
+                android:id="@+id/tip_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_above="@+id/payment_order_detail_creditBalance_rl"

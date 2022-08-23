@@ -77,12 +77,28 @@
                 app:tint="@color/black" />
         </LinearLayout>
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/add_new_order_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginTop="-5dp"
+            android:layout_marginBottom="05dp"
+            android:backgroundTint="@color/green"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:text="Add New Order"
+            android:textAllCaps="false"
+            app:icon="@drawable/ic_add"
+            android:visibility="gone"
+            android:layout_toLeftOf="@id/toolbar_refresh"/>
+
         <ImageButton
             android:id="@+id/toolbar_refresh"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:layout_marginLeft="30dp"
+            android:layout_marginLeft="15dp"
             android:layout_toLeftOf="@+id/toolbar_wifi"
             android:background="@drawable/box_corner_icon_btn"
             android:padding="8dp"
@@ -111,8 +127,6 @@
             android:layout_marginRight="15dp"
             android:layout_marginBottom="-5dp"
             android:backgroundTint="@color/darkOrange"
-            android:drawableLeft="@drawable/ic_select_table"
-            android:drawablePadding="10dp"
             android:paddingTop="8dp"
             android:paddingBottom="8dp"
             android:text="Cash In / Out"

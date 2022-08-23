@@ -441,7 +441,7 @@ public class TablePage extends CheckConnection implements
                     vacantTableSelected, intent).execute();
         }
     }
-    //Add New Draft Order (While user add any product from homepage menu)
+    //Add New Draft Order
     public class apiAddNewDraftOrderWithTable extends AsyncTask<String, String, String> {
         private ProgressDialog pd = null;
 
@@ -801,27 +801,37 @@ public class TablePage extends CheckConnection implements
             popupBinding.line1.setVisibility(View.INVISIBLE);
         }
 
+        if(ordering){
+            int orderTypePosition = currentOrderSharedPreference.getInt("orderTypePosition", -1);
+            int localOrderId = currentOrderSharedPreference.getInt("localOrderId", -1);
+            Order result = realm.where(Order.class).equalTo("local_order_id", localOrderId).findFirst();
+            Order currentOrder = realm.copyFromRealm(result);
+            if((currentOrder.getTable() == null) && (orderTypePosition == 1)){
+                popupBinding.applyTableBtn.setVisibility(View.VISIBLE);
+            }
+        }
+
         popupBinding.addMoreOrderBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (ordering) { // ordering
-                    int localOrderId = currentOrderSharedPreference.getInt("localOrderId", -1);
-                    Order result = realm.where(Order.class).equalTo("local_order_id", localOrderId).findFirst();
-                    Order currentOrder = realm.copyFromRealm(result);
-
-                    currentOrder.setTable(clickedTable);
-                    //update table status
-                    updateTableOccupied(clickedTable);
-                    realm.executeTransaction(new Realm.Transaction() {
-                        @Override
-                        public void execute(Realm realm) {
-                            realm.insertOrUpdate(currentOrder);
-                        }
-                    });
-
-                    Intent intent = new Intent(contextpage, HomePage.class);
-                    startActivity(intent);
-                    finish();
+//                    int localOrderId = currentOrderSharedPreference.getInt("localOrderId", -1);
+//                    Order result = realm.where(Order.class).equalTo("local_order_id", localOrderId).findFirst();
+//                    Order currentOrder = realm.copyFromRealm(result);
+//
+//                    currentOrder.setTable(clickedTable);
+//                    //update table status
+//                    updateTableOccupied(clickedTable);
+//                    realm.executeTransaction(new Realm.Transaction() {
+//                        @Override
+//                        public void execute(Realm realm) {
+//                            realm.insertOrUpdate(currentOrder);
+//                        }
+//                    });
+//
+//                    Intent intent = new Intent(contextpage, HomePage.class);
+//                    startActivity(intent);
+//                    finish();
                 }else{
                     //select & place order
                     //add new order, update current orderingState and orderType
@@ -830,6 +840,36 @@ public class TablePage extends CheckConnection implements
                     currentOrderSharedPreferenceEdit.putInt("orderTypePosition", 1); //dine-in
                     currentOrderSharedPreferenceEdit.commit();
                 }
+                popup.dismiss();
+            }
+        });
+        popupBinding.applyTableBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                int localOrderId = currentOrderSharedPreference.getInt("localOrderId", -1);
+                Order result = realm.where(Order.class).equalTo("local_order_id", localOrderId).findFirst();
+                Order currentOrder = realm.copyFromRealm(result);
+
+                currentOrder.setTable(clickedTable);
+                //update table status
+                updateTableOccupied(clickedTable);
+                realm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        realm.insertOrUpdate(currentOrder);
+                    }
+                });
+
+                Intent intent = new Intent(contextpage, HomePage.class);
+                if(!NetworkUtils.isNetworkAvailable(contextpage)){  //no internet
+                    Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
+                    startActivity(intent);
+                    finish();
+                }else {
+                    new SetOrderTable(contextpage, currentOrder.getOrder_id(), currentOrder.getLocal_order_id(),
+                            clickedTable, intent, TablePage.this).execute();
+                }
+
                 popup.dismiss();
             }
         });

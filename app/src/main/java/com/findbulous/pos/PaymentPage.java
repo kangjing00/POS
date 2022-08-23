@@ -4,6 +4,7 @@ import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -297,12 +298,17 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
                             updated_current_order.setIs_tipped(true);
                         }
                         updated_current_order.setAmount_total(amount_total);
+                        updated_current_order.setDisplay_amount_paid(currencyDisplayFormat(amount_total));
                         updated_current_order.setTip_amount(tip_amount);
+                    }else{
+                        updated_current_order.setIs_tipped(false);
                     }
                     updated_current_order.setState("paid");
                     updated_current_order.setState_name("Paid");
                     updated_current_order.setAmount_paid(amount_total);
+                    updated_current_order.setDisplay_amount_paid(currencyDisplayFormat(amount_total));
                     updated_current_order.setAmount_return(Double.valueOf(viewModel.getPayment_order_detail_balance().getValue()));
+                    updated_current_order.setDisplay_amount_return(currencyDisplayFormat(Double.valueOf(viewModel.getPayment_order_detail_balance().getValue())));
                     if(currentCustomer == null){
                         currentCustomer = realm.where(Customer.class).equalTo("customer_id", 0).findFirst();
                     }
@@ -359,6 +365,145 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
         );
         }
     }
+
+    public class apiCheckoutOrder extends AsyncTask<String, String, String> {
+        private ProgressDialog pd = null;
+        private int order_id, local_order_id;
+        private ArrayList<Payment> payments;
+        private double tip_amount;
+
+        private Order update_order;
+
+        public apiCheckoutOrder(int order_id, int local_order_id, ArrayList<Payment> payments, double tip_amount){
+            this.order_id = order_id;
+            this.local_order_id = local_order_id;
+            this.payments = payments;
+            this.tip_amount = tip_amount;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            if (pd == null) {
+                pd = createProgressDialog(contextpage);
+                pd.show();
+            }
+            realm = Realm.getDefaultInstance();
+
+            Order result = realm.where(Order.class).equalTo("local_order_id", local_order_id).findFirst();
+            if(result != null)
+                update_order = realm.copyFromRealm(result);
+            else
+                update_order = null;
+        }
+
+        @Override
+        protected String doInBackground(String... strings) {
+            long timeBefore = Calendar.getInstance().getTimeInMillis();
+            String connection_error = "";
+
+            String urlParameters = "&order_id=" + order_id;
+            for(int i = 0; i < payments.size(); i++){
+//                urlParameters += "&payments[" + i + "][payment_method_id]=" + payments.get(i).getPayment_method().
+            }
+            if(pos_config.isIface_tipproduct()){
+                urlParameters += "&tip_amount=" + tip_amount;
+            }
+
+            //Testing (check error)
+//        urlParameters += "&dev=1";
+
+            byte[] postData = urlParameters.getBytes(Charset.forName("UTF-8"));
+            int postDataLength = postData.length;
+
+            String url = "https://www.c3rewards.com/api/merchant/?module=pos&action=checkout_order";
+            String agent = "c092dc89b7aac085a210824fb57625db";
+            String jsonUrl =url + "&agent=" + agent;
+            System.out.println(jsonUrl);
+
+            URL obj;
+            try{
+                obj = new URL(jsonUrl);
+                HttpsURLConnection con = (HttpsURLConnection) obj.openConnection();
+                con.setRequestMethod("POST");
+                con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                con.setRequestProperty("charset", "utf-8");
+                con.setRequestProperty("Content-Length", Integer.toString(postDataLength));
+
+                // Send post request
+                con.setDoOutput(true);
+                DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+                wr.writeBytes(urlParameters);
+                wr.flush();
+                wr.close();
+
+                int responseCode = con.getResponseCode();
+                System.out.println("\nSending 'POST' request to URL : " + jsonUrl);
+                System.out.println("Post parameters : " + urlParameters);
+                System.out.println("Response Code : " + responseCode);
+
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                JsonElement je = JsonParser.parseString(String.valueOf(response));
+                String prettyJsonString = gson.toJson(je);
+                System.out.println(prettyJsonString);
+                System.out.println("Post parameters : " + urlParameters);
+                System.out.println(response);
+                String data = response.toString();
+                try{
+                    JSONObject json = new JSONObject(data);
+                    String status = json.getString("status");
+
+                    if (status.equals("OK")) {
+                        JSONObject jresult = json.getJSONObject("result");
+                        JSONObject jo_order = jresult.getJSONObject("order");
+
+                        //order
+                        if(update_order != null) {
+                            update_order.setNote(jo_order.getString("note"));
+                        }
+                    }
+                }catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }catch (IOException e){
+                Log.e("error", "cannot fetch data");
+                connection_error = e.getMessage() + "";
+                System.out.println(connection_error);
+            }
+
+            long timeAfter = Calendar.getInstance().getTimeInMillis();
+            System.out.println("Set order note time taken: " + (timeAfter - timeBefore) + "ms");
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            if(!NetworkUtils.isNetworkAvailable(contextpage)){
+                Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
+            }else{
+                if(update_order != null) {
+                    realm.executeTransaction(new Realm.Transaction() {
+                        @Override
+                        public void execute(Realm realm) {
+                            realm.insertOrUpdate(update_order);
+                        }
+                    });
+                }
+            }
+
+            if (pd != null)
+                pd.dismiss();
+        }
+    }
+
 
     private void showSplitBill(){
         PopupWindow popup = new PopupWindow(contextpage);
