@@ -24,6 +24,7 @@ import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.findbulous.pos.API.DeleteOneDraftOrder;
 import com.findbulous.pos.API.SetOrderTable;
 import com.findbulous.pos.API.UpdateTableState;
 import com.findbulous.pos.Adapters.FloorAdapter;
@@ -814,32 +815,22 @@ public class TablePage extends CheckConnection implements
         popupBinding.addMoreOrderBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (ordering) { // ordering
-//                    int localOrderId = currentOrderSharedPreference.getInt("localOrderId", -1);
-//                    Order result = realm.where(Order.class).equalTo("local_order_id", localOrderId).findFirst();
-//                    Order currentOrder = realm.copyFromRealm(result);
-//
-//                    currentOrder.setTable(clickedTable);
-//                    //update table status
-//                    updateTableOccupied(clickedTable);
-//                    realm.executeTransaction(new Realm.Transaction() {
-//                        @Override
-//                        public void execute(Realm realm) {
-//                            realm.insertOrUpdate(currentOrder);
-//                        }
-//                    });
-//
-//                    Intent intent = new Intent(contextpage, HomePage.class);
-//                    startActivity(intent);
-//                    finish();
-                }else{
-                    //select & place order
-                    //add new order, update current orderingState and orderType
-                    addNewDraftOrder(clickedTable);
-                    currentOrderSharedPreferenceEdit.putInt("orderingState", 1);    //ordering
-                    currentOrderSharedPreferenceEdit.putInt("orderTypePosition", 1); //dine-in
-                    currentOrderSharedPreferenceEdit.commit();
+                if(currentOrderSharedPreference.getInt("orderingState", -1) == 1) {
+                    currentCustomerSharedPreferenceEdit.putInt("customerID", -1);
+                    currentCustomerSharedPreferenceEdit.putString("customerName", null);
+                    currentCustomerSharedPreferenceEdit.putString("customerEmail", null);
+                    currentCustomerSharedPreferenceEdit.putString("customerPhoneNo", null);
+                    currentCustomerSharedPreferenceEdit.putString("customerIdentityNo", null);
+                    currentCustomerSharedPreferenceEdit.putString("customerBirthdate", null);
+                    currentCustomerSharedPreferenceEdit.commit();
                 }
+                //add new draft order, update current orderingState and orderType
+                addNewDraftOrder(clickedTable);
+
+                currentOrderSharedPreferenceEdit.putInt("orderingState", 1);    //ordering
+                currentOrderSharedPreferenceEdit.putInt("orderTypePosition", 1); //dine-in
+                currentOrderSharedPreferenceEdit.commit();
+
                 popup.dismiss();
             }
         });
@@ -893,28 +884,24 @@ public class TablePage extends CheckConnection implements
             public void onClick(View view) {
                 if(tableOrderSelected != null) {
                     int current_local_order_id = currentOrderSharedPreference.getInt("localOrderId", -1);
-                    if (current_local_order_id == -1) { //no current order
-                        currentCustomerSharedPreferenceEdit.putInt("customerID", tableOrderSelected.getCustomer().getCustomer_id());
-                        currentCustomerSharedPreferenceEdit.putString("customerName", tableOrderSelected.getCustomer().getCustomer_name());
-                        currentCustomerSharedPreferenceEdit.putString("customerEmail", tableOrderSelected.getCustomer().getCustomer_email());
-                        currentCustomerSharedPreferenceEdit.putString("customerPhoneNo", tableOrderSelected.getCustomer().getCustomer_phoneNo());
-                        currentCustomerSharedPreferenceEdit.putString("customerIdentityNo", tableOrderSelected.getCustomer().getCustomer_identityNo());
-                        currentCustomerSharedPreferenceEdit.putString("customerBirthdate", tableOrderSelected.getCustomer().getCustomer_birthdate());
-                        currentCustomerSharedPreferenceEdit.commit();
+                    currentCustomerSharedPreferenceEdit.putInt("customerID", tableOrderSelected.getCustomer().getCustomer_id());
+                    currentCustomerSharedPreferenceEdit.putString("customerName", tableOrderSelected.getCustomer().getCustomer_name());
+                    currentCustomerSharedPreferenceEdit.putString("customerEmail", tableOrderSelected.getCustomer().getCustomer_email());
+                    currentCustomerSharedPreferenceEdit.putString("customerPhoneNo", tableOrderSelected.getCustomer().getCustomer_phoneNo());
+                    currentCustomerSharedPreferenceEdit.putString("customerIdentityNo", tableOrderSelected.getCustomer().getCustomer_identityNo());
+                    currentCustomerSharedPreferenceEdit.putString("customerBirthdate", tableOrderSelected.getCustomer().getCustomer_birthdate());
+                    currentCustomerSharedPreferenceEdit.commit();
 
-                        currentOrderSharedPreferenceEdit.putInt("orderingState", 1);
-                        currentOrderSharedPreferenceEdit.putInt("localOrderId", tableOrderSelected.getLocal_order_id());
-                        currentOrderSharedPreferenceEdit.putInt("orderTypePosition", 1);
-                        currentOrderSharedPreferenceEdit.commit();
+                    currentOrderSharedPreferenceEdit.putInt("orderingState", 1);
+                    currentOrderSharedPreferenceEdit.putInt("localOrderId", tableOrderSelected.getLocal_order_id());
+                    currentOrderSharedPreferenceEdit.putInt("orderTypePosition", 1);
+                    currentOrderSharedPreferenceEdit.commit();
 
-                        tableOrderSelected = null;
-                        popup.dismiss();
-                        Intent intent = new Intent(contextpage, HomePage.class);
-                        startActivity(intent);
-                        finish();
-                    } else {
-                        Toast.makeText(contextpage, "Can not resume, an order is in process", Toast.LENGTH_SHORT).show();
-                    }
+                    tableOrderSelected = null;
+                    popup.dismiss();
+                    Intent intent = new Intent(contextpage, HomePage.class);
+                    startActivity(intent);
+                    finish();
                 }else{
                     Toast.makeText(contextpage, "Please select an order for adding products", Toast.LENGTH_SHORT).show();
                 }
@@ -925,36 +912,32 @@ public class TablePage extends CheckConnection implements
             public void onClick(View view) {
                 if(tableOrderSelected != null) {
                     int current_order_id = currentOrderSharedPreference.getInt("localOrderId", -1);
-                    if (current_order_id == -1) { //no current order
-                        currentCustomerSharedPreferenceEdit.putInt("customerID", tableOrderSelected.getCustomer().getCustomer_id());
-                        currentCustomerSharedPreferenceEdit.putString("customerName", tableOrderSelected.getCustomer().getCustomer_name());
-                        currentCustomerSharedPreferenceEdit.putString("customerEmail", tableOrderSelected.getCustomer().getCustomer_email());
-                        currentCustomerSharedPreferenceEdit.putString("customerPhoneNo", tableOrderSelected.getCustomer().getCustomer_phoneNo());
-                        currentCustomerSharedPreferenceEdit.putString("customerIdentityNo", tableOrderSelected.getCustomer().getCustomer_identityNo());
-                        currentCustomerSharedPreferenceEdit.putString("customerBirthdate", tableOrderSelected.getCustomer().getCustomer_birthdate());
-                        currentCustomerSharedPreferenceEdit.commit();
+                    currentCustomerSharedPreferenceEdit.putInt("customerID", tableOrderSelected.getCustomer().getCustomer_id());
+                    currentCustomerSharedPreferenceEdit.putString("customerName", tableOrderSelected.getCustomer().getCustomer_name());
+                    currentCustomerSharedPreferenceEdit.putString("customerEmail", tableOrderSelected.getCustomer().getCustomer_email());
+                    currentCustomerSharedPreferenceEdit.putString("customerPhoneNo", tableOrderSelected.getCustomer().getCustomer_phoneNo());
+                    currentCustomerSharedPreferenceEdit.putString("customerIdentityNo", tableOrderSelected.getCustomer().getCustomer_identityNo());
+                    currentCustomerSharedPreferenceEdit.putString("customerBirthdate", tableOrderSelected.getCustomer().getCustomer_birthdate());
+                    currentCustomerSharedPreferenceEdit.commit();
 
-                        currentOrderSharedPreferenceEdit.putInt("orderingState", 1);
-                        currentOrderSharedPreferenceEdit.putInt("localOrderId", tableOrderSelected.getLocal_order_id());
-                        currentOrderSharedPreferenceEdit.putInt("orderTypePosition", 1);
-                        currentOrderSharedPreferenceEdit.commit();
+                    currentOrderSharedPreferenceEdit.putInt("orderingState", 1);
+                    currentOrderSharedPreferenceEdit.putInt("localOrderId", tableOrderSelected.getLocal_order_id());
+                    currentOrderSharedPreferenceEdit.putInt("orderTypePosition", 1);
+                    currentOrderSharedPreferenceEdit.commit();
 
-                        RealmResults<Order_Line> order_lines = realm.where(Order_Line.class)
-                                .equalTo("order.local_order_id", tableOrderSelected.getLocal_order_id()).findAll();
+                    RealmResults<Order_Line> order_lines = realm.where(Order_Line.class)
+                            .equalTo("order.local_order_id", tableOrderSelected.getLocal_order_id()).findAll();
 
-                        if (order_lines.size() == 0) { //empty cart
-                            Toast.makeText(TablePage.this, "Please proceed payment with at least 1 product", Toast.LENGTH_SHORT).show();
-                            Intent intent = new Intent(contextpage, HomePage.class);
-                            startActivity(intent);
-                        } else { //ready to payment
-                            Intent intent = new Intent(contextpage, PaymentPage.class);
-                            startActivity(intent);
-                        }
-                        popup.dismiss();
-                        finish();
-                    } else {
-                        Toast.makeText(contextpage, "Can not resume, an order is in process", Toast.LENGTH_SHORT).show();
+                    if (order_lines.size() == 0) { //empty cart
+                        Toast.makeText(TablePage.this, "Please proceed payment with at least 1 product", Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(contextpage, HomePage.class);
+                        startActivity(intent);
+                    } else { //ready to payment
+                        Intent intent = new Intent(contextpage, PaymentPage.class);
+                        startActivity(intent);
                     }
+                    popup.dismiss();
+                    finish();
                 }else{
                     Toast.makeText(contextpage, "Please select an order for proceeding to payment", Toast.LENGTH_SHORT).show();
                 }
@@ -987,6 +970,31 @@ public class TablePage extends CheckConnection implements
                         popup.dismiss();
                         //Temporarily
                         displayTables(tableOrderSelected.getTable().getFloor());
+                    }
+
+                    if(tableOrderSelected.getCustomer() != null) {
+                        if(tableOrderSelected.getCustomer().getCustomer_id() != 0) {
+                            RealmResults results = realm.where(Order.class)
+                                    .equalTo("customer.customer_id", tableOrderSelected.getCustomer().getCustomer_id())
+                                    .and().notEqualTo("local_order_id", tableOrderSelected.getLocal_order_id()).findAll();
+                            if (results.size() < 1) {
+                                Customer remove_Customer = realm.where(Customer.class)
+                                        .equalTo("customer_id", tableOrderSelected.getCustomer().getCustomer_id())
+                                        .findFirst();
+                                realm.executeTransaction(new Realm.Transaction() {
+                                    @Override
+                                    public void execute(Realm realm) {
+                                        remove_Customer.deleteFromRealm();
+                                    }
+                                });
+                            }
+                        }
+                    }
+
+                    if(!NetworkUtils.isNetworkAvailable(contextpage)){
+                        Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
+                    }else{
+                        new DeleteOneDraftOrder(contextpage, orderRemove.getOrder_id()).execute();
                     }
 
                     realm.executeTransaction(new Realm.Transaction() {

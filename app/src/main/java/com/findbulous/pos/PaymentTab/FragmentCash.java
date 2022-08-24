@@ -102,7 +102,7 @@ public class FragmentCash extends Fragment {
         binding.cashKeypadEnter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                binding.getPaymentPageViewModel().keypadEnter();
+                //binding.getPaymentPageViewModel().keypadEnter();
             }
         });
         binding.cashKeypadCancel.setOnClickListener(new View.OnClickListener() {

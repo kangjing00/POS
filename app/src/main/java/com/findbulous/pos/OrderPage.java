@@ -195,6 +195,16 @@ public class OrderPage extends CheckConnection {
         binding.toolbarLayoutIncl.addNewOrderBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(currentOrderSharedPreference.getInt("orderingState", -1) == 1) {
+                    currentCustomerSharedPreferenceEdit.putInt("customerID", -1);
+                    currentCustomerSharedPreferenceEdit.putString("customerName", null);
+                    currentCustomerSharedPreferenceEdit.putString("customerEmail", null);
+                    currentCustomerSharedPreferenceEdit.putString("customerPhoneNo", null);
+                    currentCustomerSharedPreferenceEdit.putString("customerIdentityNo", null);
+                    currentCustomerSharedPreferenceEdit.putString("customerBirthdate", null);
+                    currentCustomerSharedPreferenceEdit.commit();
+                }
+
                 addNewDraftOrder();
             }
         });
@@ -367,6 +377,25 @@ public class OrderPage extends CheckConnection {
                 tableUpdate.setState("V");
         }
 
+        if(orderSelected.getCustomer() != null) {
+            if(orderSelected.getCustomer().getCustomer_id() != 0) {
+                RealmResults results = realm.where(Order.class)
+                        .equalTo("customer.customer_id", orderSelected.getCustomer().getCustomer_id())
+                        .and().notEqualTo("local_order_id", orderSelected.getLocal_order_id()).findAll();
+                if (results.size() < 1) {
+                    Customer remove_Customer = realm.where(Customer.class)
+                            .equalTo("customer_id", orderSelected.getCustomer().getCustomer_id())
+                            .findFirst();
+                    realm.executeTransaction(new Realm.Transaction() {
+                        @Override
+                        public void execute(Realm realm) {
+                            remove_Customer.deleteFromRealm();
+                        }
+                    });
+                }
+            }
+        }
+
         Table finalTableUpdate = tableUpdate;
         realm.executeTransaction(new Realm.Transaction() {
             @Override
@@ -456,6 +485,7 @@ public class OrderPage extends CheckConnection {
         order.setState("draft");
         order.setState_name("Ongoing");
         order.setCustomer_count(1);
+        order.setCustomer(getCurrentCustomer());
 
         realm.executeTransaction(new Realm.Transaction() {
             @Override
@@ -471,7 +501,11 @@ public class OrderPage extends CheckConnection {
             startActivity(intent);
             finish();
         }else{
-            new apiAddNewDraftOrder(order.getLocal_order_id(), intent).execute();
+            Customer customer = getCurrentCustomer();
+            if(getCurrentCustomer().getCustomer_id() == 0){
+                customer = realm.copyFromRealm(getCurrentCustomer());
+            }
+            new apiAddNewDraftOrder(order.getLocal_order_id(), customer,intent).execute();
         }
 
         currentOrderSharedPreferenceEdit.putInt("orderingState", 1);    //ordering
@@ -485,9 +519,11 @@ public class OrderPage extends CheckConnection {
         private int localOrderId;
         private Order createdOrder = null;
         private Intent intent;
+        private Customer customer;
 
-        public apiAddNewDraftOrder(int localOrderId, Intent intent){
+        public apiAddNewDraftOrder(int localOrderId, Customer customer, Intent intent){
             this.localOrderId = localOrderId;
+            this.customer = customer;
             this.intent = intent;
         }
 
@@ -504,7 +540,11 @@ public class OrderPage extends CheckConnection {
             long timeBefore = Calendar.getInstance().getTimeInMillis();
             String connection_error = "";
 
+            int customer_id = customer.getCustomer_id();
             String urlParameters = "&customer_count=1";
+            if(customer_id != 0){
+                urlParameters += "&customer_id=" + customer_id;
+            }
 
             byte[] postData = urlParameters.getBytes(Charset.forName("UTF-8"));
             int postDataLength = postData.length;
@@ -584,7 +624,7 @@ public class OrderPage extends CheckConnection {
                                 jo_order.getString("display_amount_tax"), jo_order.getString("display_amount_total"),
                                 jo_order.getString("display_amount_paid"), jo_order.getString("display_amount_return"),
                                 jo_order.getString("display_amount_subtotal"), jo_order.getString("display_tip_amount"),
-                                is_tipped, null, null, jo_order.getString("note"), jo_order.getDouble("discount"),
+                                is_tipped, null, customer, jo_order.getString("note"), jo_order.getDouble("discount"),
                                 discount_type, jo_order.getInt("customer_count"), jo_order.getInt("session_id"),
                                 jo_order.getInt("user_id"), jo_order.getInt("company_id"), partner_id);
                     }

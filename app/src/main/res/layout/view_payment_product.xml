@@ -37,7 +37,7 @@
             android:id="@+id/payment_product_product_option"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Medium - Half Grilled"
+            android:text='@{String.format("%s", (orderLine.full_product_name.indexOf("(") >= 0)? orderLine.full_product_name.substring((orderLine.full_product_name.indexOf("(") + 1), orderLine.full_product_name.indexOf(")")) : "")}'
             android:textSize="8dp"
             android:layout_marginLeft="20dp"
             android:textColor="@color/darkGrey"

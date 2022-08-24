@@ -99,7 +99,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
     private ImageButton lastClickedColorBtn;
 
     //POS Type
-    private ArrayAdapter<String> orderTypes;
+    private ArrayAdapter<String> orderTypeAdapter;
     private List<String> posOrderType = new ArrayList<String>();
     private String takeaway_posType = "Takeaway", dine_in_posType = "Dine-in";
 
@@ -436,7 +436,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
         posOrderType.add(takeaway_posType);
         posOrderType.add(dine_in_posType);
         //getResources().getStringArray(R.array.order_types
-        orderTypes = new ArrayAdapter<String>(contextpage, R.layout.textview_spinner_item, posOrderType){
+        orderTypeAdapter = new ArrayAdapter<String>(contextpage, R.layout.textview_spinner_item, posOrderType){
             @Override
             public View getDropDownView(int position, View convertView, ViewGroup parent){
                 View v = null;
@@ -461,8 +461,8 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
                 return v;
             }
         };
-        orderTypes.setDropDownViewResource(R.layout.textview_spinner_item);
-        binding.cartInclude.cartBtnPosType.setAdapter(orderTypes);
+        orderTypeAdapter.setDropDownViewResource(R.layout.textview_spinner_item);
+        binding.cartInclude.cartBtnPosType.setAdapter(orderTypeAdapter);
 //        binding.cartInclude.cartBtnPosType.getAdapter().notifyAll();
         binding.cartInclude.cartBtnPosType.setDropDownVerticalOffset(65);
         binding.cartInclude.cartBtnPosType.setSelection(cartSharedPreference.getInt("orderTypePosition", 1));
@@ -471,7 +471,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
             posOrderType.remove(dine_in_posType);
             dine_in_posType = currentOrder.getTable().getFloor().getName() + " / " + currentOrder.getTable().getName();
             posOrderType.add(dine_in_posType);
-            orderTypes.notifyDataSetChanged();
+            orderTypeAdapter.notifyDataSetChanged();
         }
 
         binding.cartInclude.cartBtnPosType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -1946,7 +1946,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
     }
     public void refreshCartCurrentCustomer(){
         int currentCustomerId = customerSharedPreference.getInt("customerID", -1);
-        if(currentCustomerId != -1) {
+        if((currentCustomerId != -1) && (currentCustomerId != 0)) {
             binding.cartInclude.cartCurrentCustomerName.setText(customerSharedPreference.getString("customerName", null));
             binding.cartInclude.cartCurrentCustomerId.setText("#" + customerSharedPreference.getInt("customerID", -1));
             binding.cartInclude.cartAddCustomer.setVisibility(View.GONE);
@@ -1968,7 +1968,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
             posOrderType.remove(dine_in_posType);
             dine_in_posType = "Dine-in";
             posOrderType.add(dine_in_posType);
-            orderTypes.notifyDataSetChanged();
+            orderTypeAdapter.notifyDataSetChanged();
         }
     }
 
@@ -2052,7 +2052,7 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
 
         if(currentOrder.getLocal_order_id() != -1) {
             currentOrder.setCustomer(customer);
-
+            System.out.println("Iam INNNNNNNNNNNNNNNNNNNNNNNNNNNNNN");
             realm.executeTransaction(new Realm.Transaction() {
                 @Override
                 public void execute(Realm realm) {
@@ -2067,8 +2067,12 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
             if(customer == null){
                 customer_id = 0;
             }
-            new SetOrderCustomer(contextpage, currentOrder.getOrder_id(),
-                    currentOrder.getLocal_order_id(), customer_id).execute();
+            if(!NetworkUtils.isNetworkAvailable(contextpage)){
+                Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
+            }else {
+                new SetOrderCustomer(contextpage, currentOrder.getOrder_id(),
+                        currentOrder.getLocal_order_id(), customer_id).execute();
+            }
         }
 
         refreshCartCurrentCustomer();

@@ -1053,7 +1053,10 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                                 int partner_id = -1;
                                 if(jo.getString("partner_id").length() > 0){
                                     partner_id = jo.getInt("partner_id");
-                                    customer = getCustomer(partner_id);
+                                }
+
+                                if(jo.getString("c3_customer_id").length() > 0){
+                                    customer = getCustomer(jo.getInt("c3_customer_id"));
                                 }else{
                                     customer = guestAcc;
                                 }

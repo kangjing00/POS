@@ -20,7 +20,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:padding="5dp"
-            android:text='@{String.format("%s", order.date_order)}'
+            android:text='@{order.date_order}'
             android:layout_weight="1"/>
 
         <TextView
@@ -35,7 +35,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:padding="5dp"
-            android:text='@{String.format("%s", order.customer.customer_name)}'
+            android:text='@{(order.customer == null)? "-" : order.customer.customer_name}'
             android:layout_weight="1"/>
 
         <TextView
@@ -52,7 +52,7 @@
             android:layout_height="wrap_content"
             android:padding="5dp"
             android:textAlignment="center"
-            android:text='@{String.format("%s", order.state_name)}'
+            android:text='@{order.state_name}'
             android:layout_weight="1"/>
 
 

@@ -80,7 +80,7 @@ public class FragmentCustomer extends Fragment implements CustomerAdapter.OnItem
         binding.searchCustomerRv.setAdapter(customerAdapter);
 
         int currentCustomerId = customerSharedPreference.getInt("customerID", -1);
-        if(currentCustomerId != -1){
+        if((currentCustomerId != -1) && (currentCustomerId != 0)){
             binding.customerCurrentCustomerName.setText(customerSharedPreference.getString("customerName", null));
             binding.customerCurrentCustomerEmail.setText(customerSharedPreference.getString("customerEmail", null));
             binding.customerCurrentCustomerId.setText("#" + customerSharedPreference.getInt("customerID", -1));

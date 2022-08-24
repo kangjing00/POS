@@ -4,7 +4,6 @@ import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -16,31 +15,33 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.EditText;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.PopupWindow;
 import android.widget.Toast;
+
+import com.findbulous.pos.API.DeleteOneDraftOrder;
+import com.findbulous.pos.API.SetOrderCustomer;
+import com.findbulous.pos.API.SetOrderTable;
+import com.findbulous.pos.Adapters.PaymentAdapter;
 import com.findbulous.pos.Adapters.PaymentOrderLineAdapter;
 import com.findbulous.pos.Adapters.SplitBillOrderAdapter;
 import com.findbulous.pos.Network.CheckConnection;
 import com.findbulous.pos.Network.NetworkUtils;
-import com.findbulous.pos.PaymentTab.PaymentMethodPagerAdapter;
 import com.findbulous.pos.databinding.CashInOutPopupBinding;
 import com.findbulous.pos.databinding.PaymentAddTipPopupBinding;
 import com.findbulous.pos.databinding.PaymentOrderLinePopupBinding;
 import com.findbulous.pos.databinding.PaymentPageBinding;
 import com.findbulous.pos.databinding.SplitOrderPopupBinding;
 import com.findbulous.pos.databinding.ToolbarSyncPopupBinding;
-import com.google.android.material.tabs.TabLayoutMediator;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -49,21 +50,24 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
-
 import io.realm.Realm;
 import io.realm.RealmResults;
 
-public class PaymentPage extends CheckConnection implements SplitBillOrderAdapter.SplitOrderLineInterface {
+public class PaymentPage extends CheckConnection implements SplitBillOrderAdapter.SplitOrderLineInterface, PaymentAdapter.PaymentInterface {
 
     private PaymentPageBinding binding;
-    private PaymentMethodPagerAdapter paymentMethodPagerAdapter;
+//    private PaymentMethodPagerAdapter paymentMethodPagerAdapter;
     private String[] titles = new String[]{"Cash", "Other Modes"};
     private PaymentPageViewModel viewModel;
     //RecyclerView
+    private ArrayList<Payment> payments;
+    private PaymentAdapter paymentAdapter;
     private ArrayList<Order_Line> payment_order_lines;
-    private PaymentOrderLineAdapter paymentOrderLineAdapter;
+//    private PaymentOrderLineAdapter paymentOrderLineAdapter;
+
     private ArrayList<Order_Line> splitting_order_lines;
     private SplitBillOrderAdapter splittingOrderLineAdapter;
     //Current order
@@ -78,6 +82,10 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
     private POS_Config pos_config;
     private Currency currency;
     private ArrayList<Payment_Method> payment_method;
+
+    //Payment Methods Drop Down List
+    private ArrayAdapter<Payment_Method> paymentMethodAdapter;
+    private Payment_Method selectedPaymentMethod;
 
     String statuslogin;
     Context contextpage;
@@ -137,7 +145,7 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
         payment_method.addAll(realm.copyFromRealm(realm.where(Payment_Method.class).findAll()));
 
         //Customer Setting
-        if(current_customer_id != -1) {
+        if((current_customer_id != -1) && (current_customer_id != 0)) {
             binding.paymentBarCustomerName.setText(customer_name);
             binding.paymentBarCustomerId.setText("#" + current_customer_id);
             binding.paymentBarCustomerRl.setVisibility(View.VISIBLE);
@@ -150,13 +158,22 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
             binding.paymentBarApplyCustomerBtn.setVisibility(View.VISIBLE);
         }
         //Recycler View
-        binding.paymentOrderDetailProductRv.setLayoutManager(new LinearLayoutManager(contextpage, LinearLayoutManager.VERTICAL, false));
-        binding.paymentOrderDetailProductRv.setHasFixedSize(true);
+        binding.paymentOrderPaymentsRv.setLayoutManager(new LinearLayoutManager(contextpage, LinearLayoutManager.VERTICAL, false));
+        binding.paymentOrderPaymentsRv.setHasFixedSize(true);
+        payments = new ArrayList<>();
+        paymentAdapter = new PaymentAdapter(payments, this);
+        binding.paymentOrderPaymentsRv.setAdapter(paymentAdapter);
+
+//        binding.paymentOrderDetailProductRv.setLayoutManager(new LinearLayoutManager(contextpage, LinearLayoutManager.VERTICAL, false));
+//        binding.paymentOrderDetailProductRv.setHasFixedSize(true);
         payment_order_lines = new ArrayList<>();
-        paymentOrderLineAdapter = new PaymentOrderLineAdapter(payment_order_lines);
+//        paymentOrderLineAdapter = new PaymentOrderLineAdapter(payment_order_lines);
         payment_order_lines.addAll(order.getOrder_lines());
-        binding.paymentOrderDetailProductRv.setAdapter(paymentOrderLineAdapter);
-        paymentMethodPagerAdapter = new PaymentMethodPagerAdapter(this);
+//        binding.paymentOrderDetailProductRv.setAdapter(paymentOrderLineAdapter);
+
+
+
+//        paymentMethodPagerAdapter = new PaymentMethodPagerAdapter(this);
 
         double order_subtotal = 0.0, total_price_subtotal_incl = 0.0, amount_order_discount = 0.0;
         for(int i = 0; i < payment_order_lines.size(); i++){
@@ -186,15 +203,63 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
         }
 
         binding.customerCount.setText("" + currentOrder.getCustomer_count());
+
+
+
+        //Payment Methods Spinner / Drop Down List
+        selectedPaymentMethod = payment_method.get(0);
+        paymentMethodAdapter = new ArrayAdapter<Payment_Method>(contextpage, R.layout.textview_spinner_item_larger, payment_method){
+            @Override
+            public View getDropDownView(int position, View convertView, ViewGroup parent){
+                View v = null;
+                v = super.getDropDownView(position, null, parent);
+
+                // If this is the selected item position
+                if (position == binding.paymentMethodSpinner.getSelectedItemPosition()) {
+                    if(position == (binding.paymentMethodSpinner.getCount() - 1)){ //last one
+                        v.setBackground(getResources().getDrawable(R.drawable.box_btm_corner_dark_orange));
+                    }else { //not the last one
+                        v.setBackgroundColor(getResources().getColor(R.color.darkOrange));
+                    }
+                }
+                else {
+                    // for other views
+                    if(position != (binding.paymentMethodSpinner.getCount() - 1)) { // not the last one
+                        v.setBackgroundColor(getResources().getColor(R.color.white));
+                    }else{  //last one
+                        v.setBackground(getResources().getDrawable(R.drawable.box_btm_corner));
+                    }
+                }
+                return v;
+            }
+        };
+        paymentMethodAdapter.setDropDownViewResource(R.layout.textview_spinner_item_larger);
+        binding.paymentMethodSpinner.setAdapter(paymentMethodAdapter);
+        binding.paymentMethodSpinner.setDropDownVerticalOffset(90);
+        binding.paymentMethodSpinner.setSelection(0);
+
+        binding.paymentMethodSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long l) {
+                Payment_Method payment_method = (Payment_Method) adapterView.getItemAtPosition(pos);
+                selectedPaymentMethod = payment_method;
+
+                //binding.cartInclude.cartBtnPosType.getSelectedItem().toString();
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+            }
+        });
+
         //Tabs
-        {binding.paymentMethodViewPager.setAdapter(paymentMethodPagerAdapter);
-        new TabLayoutMediator(binding.paymentMethodTl, binding.paymentMethodViewPager,
-                (
-                        (
-                                (tab, position) -> tab.setText(titles[position])
-                        )
-                )
-        ).attach();}
+//        {binding.paymentMethodViewPager.setAdapter(paymentMethodPagerAdapter);
+//        new TabLayoutMediator(binding.paymentMethodTl, binding.paymentMethodViewPager,
+//            (
+//                (
+//                    (tab, position) -> tab.setText(titles[position])
+//                )
+//            )
+//        ).attach();}
 
         //OnClickListener
         //Body
@@ -254,28 +319,24 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
         binding.paymentBarRemoveCustomerBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                currentCustomerSharePreferenceEdit.putInt("customerID", -1);
-                currentCustomerSharePreferenceEdit.putString("customerName", null);
-                currentCustomerSharePreferenceEdit.putString("customerEmail", null);
-                currentCustomerSharePreferenceEdit.putString("customerPhoneNo", null);
-                currentCustomerSharePreferenceEdit.putString("customerIdentityNo", null);
-                currentCustomerSharePreferenceEdit.putString("customerBirthdate", null);
-                currentCustomerSharePreferenceEdit.commit();
-
                 binding.paymentBarCustomerRl.setVisibility(View.GONE);
                 binding.paymentBarApplyCustomerBtn.setVisibility(View.VISIBLE);
 
-                currentCustomer = null;
-                binding.paymentOrderDetailCustomerName.setText("[Customer Name]");
-                Toast.makeText(contextpage, "Current Customer Removed", Toast.LENGTH_SHORT).show();
-                binding.paymentOrderDetailCustomerName.setVisibility(View.GONE);
+                if(currentOrder.getLocal_order_id() != -1) {
+                    currentCustomer = null;
+                    setCurrentCustomer(null);
+
+                    binding.paymentOrderDetailCustomerName.setText("[Customer Name]");
+                    Toast.makeText(contextpage, "Current Customer Removed", Toast.LENGTH_SHORT).show();
+                    binding.paymentOrderDetailCustomerName.setVisibility(View.GONE);
+                }
             }
         });
         //wait for api to make / confirm payment
         binding.paymentOrderDetailConfirmBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(is_balanceLargerOrEqualToZero()) {
+                if(is_balanceLargerOrEqualToZero() && (currentOrder.getLocal_order_id() != -1)) {
                     int current_customer_id = currentCustomerSharePreference.getInt("customerID", -1);
                     currentCustomerSharePreferenceEdit.putInt("customerID", -1);
                     currentCustomerSharePreferenceEdit.putString("customerName", null);
@@ -289,31 +350,31 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
                     currentOrderSharePreferenceEdit.putInt("localOrderId", -1);
                     currentOrderSharePreferenceEdit.commit();
 
-                    Order current_order = realm.where(Order.class).equalTo("local_order_id", current_local_order_id).findFirst();
-                    Order updated_current_order = realm.copyFromRealm(current_order);
-                    double amount_total = binding.getPaymentPageViewModel().getAmount_total();
+                    Order updated_current_order = realm.copyFromRealm(currentOrder);
+                    double amount_paid = 0.0;
+                    for (int i = 0; i < payments.size(); i++){
+                        amount_paid += payments.get(i).getAmount();
+                    }
                     double tip_amount = Double.valueOf(binding.getPaymentPageViewModel().getPayment_tip().getValue());
                     if (tip_amount > 0) {
                         if (updated_current_order.isIs_tipped() == false) {
                             updated_current_order.setIs_tipped(true);
                         }
-                        updated_current_order.setAmount_total(amount_total);
-                        updated_current_order.setDisplay_amount_paid(currencyDisplayFormat(amount_total));
                         updated_current_order.setTip_amount(tip_amount);
                     }else{
                         updated_current_order.setIs_tipped(false);
                     }
                     updated_current_order.setState("paid");
                     updated_current_order.setState_name("Paid");
-                    updated_current_order.setAmount_paid(amount_total);
-                    updated_current_order.setDisplay_amount_paid(currencyDisplayFormat(amount_total));
+                    updated_current_order.setAmount_paid(amount_paid);
+                    updated_current_order.setDisplay_amount_paid(currencyDisplayFormat(amount_paid));
                     updated_current_order.setAmount_return(Double.valueOf(viewModel.getPayment_order_detail_balance().getValue()));
                     updated_current_order.setDisplay_amount_return(currencyDisplayFormat(Double.valueOf(viewModel.getPayment_order_detail_balance().getValue())));
                     if(currentCustomer == null){
                         currentCustomer = realm.where(Customer.class).equalTo("customer_id", 0).findFirst();
                     }
                     updated_current_order.setCustomer(currentCustomer);
-                    if(current_order.getTable() != null){
+                    if(currentOrder.getTable() != null){
                         RealmResults<Order> results = realm.where(Order.class)
                                 .equalTo("table.table_id", updated_current_order.getTable().getTable_id())
                                 .and().notEqualTo("state", "paid").and()
@@ -327,14 +388,145 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
                             realm.insertOrUpdate(updated_current_order);
                         }
                     });
-
                     Toast.makeText(contextpage, "Payment Success", Toast.LENGTH_SHORT).show();
+
+
                     Intent intent = new Intent(contextpage, HomePage.class);
-                    startActivity(intent);
-                    finish();
+                    if(!NetworkUtils.isNetworkAvailable(contextpage)){
+                        Toast.makeText(PaymentPage.this, "No Internet Connection, payment record store in local", Toast.LENGTH_SHORT).show();
+                        startActivity(intent);
+                        finish();
+                    }else{
+//                        new apiCheckoutOrder(updated_current_order.getOrder_id(), updated_current_order.getLocal_order_id(),
+//                                null, updated_current_order.getTip_amount(), intent);
+                    }
+
                 }else{
                     Toast.makeText(contextpage, "Transaction is not completed", Toast.LENGTH_SHORT).show();
                 }
+            }
+        });
+
+
+        //Key pad number
+        binding.cashKeypad1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                viewModel.keypadAddNumber('1');
+            }
+        });
+        binding.cashKeypad2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                viewModel.keypadAddNumber('2');
+            }
+        });
+        binding.cashKeypad3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                viewModel.keypadAddNumber('3');
+            }
+        });
+        binding.cashKeypad4.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                viewModel.keypadAddNumber('4');
+            }
+        });
+        binding.cashKeypad5.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                viewModel.keypadAddNumber('5');
+            }
+        });
+        binding.cashKeypad6.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                viewModel.keypadAddNumber('6');
+            }
+        });
+        binding.cashKeypad7.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                viewModel.keypadAddNumber('7');
+            }
+        });
+        binding.cashKeypad8.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                viewModel.keypadAddNumber('8');
+            }
+        });
+        binding.cashKeypad9.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                viewModel.keypadAddNumber('9');
+            }
+        });
+        binding.cashKeypad0.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                viewModel.keypadAddNumber('0');
+            }
+        });
+        binding.cashKeypad00.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                viewModel.keypadAddNumber('0');
+                viewModel.keypadAddNumber('0');
+            }
+        });
+        //Key pad btn
+        binding.cashKeypadEnter.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(Double.valueOf(viewModel.getPayment_order_detail_balance().getValue()) > 0) {
+                    Number id = realm.where(Payment.class).max("local_id");
+                    int nextID = -1;
+                    System.out.println(id);
+                    if (id == null) {
+                        nextID = 1;
+                    } else {
+                        nextID = id.intValue() + 1;
+                    }
+                    if (payments.size() > 0) {
+                        nextID = payments.get(payments.size() - 1).getLocal_id() + 1;
+                    }
+                    double payment_amount = Double.valueOf(viewModel.getCash_amount_et().getValue());
+                    Payment payment = new Payment(nextID, -1, payment_amount,
+                            currencyDisplayFormat(payment_amount), selectedPaymentMethod, currentOrder);
+                    payments.add(payment);
+                    paymentAdapter.notifyDataSetChanged();
+
+                    viewModel.keypadEnter();
+                }else{
+                    Toast.makeText(contextpage, "The payable amount is completed.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        binding.cashKeypadCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                viewModel.setAmountEtToZero();
+            }
+        });
+        binding.cashKeypadBackspace.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                viewModel.keypadBackSpace();
+            }
+        });
+        binding.cashKeypadExact.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                double amount_total = viewModel.getAmount_total();
+                for(int i = 0; i < payments.size(); i++){
+                    if(amount_total <= 0)
+                        amount_total = 0;
+                    else
+                        amount_total -= payments.get(i).getAmount();
+                }
+                viewModel.setCash_amount_et(String.format("%.2f", amount_total));
             }
         });
         }
@@ -366,19 +558,85 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
         }
     }
 
+    public void setCurrentCustomer(Customer customer){
+        int customer_id = -1;
+        String name = null, email = null, phoneNo = null, identityNo = null, birthdate = null;
+
+        if(customer != null){
+            customer_id = customer.getCustomer_id();
+            name = customer.getCustomer_name();
+            email = customer.getCustomer_email();
+            phoneNo = customer.getCustomer_phoneNo();
+            identityNo = customer.getCustomer_identityNo();
+            birthdate = customer.getCustomer_birthdate();
+        }else{
+            if(currentOrder.getLocal_order_id() != -1) {
+                RealmResults results = realm.where(Order.class)
+                        .equalTo("customer.customer_id", currentOrder.getCustomer().getCustomer_id())
+                        .and().notEqualTo("local_order_id", currentOrder.getLocal_order_id()).findAll();
+                if (results.size() < 1) {
+                    Customer remove_Customer = realm.where(Customer.class)
+                            .equalTo("customer_id", currentOrder.getCustomer().getCustomer_id())
+                            .findFirst();
+                    realm.executeTransaction(new Realm.Transaction() {
+                        @Override
+                        public void execute(Realm realm) {
+                            remove_Customer.deleteFromRealm();
+                        }
+                    });
+                }
+                currentOrder.setPartner_id(-1);
+            }
+        }
+        currentCustomerSharePreferenceEdit.putInt("customerID", customer_id);
+        currentCustomerSharePreferenceEdit.putString("customerName", name);
+        currentCustomerSharePreferenceEdit.putString("customerEmail", email);
+        currentCustomerSharePreferenceEdit.putString("customerPhoneNo", phoneNo);
+        currentCustomerSharePreferenceEdit.putString("customerIdentityNo", identityNo);
+        currentCustomerSharePreferenceEdit.putString("customerBirthdate", birthdate);
+        currentCustomerSharePreferenceEdit.commit();
+
+        if(currentOrder.getLocal_order_id() != -1) {
+            currentOrder.setCustomer(customer);
+
+            realm.executeTransaction(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+                    if (customer != null) {
+                        realm.insertOrUpdate(customer);
+                    }
+                    realm.insertOrUpdate(currentOrder);
+                }
+            });
+
+
+            if(customer == null){
+                customer_id = 0;
+            }
+            if(!NetworkUtils.isNetworkAvailable(contextpage)){
+                Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
+            }else {
+                new SetOrderCustomer(contextpage, currentOrder.getOrder_id(),
+                        currentOrder.getLocal_order_id(), customer_id).execute();
+            }
+        }
+    }
+
     public class apiCheckoutOrder extends AsyncTask<String, String, String> {
         private ProgressDialog pd = null;
         private int order_id, local_order_id;
         private ArrayList<Payment> payments;
         private double tip_amount;
+        private Intent intent;
 
         private Order update_order;
 
-        public apiCheckoutOrder(int order_id, int local_order_id, ArrayList<Payment> payments, double tip_amount){
+        public apiCheckoutOrder(int order_id, int local_order_id, ArrayList<Payment> payments, double tip_amount, Intent intent){
             this.order_id = order_id;
             this.local_order_id = local_order_id;
             this.payments = payments;
             this.tip_amount = tip_amount;
+            this.intent = intent;
         }
 
         @Override
@@ -403,7 +661,8 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
 
             String urlParameters = "&order_id=" + order_id;
             for(int i = 0; i < payments.size(); i++){
-//                urlParameters += "&payments[" + i + "][payment_method_id]=" + payments.get(i).getPayment_method().
+                urlParameters += "&payments[" + i + "][payment_method_id]=" + payments.get(i).getPayment_method().getPayment_method_id()
+                        + "&payments[" + i + "][amount]=" + payments.get(i).getAmount();
             }
             if(pos_config.isIface_tipproduct()){
                 urlParameters += "&tip_amount=" + tip_amount;
@@ -467,7 +726,15 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
 
                         //order
                         if(update_order != null) {
-                            update_order.setNote(jo_order.getString("note"));
+                            update_order.setAmount_paid(jo_order.getDouble("amount_paid"));
+                            update_order.setDisplay_amount_paid(currencyDisplayFormat(jo_order.getDouble("amount_paid")));
+                            update_order.setAmount_return(jo_order.getDouble("amount_return"));
+                            update_order.setDisplay_amount_return(currencyDisplayFormat(jo_order.getDouble("amount_return")));
+                            update_order.setState(jo_order.getString("state"));
+                            update_order.setState_name(jo_order.getString("state_name"));
+                            update_order.setIs_tipped(jo_order.getBoolean("is_tipped"));
+                            update_order.setTip_amount(jo_order.getDouble("tip_amount"));
+                            update_order.setDisplay_tip_amount(currencyDisplayFormat(jo_order.getDouble("tip_amount")));
                         }
                     }
                 }catch (JSONException e) {
@@ -497,6 +764,8 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
                         }
                     });
                 }
+                startActivity(intent);
+                finish();
             }
 
             if (pd != null)
@@ -574,6 +843,7 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
         popup.setElevation(8);
         popup.setBackgroundDrawable(null);
         //RecyclerView
+        PaymentOrderLineAdapter paymentOrderLineAdapter = new PaymentOrderLineAdapter(payment_order_lines);
         popupBinding.paymentOrderProductsRv.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
         popupBinding.paymentOrderProductsRv.setHasFixedSize(true);
         popupBinding.paymentOrderProductsRv.setAdapter(paymentOrderLineAdapter);
@@ -745,6 +1015,13 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
     @Override
     public void onSplitOrderLineClick(int position) {
 
+    }
+
+    @Override
+    public void onPaymentRemove(int position) {
+        Payment payment = payments.get(position);
+        Toast.makeText(contextpage, "Name = " + payment.getPayment_method().getName()
+                + "\nAmount = " + payment.getAmount(), Toast.LENGTH_SHORT).show();
     }
 
     private String currencyDisplayFormat(double value){

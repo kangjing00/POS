@@ -78,4 +78,9 @@ public class Payment_Method extends RealmObject {
     public void setPayment_method_id(int payment_method_id) {
         this.payment_method_id = payment_method_id;
     }
+
+    @Override
+    public String toString() {
+        return this.name; // What to display in the Spinner list.
+    }
 }

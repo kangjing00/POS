@@ -3,6 +3,8 @@ package com.findbulous.pos;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import java.util.ArrayList;
+
 import io.realm.Realm;
 
 public class PaymentPageViewModel extends ViewModel {
@@ -35,9 +37,14 @@ public class PaymentPageViewModel extends ViewModel {
     }
 
     public void keypadEnter(){
-        setPayment_order_detail_credit(cash_amount_et.getValue());
+        double amount_payment = Double.valueOf(cash_amount_et.getValue());
+        double amount_credit = Double.valueOf(payment_order_detail_credit.getValue()) + amount_payment;
+        MutableLiveData<String> amount_credit_string = new MutableLiveData<String>(String.format("%.2f", amount_credit));
+        setPayment_order_detail_credit(amount_credit_string.getValue());
+
         double balanceDouble = Double.valueOf(payment_order_detail_credit.getValue()) - Double.valueOf(String.format("%.2f", amount_total));
         MutableLiveData<String> balance = new MutableLiveData<String>(String.format("%.2f", balanceDouble));
+
         setPayment_order_detail_balance(balance.getValue());
         setAmountEtToZero();
     }
