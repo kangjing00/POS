@@ -42,10 +42,22 @@ public class PaymentPageViewModel extends ViewModel {
         MutableLiveData<String> amount_credit_string = new MutableLiveData<String>(String.format("%.2f", amount_credit));
         setPayment_order_detail_credit(amount_credit_string.getValue());
 
-        double balanceDouble = Double.valueOf(payment_order_detail_credit.getValue()) - Double.valueOf(String.format("%.2f", amount_total));
-        MutableLiveData<String> balance = new MutableLiveData<String>(String.format("%.2f", balanceDouble));
+        double balance = Double.valueOf(payment_order_detail_credit.getValue()) - Double.valueOf(String.format("%.2f", amount_total));
+        MutableLiveData<String> balance_string = new MutableLiveData<String>(String.format("%.2f", balance));
+        setPayment_order_detail_balance(balance_string.getValue());
 
-        setPayment_order_detail_balance(balance.getValue());
+        setAmountEtToZero();
+    }
+
+    public void removeOnePayment(Payment payment){
+        double amount_credit = Double.valueOf(payment_order_detail_credit.getValue()) - payment.getAmount();
+        MutableLiveData<String> amount_credit_string = new MutableLiveData<String>(String.format("%.2f", amount_credit));
+        setPayment_order_detail_credit(amount_credit_string.getValue());
+
+        double balance = Double.valueOf(payment_order_detail_credit.getValue()) - Double.valueOf(String.format("%.2f", amount_total));
+        MutableLiveData<String> balance_string = new MutableLiveData<String>(String.format("%.2f", balance));
+        setPayment_order_detail_balance(balance_string.getValue());
+
         setAmountEtToZero();
     }
 

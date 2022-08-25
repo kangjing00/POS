@@ -332,12 +332,15 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                         if(jpos_config.getString("iface_orderline_customer_notes").length() > 0){
                             iface_orderline_customer_notes = jpos_config.getBoolean("iface_orderline_customer_notes");
                         }
-
+                        int tip_product_id = -1;
+                        if(jpos_config.getString("tip_product_id").length() > 0){
+                            tip_product_id = jpos_config.getInt("tip_product_id");
+                        }
                         pos_config = new POS_Config(jpos_config.getInt("id"), jpos_config.getString("name"),
                                 jpos_config.getBoolean("is_table_management"), iface_tipproduct,
                                 iface_orderline_customer_notes, start_categ_id,
                                 jpos_config.getBoolean("iface_orderline_notes"), jpos_config.getBoolean("manual_discount"),
-                                product_configurator, jpos_config.getInt("company_id"));
+                                product_configurator, jpos_config.getInt("company_id"), tip_product_id);
 
                         pos_session = new POS_Session(jpos_session.getInt("id"), jpos_session.getString("name"),
                                 jpos_session.getString("start_at"), jpos_session.getString("stop_at"),
@@ -369,6 +372,8 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
             openedSessionExist = sessionExist;
             if(no_connection){
                 System.out.println("Connection Error Message: " + connection_error);
+                if (pd != null)
+                    pd.dismiss();
             }else{
                 new loadProduct().execute();
                 new loadFloorAndTable().execute();
@@ -393,9 +398,6 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                 //Go to homepage
                 goToHomePage();
             }
-
-            if (pd != null)
-                pd.dismiss();
         }
     }
 
@@ -482,12 +484,15 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                         if(jpos_config.getString("iface_orderline_customer_notes").length() > 0){
                             iface_orderline_customer_notes = jpos_config.getBoolean("iface_orderline_customer_notes");
                         }
-
+                        int tip_product_id = -1;
+                        if(jpos_config.getString("tip_product_id").length() > 0){
+                            tip_product_id = jpos_config.getInt("tip_product_id");
+                        }
                         pos_config = new POS_Config(jpos_config.getInt("id"), jpos_config.getString("name"),
                                 jpos_config.getBoolean("is_table_management"), iface_tipproduct,
                                 iface_orderline_customer_notes, start_categ_id,
                                 jpos_config.getBoolean("iface_orderline_notes"), jpos_config.getBoolean("manual_discount"),
-                                product_configurator, jpos_config.getInt("company_id"));
+                                product_configurator, jpos_config.getInt("company_id"), tip_product_id);
 
                         pos_session = new POS_Session(jpos_session.getInt("id"), jpos_session.getString("name"),
                                 jpos_session.getString("start_at"), jpos_session.getString("stop_at"),
@@ -522,6 +527,8 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         protected void onPostExecute(String s) {
             if(!NetworkUtils.isNetworkAvailable(contextpage)){
                 Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
+                if (pd != null)
+                    pd.dismiss();
             }else{
                 if(error){
                   System.out.println("Error Message: " + error_msg);
@@ -544,8 +551,6 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                     });
                 }
             }
-            if (pd != null)
-                pd.dismiss();
         }
     }
 
@@ -714,6 +719,8 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         protected void onPostExecute(String s) {
             if(!NetworkUtils.isNetworkAvailable(contextpage)){
                 Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
+                if (pd != null)
+                    pd.dismiss();
             }else{
                 long timeBefore = Calendar.getInstance().getTimeInMillis();
                 realm.executeTransaction(new Realm.Transaction() {
@@ -729,8 +736,6 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                 long timeAfter = Calendar.getInstance().getTimeInMillis();
                 System.out.println("Update product & category to realm time: " + (timeAfter - timeBefore) + "ms");
             }
-            if (pd != null)
-                pd.dismiss();
         }
     }
     //Recursive retrieve category and sub-category and subsub-category and subsubsub...
@@ -864,6 +869,8 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         protected void onPostExecute(String s) {
             if(!NetworkUtils.isNetworkAvailable(contextpage)){
                 Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
+                if (pd != null)
+                    pd.dismiss();
             }else{
                 realm.executeTransaction(new Realm.Transaction() {
                     @Override
@@ -876,8 +883,6 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
 
                 new loadOrder().execute();
             }
-            if (pd != null)
-                pd.dismiss();
         }
     }
 //    public class getCustomer extends AsyncTask<String, String, String> {
@@ -1191,6 +1196,8 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         protected void onPostExecute(String s){
             if(!NetworkUtils.isNetworkAvailable(contextpage)){
                 Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
+                if (pd != null)
+                    pd.dismiss();
             }else {
                 long timeBefore = Calendar.getInstance().getTimeInMillis();
                 realm.executeTransaction(new Realm.Transaction() {
@@ -1204,8 +1211,6 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                 long timeAfter = Calendar.getInstance().getTimeInMillis();
                 System.out.println("Update orders to realm time: " + (timeAfter - timeBefore) + "ms");
             }
-            if (pd != null)
-                pd.dismiss();
         }
     }
 

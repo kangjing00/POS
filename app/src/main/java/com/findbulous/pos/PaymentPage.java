@@ -251,16 +251,6 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
             }
         });
 
-        //Tabs
-//        {binding.paymentMethodViewPager.setAdapter(paymentMethodPagerAdapter);
-//        new TabLayoutMediator(binding.paymentMethodTl, binding.paymentMethodViewPager,
-//            (
-//                (
-//                    (tab, position) -> tab.setText(titles[position])
-//                )
-//            )
-//        ).attach();}
-
         //OnClickListener
         //Body
         {
@@ -350,7 +340,7 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
                     currentOrderSharePreferenceEdit.putInt("localOrderId", -1);
                     currentOrderSharePreferenceEdit.commit();
 
-                    Order updated_current_order = realm.copyFromRealm(currentOrder);
+                    Order updated_current_order = currentOrder;
                     double amount_paid = 0.0;
                     for (int i = 0; i < payments.size(); i++){
                         amount_paid += payments.get(i).getAmount();
@@ -397,8 +387,8 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
                         startActivity(intent);
                         finish();
                     }else{
-//                        new apiCheckoutOrder(updated_current_order.getOrder_id(), updated_current_order.getLocal_order_id(),
-//                                null, updated_current_order.getTip_amount(), intent);
+                        new apiCheckoutOrder(updated_current_order.getOrder_id(), updated_current_order.getLocal_order_id(),
+                                payments, updated_current_order.getTip_amount(), intent).execute();
                     }
 
                 }else{
@@ -480,27 +470,30 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
         binding.cashKeypadEnter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(Double.valueOf(viewModel.getPayment_order_detail_balance().getValue()) > 0) {
-                    Number id = realm.where(Payment.class).max("local_id");
-                    int nextID = -1;
-                    System.out.println(id);
-                    if (id == null) {
-                        nextID = 1;
-                    } else {
-                        nextID = id.intValue() + 1;
-                    }
-                    if (payments.size() > 0) {
-                        nextID = payments.get(payments.size() - 1).getLocal_id() + 1;
-                    }
-                    double payment_amount = Double.valueOf(viewModel.getCash_amount_et().getValue());
-                    Payment payment = new Payment(nextID, -1, payment_amount,
-                            currencyDisplayFormat(payment_amount), selectedPaymentMethod, currentOrder);
-                    payments.add(payment);
-                    paymentAdapter.notifyDataSetChanged();
+                if(Double.valueOf(viewModel.getCash_amount_et().getValue()) > 0) {
+                    if (Double.valueOf(viewModel.getPayment_order_detail_balance().getValue()) < 0) {
+                        Number id = realm.where(Payment.class).max("local_id");
+                        int nextID = -1;
+                        if (id == null) {
+                            nextID = 1;
+                        } else {
+                            nextID = id.intValue() + 1;
+                        }
+                        if (payments.size() > 0) {
+                            nextID = payments.get(payments.size() - 1).getLocal_id() + 1;
+                        }
+                        double payment_amount = Double.valueOf(viewModel.getCash_amount_et().getValue());
+                        Payment payment = new Payment(nextID, -1, payment_amount,
+                                currencyDisplayFormat(payment_amount), selectedPaymentMethod, currentOrder);
+                        payments.add(payment);
+                        paymentAdapter.notifyDataSetChanged();
 
-                    viewModel.keypadEnter();
+                        viewModel.keypadEnter();
+                    } else {
+                        Toast.makeText(contextpage, "The payable amount is completed.", Toast.LENGTH_SHORT).show();
+                    }
                 }else{
-                    Toast.makeText(contextpage, "The payable amount is completed.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(contextpage, "Please provide an amount at least more than zero", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -519,14 +512,13 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
         binding.cashKeypadExact.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                double amount_total = viewModel.getAmount_total();
-                for(int i = 0; i < payments.size(); i++){
-                    if(amount_total <= 0)
-                        amount_total = 0;
-                    else
-                        amount_total -= payments.get(i).getAmount();
+                double balance = Double.valueOf(viewModel.getPayment_order_detail_balance().getValue());
+                if(balance >= 0){
+                    balance = 0.0;
+                }else{
+                    balance = -balance;
                 }
-                viewModel.setCash_amount_et(String.format("%.2f", amount_total));
+                viewModel.setCash_amount_et(String.format("%.2f", balance));
             }
         });
         }
@@ -664,12 +656,12 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
                 urlParameters += "&payments[" + i + "][payment_method_id]=" + payments.get(i).getPayment_method().getPayment_method_id()
                         + "&payments[" + i + "][amount]=" + payments.get(i).getAmount();
             }
-            if(pos_config.isIface_tipproduct()){
+            if((pos_config.isIface_tipproduct()) && (pos_config.getTip_product_id() > 0) && (tip_amount > 0)){
                 urlParameters += "&tip_amount=" + tip_amount;
             }
 
             //Testing (check error)
-//        urlParameters += "&dev=1";
+            urlParameters += "&dev=1";
 
             byte[] postData = urlParameters.getBytes(Charset.forName("UTF-8"));
             int postDataLength = postData.length;
@@ -1020,8 +1012,16 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
     @Override
     public void onPaymentRemove(int position) {
         Payment payment = payments.get(position);
-        Toast.makeText(contextpage, "Name = " + payment.getPayment_method().getName()
-                + "\nAmount = " + payment.getAmount(), Toast.LENGTH_SHORT).show();
+
+        //remove UI payments
+        payments.remove(position);
+        paymentAdapter.notifyDataSetChanged();
+
+        //update balance & credit
+        viewModel.removeOnePayment(payment);
+
+//        Toast.makeText(contextpage, "Name = " + payment.getPayment_method().getName()
+//                + "\nAmount = " + payment.getAmount(), Toast.LENGTH_SHORT).show();
     }
 
     private String currencyDisplayFormat(double value){
