@@ -1631,31 +1631,48 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                 RealmResults attribute_results = realm.where(Attribute.class).equalTo("product_tmpl_id", product.getProduct_tmpl_id())
                         .findAll();
                 ArrayList<Attribute> attributes = (ArrayList<Attribute>) realm.copyFromRealm(attribute_results);
-                if(attributes.size() == 0){
+                if(attributes.size() == 0){ //product without any attribute
                     boolean sameProduct = false;
-//                    for(int i = 0; i < order_lines.size(); i++) {
-//                        if (product.getId() == order_lines.get(i).getProduct().getProduct_id()){
-//                            int qty = order_lines.get(i).getQty() + 1;
-//                            double price_before_discount = qty * order_lines.get(i).getPrice_unit();
-//                            double amount_discount = 0;
-//                            if(order_lines.get(i).getDiscount_type() != null) {
-//                                if (order_lines.get(i).getDiscount_type().equalsIgnoreCase("percentage")) {
-//                                    amount_discount = (price_before_discount * order_lines.get(i).getDiscount()) / 100;
-//                                } else if (order_lines.get(i).getDiscount_type().equalsIgnoreCase("fixed_amount")) {
-//                                    amount_discount = order_lines.get(i).getDiscount();
-//                                }
-//                            }
-//                            double subtotal = price_before_discount - amount_discount;
-//
-//                            order_lines.get(i).setPrice_subtotal(subtotal);
-//                            order_lines.get(i).setQty(qty);
-//                            order_lines.get(i).setPrice_before_discount(price_before_discount);
-//
-//                            sameProduct = true;
-//                            orderLineAdapter.notifyDataSetChanged();
-//                            updateOrderTotalAmount();
-//                        }
-//                    }
+                    for(int i = 0; i < order_lines.size(); i++) {
+                        Order_Line order_line_from_list = order_lines.get(i);
+                        if ((product.getId() == order_line_from_list.getProduct().getProduct_id())
+                            && (order_line_from_list.getDiscount_type() == null)){    //same product, no discount
+
+                            int qty = order_line_from_list.getQty() + 1;
+                            double price_unit_excl_tax = calculate_price_unit_excl_tax(product, order_line_from_list.getPrice_unit());
+                            double price_subtotal = price_unit_excl_tax * qty;
+                            ArrayList<Product_Tax> product_taxes = new ArrayList<>();
+                            RealmResults product_taxes_results = realm.where(Product_Tax.class)
+                                    .equalTo("product_tmpl_id", product.getProduct_tmpl_id()).findAll();
+                            product_taxes.addAll(realm.copyFromRealm(product_taxes_results));
+                            double price_subtotal_incl = calculate_price_subtotal_incl(product_taxes, price_subtotal);
+                            double price_before_discount = price_unit_excl_tax * qty;
+                            double total_cost = product.getStandard_price() * qty;
+
+                            order_line_from_list.setQty(qty);
+                            order_line_from_list.setPrice_subtotal(price_subtotal);
+                            order_line_from_list.setDisplay_price_subtotal(currencyDisplayFormat(price_subtotal));
+                            order_line_from_list.setPrice_subtotal_incl(price_subtotal_incl);
+                            order_line_from_list.setDisplay_price_subtotal_incl(currencyDisplayFormat(price_subtotal_incl));
+                            order_line_from_list.setPrice_before_discount(price_before_discount);
+                            order_line_from_list.setDisplay_price_before_discount(currencyDisplayFormat(price_before_discount));
+                            order_line_from_list.setTotal_cost(total_cost);
+                            order_line_from_list.setDisplay_total_cost(currencyDisplayFormat(total_cost));
+
+                            order_lines.set(i, order_line_from_list);
+                            orderLineAdapter.notifyDataSetChanged();
+                            updateOrderTotalAmount();
+                            if(!NetworkUtils.isNetworkAvailable(contextpage)){
+                                Toast.makeText(contextpage, "No Internet Conenction.", Toast.LENGTH_SHORT).show();
+                            }else{
+                                new UpdateOneOrderLineQtyDisc(contextpage, order_line_from_list.getOrder().getLocal_order_id(),
+                                        order_line_from_list.getOrder().getOrder_id(), order_line_from_list.getLocal_order_line_id(),
+                                        order_line_from_list.getOrder_line_id(), order_line_from_list.getQty(), null, 0)
+                                        .execute();
+                            }
+                            sameProduct = true;
+                        }
+                    }
                     if(!sameProduct)    //not same product
                         addProductToOrder(product, null, 0.0, null, null, null);
                     popup.dismiss();
@@ -1755,7 +1772,64 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
 
                 if(!empty_customer_note && !empty_custom_et) {
                     if(order_line == null) {
-                        addProductToOrder(product, product_attributesName, price_extra, customer_note,
+
+                        boolean sameProduct = false;
+                        for(int i = 0; i < order_lines.size(); i++) {
+                            Order_Line order_line_from_list = order_lines.get(i);
+                            if ((product.getId() == order_line_from_list.getProduct().getProduct_id())
+                                    && (order_line_from_list.getDiscount_type() == null)
+                                    && (customer_note == null)){    //same product, no discount, no note
+                                //attribute_value same, attribute_value is not custom
+                                boolean differentAttributeValue = true, attributeHasCustom = false;
+                                for(int x = 0; x < allAttributes.length; x++){
+                                    if(allAttributes[x].getAttribute_line_id() !=
+                                            order_line_from_list.getAttribute_values().get(x).getAttribute_line_id()){
+                                        differentAttributeValue = false;
+                                    }
+
+                                    if(allAttributes[x].isIs_custom()){
+                                        attributeHasCustom = true;
+                                    }
+                                }
+                                if((!differentAttributeValue) && (!attributeHasCustom)) {   //same attribute and has no custom
+                                    int qty = order_line_from_list.getQty() + 1;
+                                    double price_unit_excl_tax = calculate_price_unit_excl_tax(product, order_line_from_list.getPrice_unit());
+                                    double price_subtotal = price_unit_excl_tax * qty;
+                                    ArrayList<Product_Tax> product_taxes = new ArrayList<>();
+                                    RealmResults product_taxes_results = realm.where(Product_Tax.class)
+                                            .equalTo("product_tmpl_id", product.getProduct_tmpl_id()).findAll();
+                                    product_taxes.addAll(realm.copyFromRealm(product_taxes_results));
+                                    double price_subtotal_incl = calculate_price_subtotal_incl(product_taxes, price_subtotal);
+                                    double price_before_discount = price_unit_excl_tax * qty;
+                                    double total_cost = product.getStandard_price() * qty;
+
+                                    order_line_from_list.setQty(qty);
+                                    order_line_from_list.setPrice_subtotal(price_subtotal);
+                                    order_line_from_list.setDisplay_price_subtotal(currencyDisplayFormat(price_subtotal));
+                                    order_line_from_list.setPrice_subtotal_incl(price_subtotal_incl);
+                                    order_line_from_list.setDisplay_price_subtotal_incl(currencyDisplayFormat(price_subtotal_incl));
+                                    order_line_from_list.setPrice_before_discount(price_before_discount);
+                                    order_line_from_list.setDisplay_price_before_discount(currencyDisplayFormat(price_before_discount));
+                                    order_line_from_list.setTotal_cost(total_cost);
+                                    order_line_from_list.setDisplay_total_cost(currencyDisplayFormat(total_cost));
+
+                                    order_lines.set(i, order_line_from_list);
+                                    orderLineAdapter.notifyDataSetChanged();
+                                    updateOrderTotalAmount();
+                                    if (!NetworkUtils.isNetworkAvailable(contextpage)) {
+                                        Toast.makeText(contextpage, "No Internet Conenction.", Toast.LENGTH_SHORT).show();
+                                    } else {
+                                        new UpdateOneOrderLineQtyDisc(contextpage, order_line_from_list.getOrder().getLocal_order_id(),
+                                                order_line_from_list.getOrder().getOrder_id(), order_line_from_list.getLocal_order_line_id(),
+                                                order_line_from_list.getOrder_line_id(), order_line_from_list.getQty(), null, 0)
+                                                .execute();
+                                    }
+                                    sameProduct = true;
+                                }
+                            }
+                        }
+                        if(!sameProduct)    //not same product
+                            addProductToOrder(product, product_attributesName, price_extra, customer_note,
                                 allAttributes, allAttributes_custom);
                     }else{
                         updateOrderLineConfig(order_line, product, product_attributesName,
@@ -2779,36 +2853,60 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
     @Override
     public void onMenuProductClick(int position) {
         Product product = list.get(position);
+//has customer_note or attribute_value
 
+        // attribute_value different, attribute_value is_custom, no note
+//                    (order_line.getCustomer_note().equalsIgnoreCase("") || (order_line.getCustomer_note() == null)
+//                    boolean sameAttributeValue = true;
+//                    for(int x = 0; x < order_line.getAttribute_values().size(); x++){
+//
+//                    }
         if(pos_config.isProduct_configurator() || pos_config.isIface_orderline_customer_notes()) {
             showProductModifier(null, product);
         }else{
-            //add the product to order line directly
+            //add the product to order line directly if has same product in order_line
             boolean sameProduct = false;
-//            for(int i = 0; i < order_lines.size(); i++) {
-//                if (product.getId() == order_lines.get(i).getProduct().getProduct_id()){    //cart has the same product
-//                    int qty = order_lines.get(i).getQty() + 1;
-//                    double price_before_discount = qty * order_lines.get(i).getPrice_unit();
-//                    double amount_discount = 0;
-//                    if(order_lines.get(i).getDiscount_type() != null) {
-//                        if (order_lines.get(i).getDiscount_type().equalsIgnoreCase("percentage")) {
-//                            amount_discount = (price_before_discount * order_lines.get(i).getDiscount()) / 100;
-//                        } else if (order_lines.get(i).getDiscount_type().equalsIgnoreCase("fixed_amount")) {
-//                            amount_discount = order_lines.get(i).getDiscount();
-//                        }
-//                    }
-//
-//                    double subtotal = price_before_discount - amount_discount;
-//
-//                    order_lines.get(i).setPrice_subtotal(subtotal);
-//                    order_lines.get(i).setQty(qty);
-//                    order_lines.get(i).setPrice_before_discount(price_before_discount);
-//
-//                    sameProduct = true;
-//                    orderLineAdapter.notifyDataSetChanged();
-//                    updateOrderTotalAmount();
-//                }
-//            }
+
+            for(int i = 0; i < order_lines.size(); i++) {
+                Order_Line order_line = order_lines.get(i);
+                if ((product.getId() == order_line.getProduct().getProduct_id())
+                    && (order_line.getDiscount_type() == null)){    //same product, no discount
+
+                    int qty = order_line.getQty() + 1;
+                    double price_unit_excl_tax = calculate_price_unit_excl_tax(product, order_line.getPrice_unit());
+                    double price_subtotal = price_unit_excl_tax * qty;
+                    ArrayList<Product_Tax> product_taxes = new ArrayList<>();
+                    RealmResults product_taxes_results = realm.where(Product_Tax.class)
+                            .equalTo("product_tmpl_id", product.getProduct_tmpl_id()).findAll();
+                    product_taxes.addAll(realm.copyFromRealm(product_taxes_results));
+                    double price_subtotal_incl = calculate_price_subtotal_incl(product_taxes, price_subtotal);
+                    double price_before_discount = price_unit_excl_tax * qty;
+                    double total_cost = product.getStandard_price() * qty;
+
+                    order_line.setQty(qty);
+                    order_line.setPrice_subtotal(price_subtotal);
+                    order_line.setDisplay_price_subtotal(currencyDisplayFormat(price_subtotal));
+                    order_line.setPrice_subtotal_incl(price_subtotal_incl);
+                    order_line.setDisplay_price_subtotal_incl(currencyDisplayFormat(price_subtotal_incl));
+                    order_line.setPrice_before_discount(price_before_discount);
+                    order_line.setDisplay_price_before_discount(currencyDisplayFormat(price_before_discount));
+                    order_line.setTotal_cost(total_cost);
+                    order_line.setDisplay_total_cost(currencyDisplayFormat(total_cost));
+
+                    order_lines.set(i, order_line);
+                    orderLineAdapter.notifyDataSetChanged();
+                    updateOrderTotalAmount();
+                    if(!NetworkUtils.isNetworkAvailable(contextpage)){
+                        Toast.makeText(contextpage, "No Internet Conenction.", Toast.LENGTH_SHORT).show();
+                    }else{
+                        new UpdateOneOrderLineQtyDisc(contextpage, order_line.getOrder().getLocal_order_id(),
+                                order_line.getOrder().getOrder_id(), order_line.getLocal_order_line_id(),
+                                order_line.getOrder_line_id(), order_line.getQty(), null, 0)
+                                .execute();
+                    }
+                    sameProduct = true;
+                }
+            }
             if(!sameProduct)
                 addProductToOrder(product, null, 0.0, null, null, null);
         }

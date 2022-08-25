@@ -340,10 +340,11 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
                     currentOrderSharePreferenceEdit.commit();
 
                     Order updated_current_order = currentOrder;
-                    double amount_paid = 0.0;
-                    for (int i = 0; i < payments.size(); i++){
-                        amount_paid += payments.get(i).getAmount();
-                    }
+                    double amount_paid = updated_current_order.getAmount_total();
+//                    for (int i = 0; i < payments.size(); i++){
+//                        amount_paid += payments.get(i).getAmount();
+//                    }
+
                     double tip_amount = Double.valueOf(binding.getPaymentPageViewModel().getPayment_tip().getValue());
                     if (tip_amount > 0) {
                         if (updated_current_order.isIs_tipped() == false) {
@@ -363,6 +364,26 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
                         currentCustomer = realm.where(Customer.class).equalTo("customer_id", 0).findFirst();
                     }
                     updated_current_order.setCustomer(currentCustomer);
+
+                    boolean hasReturn = false;
+                    if(updated_current_order.getAmount_return() > 0){
+                        Number id = realm.where(Payment.class).max("local_id");
+                        int nextID = -1;
+                        if (id == null) {
+                            nextID = 1;
+                        } else {
+                            nextID = id.intValue() + 1;
+                        }
+                        if (payments.size() > 0) {
+                            nextID = payments.get(payments.size() - 1).getLocal_id() + 1;
+                        }
+                        double return_amount = -updated_current_order.getAmount_return();
+                        Payment return_payment = new Payment(nextID, -1, return_amount,
+                                currencyDisplayFormat(return_amount), selectedPaymentMethod, currentOrder);
+                        payments.add(return_payment);
+                        hasReturn = true;
+                    }
+
                     if(currentOrder.getTable() != null){
                         RealmResults<Order> results = realm.where(Order.class)
                                 .equalTo("table.table_id", updated_current_order.getTable().getTable_id())
@@ -375,6 +396,7 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
                         @Override
                         public void execute(Realm realm) {
                             realm.insertOrUpdate(updated_current_order);
+                            realm.insertOrUpdate(payments);
                         }
                     });
                     Toast.makeText(contextpage, "Payment Success", Toast.LENGTH_SHORT).show();
@@ -387,7 +409,7 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
                         finish();
                     }else{
                         new apiCheckoutOrder(updated_current_order.getOrder_id(), updated_current_order.getLocal_order_id(),
-                                payments, payment_methods, updated_current_order.getTip_amount(), intent).execute();
+                                payments, hasReturn, payment_methods, updated_current_order.getTip_amount(), intent).execute();
                     }
 
                 }else{
@@ -617,17 +639,19 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
         private ProgressDialog pd = null;
         private int order_id, local_order_id;
         private ArrayList<Payment> payments;
+        private boolean hasReturn;
         private ArrayList<Payment_Method> payment_methods;
         private double tip_amount;
         private Intent intent;
 
         private Order update_order;
 
-        public apiCheckoutOrder(int order_id, int local_order_id, ArrayList<Payment> payments,
+        public apiCheckoutOrder(int order_id, int local_order_id, ArrayList<Payment> payments, boolean hasReturn,
                                 ArrayList<Payment_Method> payment_methods, double tip_amount, Intent intent){
             this.order_id = order_id;
             this.local_order_id = local_order_id;
             this.payments = payments;
+            this.hasReturn = hasReturn;
             this.payment_methods = payment_methods;
             this.tip_amount = tip_amount;
             this.intent = intent;
@@ -654,7 +678,11 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
             String connection_error = "";
 
             String urlParameters = "&order_id=" + order_id;
-            for(int i = 0; i < payments.size(); i++){
+            int noOfPayment = payments.size();
+            if(hasReturn){
+                noOfPayment--;
+            }
+            for(int i = 0; i < noOfPayment; i++){
                 urlParameters += "&payments[" + i + "][payment_method_id]=" + payments.get(i).getPayment_method().getPayment_method_id()
                         + "&payments[" + i + "][amount]=" + payments.get(i).getAmount();
             }
@@ -739,7 +767,7 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
                             JSONObject jo_payment = jo_payment_array.getJSONObject(i);
                             payments.get(i).setId(jo_payment.getInt("id"));
                             payments.get(i).setAmount(jo_payment.getDouble("amount"));
-                            payments.get(i).setDisplay_amount(currencyDisplayFormat(jo_payment.getDouble("amount")));
+                            payments.get(i).setDisplay_amount(jo_payment.getString("display_amount"));
                             int payment_method_id = jo_payment.getInt("payment_method_id");
                             for(int x = 0; x < payment_methods.size(); x++){
                                 if(payment_methods.get(x).getPayment_method_id() == payment_method_id){

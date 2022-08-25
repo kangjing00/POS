@@ -325,7 +325,7 @@
                     android:textSize="18dp" />
 
                 <TextView
-                    android:id="@+id/cash_tv"
+                    android:id="@+id/paid_tv"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_below="@id/textView4"
@@ -333,10 +333,10 @@
                     android:layout_marginLeft="15dp"
                     android:layout_marginTop="5dp"
                     android:fontFamily="@font/roboto_regular"
-                    android:text="Cash" />
+                    android:text="Paid" />
 
                 <TextView
-                    android:id="@+id/order_detail_cash"
+                    android:id="@+id/order_detail_paid"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_below="@id/order_detail_grand_total"
@@ -349,7 +349,7 @@
                     android:id="@+id/balance_tv"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_below="@id/cash_tv"
+                    android:layout_below="@id/paid_tv"
                     android:layout_alignParentStart="true"
                     android:layout_marginLeft="15dp"
                     android:layout_marginTop="5dp"
@@ -360,7 +360,7 @@
                     android:id="@+id/order_detail_balance"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_below="@id/order_detail_cash"
+                    android:layout_below="@id/order_detail_paid"
                     android:layout_alignParentEnd="true"
                     android:layout_marginTop="5dp"
                     android:layout_marginRight="15dp"

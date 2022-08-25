@@ -671,8 +671,8 @@ public class OrderPage extends CheckConnection {
     private void visibleTipCashBalance(){
         binding.tipTv.setVisibility(View.VISIBLE);
         binding.orderDetailTip.setVisibility(View.VISIBLE);
-        binding.cashTv.setVisibility(View.VISIBLE);
-        binding.orderDetailCash.setVisibility(View.VISIBLE);
+        binding.paidTv.setVisibility(View.VISIBLE);
+        binding.orderDetailPaid.setVisibility(View.VISIBLE);
         binding.balanceTv.setVisibility(View.VISIBLE);
         binding.orderDetailBalance.setVisibility(View.VISIBLE);
     }
@@ -680,8 +680,8 @@ public class OrderPage extends CheckConnection {
     private void invisibleTipCashBalance(){
         binding.tipTv.setVisibility(View.GONE);
         binding.orderDetailTip.setVisibility(View.GONE);
-        binding.cashTv.setVisibility(View.GONE);
-        binding.orderDetailCash.setVisibility(View.GONE);
+        binding.paidTv.setVisibility(View.GONE);
+        binding.orderDetailPaid.setVisibility(View.GONE);
         binding.balanceTv.setVisibility(View.GONE);
         binding.orderDetailBalance.setVisibility(View.GONE);
     }
@@ -940,7 +940,7 @@ public class OrderPage extends CheckConnection {
         binding.orderDetailTax.setText(String.format("%.2f", tax));
         binding.orderDetailTip.setText(String.format("%.2f", tip));
         binding.orderDetailGrandTotal.setText(String.format("%.2f", amount_total));
-        binding.orderDetailCash.setText(String.format("%.2f", amount_paid));
+        binding.orderDetailPaid.setText(String.format("%.2f", amount_paid));
         binding.orderDetailBalance.setText(String.format("%.2f", balance));
         binding.orderDetailSubtotal.setText(String.format("%.2f", subtotal));
         binding.orderDetailProductDiscount.setText(String.format("%.2f", product_discount));
@@ -967,7 +967,7 @@ public class OrderPage extends CheckConnection {
         binding.orderDetailTax.setText("0.00");
         binding.orderDetailTip.setText("0.00");
         binding.orderDetailGrandTotal.setText("0.00");
-        binding.orderDetailCash.setText("0.00");
+        binding.orderDetailPaid.setText("0.00");
         binding.orderDetailBalance.setText("0.00");
         binding.orderDetailSubtotal.setText("0.00");
         binding.orderDetailProductDiscount.setText("0.00");

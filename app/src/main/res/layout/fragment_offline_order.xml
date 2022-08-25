@@ -153,6 +153,7 @@
                 android:layout_alignParentBottom="true"
                 android:layout_marginLeft="15dp"
                 android:layout_marginRight="15dp"
+                android:layout_marginBottom="10dp"
                 android:scrollbars="vertical"
                 tools:listitem="@layout/view_offline_order_list" />
 
