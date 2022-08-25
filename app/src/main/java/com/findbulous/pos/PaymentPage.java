@@ -22,9 +22,7 @@ import android.widget.ArrayAdapter;
 import android.widget.PopupWindow;
 import android.widget.Toast;
 
-import com.findbulous.pos.API.DeleteOneDraftOrder;
 import com.findbulous.pos.API.SetOrderCustomer;
-import com.findbulous.pos.API.SetOrderTable;
 import com.findbulous.pos.Adapters.PaymentAdapter;
 import com.findbulous.pos.Adapters.PaymentOrderLineAdapter;
 import com.findbulous.pos.Adapters.SplitBillOrderAdapter;
@@ -40,6 +38,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.io.BufferedReader;
@@ -50,7 +50,6 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
 import io.realm.Realm;
@@ -81,7 +80,7 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
 
     private POS_Config pos_config;
     private Currency currency;
-    private ArrayList<Payment_Method> payment_method;
+    private ArrayList<Payment_Method> payment_methods;
 
     //Payment Methods Drop Down List
     private ArrayAdapter<Payment_Method> paymentMethodAdapter;
@@ -141,8 +140,8 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
 //        binding.paymentBarAddTip.setVisibility(View.VISIBLE);
         //Currency setting
         currency = realm.copyFromRealm(realm.where(Currency.class).findFirst());
-        payment_method = new ArrayList<>();
-        payment_method.addAll(realm.copyFromRealm(realm.where(Payment_Method.class).findAll()));
+        payment_methods = new ArrayList<>();
+        payment_methods.addAll(realm.copyFromRealm(realm.where(Payment_Method.class).findAll()));
 
         //Customer Setting
         if((current_customer_id != -1) && (current_customer_id != 0)) {
@@ -207,8 +206,8 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
 
 
         //Payment Methods Spinner / Drop Down List
-        selectedPaymentMethod = payment_method.get(0);
-        paymentMethodAdapter = new ArrayAdapter<Payment_Method>(contextpage, R.layout.textview_spinner_item_larger, payment_method){
+        selectedPaymentMethod = payment_methods.get(0);
+        paymentMethodAdapter = new ArrayAdapter<Payment_Method>(contextpage, R.layout.textview_spinner_item_larger, payment_methods){
             @Override
             public View getDropDownView(int position, View convertView, ViewGroup parent){
                 View v = null;
@@ -388,7 +387,7 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
                         finish();
                     }else{
                         new apiCheckoutOrder(updated_current_order.getOrder_id(), updated_current_order.getLocal_order_id(),
-                                payments, updated_current_order.getTip_amount(), intent).execute();
+                                payments, payment_methods, updated_current_order.getTip_amount(), intent).execute();
                     }
 
                 }else{
@@ -618,15 +617,18 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
         private ProgressDialog pd = null;
         private int order_id, local_order_id;
         private ArrayList<Payment> payments;
+        private ArrayList<Payment_Method> payment_methods;
         private double tip_amount;
         private Intent intent;
 
         private Order update_order;
 
-        public apiCheckoutOrder(int order_id, int local_order_id, ArrayList<Payment> payments, double tip_amount, Intent intent){
+        public apiCheckoutOrder(int order_id, int local_order_id, ArrayList<Payment> payments,
+                                ArrayList<Payment_Method> payment_methods, double tip_amount, Intent intent){
             this.order_id = order_id;
             this.local_order_id = local_order_id;
             this.payments = payments;
+            this.payment_methods = payment_methods;
             this.tip_amount = tip_amount;
             this.intent = intent;
         }
@@ -715,18 +717,35 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
                     if (status.equals("OK")) {
                         JSONObject jresult = json.getJSONObject("result");
                         JSONObject jo_order = jresult.getJSONObject("order");
+                        JSONArray jo_payment_array = jo_order.getJSONArray("payments");
 
                         //order
                         if(update_order != null) {
                             update_order.setAmount_paid(jo_order.getDouble("amount_paid"));
-                            update_order.setDisplay_amount_paid(currencyDisplayFormat(jo_order.getDouble("amount_paid")));
+                            update_order.setDisplay_amount_paid(jo_order.getString("display_amount_paid"));
                             update_order.setAmount_return(jo_order.getDouble("amount_return"));
-                            update_order.setDisplay_amount_return(currencyDisplayFormat(jo_order.getDouble("amount_return")));
+                            update_order.setDisplay_amount_return(jo_order.getString("display_amount_return"));
                             update_order.setState(jo_order.getString("state"));
                             update_order.setState_name(jo_order.getString("state_name"));
-                            update_order.setIs_tipped(jo_order.getBoolean("is_tipped"));
-                            update_order.setTip_amount(jo_order.getDouble("tip_amount"));
-                            update_order.setDisplay_tip_amount(currencyDisplayFormat(jo_order.getDouble("tip_amount")));
+                            if(jo_order.getString("is_tipped").length() > 0)
+                                update_order.setIs_tipped(jo_order.getBoolean("is_tipped"));
+                            if(jo_order.getString("tip_amount").length() > 0)
+                                update_order.setTip_amount(jo_order.getDouble("tip_amount"));
+                            if(jo_order.getString("display_tip_amount").length() > 0)
+                                update_order.setDisplay_tip_amount(jo_order.getString("display_tip_amount"));
+                        }
+
+                        for(int i = 0; i < payments.size(); i++){
+                            JSONObject jo_payment = jo_payment_array.getJSONObject(i);
+                            payments.get(i).setId(jo_payment.getInt("id"));
+                            payments.get(i).setAmount(jo_payment.getDouble("amount"));
+                            payments.get(i).setDisplay_amount(currencyDisplayFormat(jo_payment.getDouble("amount")));
+                            int payment_method_id = jo_payment.getInt("payment_method_id");
+                            for(int x = 0; x < payment_methods.size(); x++){
+                                if(payment_methods.get(x).getPayment_method_id() == payment_method_id){
+                                    payments.get(i).setPayment_method(payment_methods.get(x));
+                                }
+                            }
                         }
                     }
                 }catch (JSONException e) {
@@ -753,6 +772,7 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
                         @Override
                         public void execute(Realm realm) {
                             realm.insertOrUpdate(update_order);
+                            realm.insertOrUpdate(payments);
                         }
                     });
                 }
