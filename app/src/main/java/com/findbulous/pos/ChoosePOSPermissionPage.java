@@ -678,7 +678,7 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
                                         jTti_by_amount_type.getDouble("division"), jo.getString("display_list_price"),
                                         jo.getString("display_standard_price"), jo.getString("display_margin"),
                                         jo.getString("display_margin_percent"), jo.getString("display_price_incl_tax"),
-                                        jo.getString("display_price_excl_tax"), category);
+                                        jo.getString("display_price_excl_tax"), jo.getString("featured_img_url"), category);
 
                                 // Product Taxes
                                 if(jo.getJSONArray("taxes").length() > 0){

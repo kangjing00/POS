@@ -63,6 +63,8 @@ public class OrderHistoryAdapter extends RecyclerView.Adapter<OrderHistoryAdapte
         if((position % 2) == 0){
             //even number (recyclerview start from zero) [array]
             holder.binding.viewOrderHistoryLl.setBackgroundResource(R.drawable.box_corner_nopadding_white);
+        }else{
+            holder.binding.viewOrderHistoryLl.setBackgroundResource(R.drawable.box_corner_nopadding);
         }
 
         holder.binding.viewOrderHistoryLl.setOnClickListener(new View.OnClickListener() {

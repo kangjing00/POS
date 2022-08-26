@@ -5,22 +5,16 @@ import android.os.Bundle;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
-
-import com.findbulous.pos.Adapters.OrderHistoryAdapter;
 import com.findbulous.pos.Adapters.OrderOnGoingAdapter;
 import com.findbulous.pos.Order;
 import com.findbulous.pos.OrderPage;
 import com.findbulous.pos.R;
-import com.findbulous.pos.databinding.FragmentOrderHistoryBinding;
 import com.findbulous.pos.databinding.FragmentOrderOnGoingBinding;
-
 import java.util.ArrayList;
-
 import io.realm.Case;
 import io.realm.Realm;
 import io.realm.RealmResults;

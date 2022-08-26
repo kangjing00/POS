@@ -17,6 +17,7 @@ public class Product extends RealmObject {
             amount_tax_incl_division;
     private String display_list_price, display_standard_price, display_margin, display_margin_percent,
             display_price_incl_tax, display_price_excl_tax;
+    private String featured_img_url;
 
     private POS_Category category;
 
@@ -29,7 +30,7 @@ public class Product extends RealmObject {
                    double price_incl_tax, double price_excl_tax, double amount_tax_incl_fixed, double amount_tax_incl_percent,
                    double amount_tax_incl_division, String display_list_price, String display_standard_price,
                    String display_margin, String display_margin_percent, String display_price_incl_tax,
-                   String display_price_excl_tax, POS_Category category) {
+                   String display_price_excl_tax, String featured_img_url, POS_Category category) {
         this.id = id;
         this.product_id = product_id;
         this.product_tmpl_id = product_tmpl_id;
@@ -50,6 +51,7 @@ public class Product extends RealmObject {
         this.display_margin_percent = display_margin_percent;
         this.display_price_incl_tax = display_price_incl_tax;
         this.display_price_excl_tax = display_price_excl_tax;
+        this.featured_img_url = featured_img_url;
         this.category = category;
     }
     public Product(){
@@ -73,6 +75,7 @@ public class Product extends RealmObject {
         display_margin_percent = null;
         display_price_incl_tax = null;
         display_price_excl_tax = null;
+        featured_img_url = null;
         category = null;
     }
 
@@ -240,5 +243,13 @@ public class Product extends RealmObject {
 
     public void setAmount_tax_incl_division(double amount_tax_incl_division) {
         this.amount_tax_incl_division = amount_tax_incl_division;
+    }
+
+    public String getFeatured_img_url() {
+        return featured_img_url;
+    }
+
+    public void setFeatured_img_url(String featured_img_url) {
+        this.featured_img_url = featured_img_url;
     }
 }

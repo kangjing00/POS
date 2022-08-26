@@ -67,6 +67,8 @@ public class OrderOnGoingAdapter  extends RecyclerView.Adapter<OrderOnGoingAdapt
         if((position % 2) == 0){
             //even number (recyclerview start from zero) [array]
             holder.binding.viewOrderOnGoingTitleLl.setBackgroundResource(R.drawable.box_corner_nopadding_white);
+        }else{
+            holder.binding.viewOrderOnGoingTitleLl.setBackgroundResource(R.drawable.box_corner_nopadding);
         }
 
         holder.binding.viewOrderOnGoingTitleLl.setOnClickListener(new View.OnClickListener() {

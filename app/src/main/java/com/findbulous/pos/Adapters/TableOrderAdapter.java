@@ -52,6 +52,8 @@ public class TableOrderAdapter extends RecyclerView.Adapter<TableOrderAdapter.Ta
         if((holder.getAdapterPosition() % 2) == 0){
             //even number (recyclerview start from zero) [array]
             holder.binding.viewTableOrderSelectionLl.setBackgroundResource(R.drawable.box_corner_nopadding_white);
+        }else{
+            holder.binding.viewTableOrderSelectionLl.setBackgroundResource(R.drawable.box_corner_nopadding);
         }
 
         holder.binding.getRoot().setOnClickListener(new View.OnClickListener() {

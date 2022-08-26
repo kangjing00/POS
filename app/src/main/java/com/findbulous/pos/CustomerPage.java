@@ -1846,6 +1846,8 @@ public class CustomerPage extends CheckConnection implements CartOrderLineAdapte
         order_lines.get(position).setQty(updateOrderLine.getQty());
         order_lines.get(position).setPrice_before_discount(updateOrderLine.getPrice_before_discount());
         order_lines.get(position).setDisplay_price_before_discount(updateOrderLine.getDisplay_price_before_discount());
+        order_lines.get(position).setTotal_cost(updateOrderLine.getTotal_cost());
+        order_lines.get(position).setDisplay_total_cost(currencyDisplayFormat(updateOrderLine.getTotal_cost()));
 
         realm.executeTransaction(new Realm.Transaction() {
             @Override

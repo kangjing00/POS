@@ -231,7 +231,7 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
                                 calculate_price_unit_excl_tax(order_lines.get(p).getProduct(), (price_unit - amount_discount));
                         double price_subtotal = price_unit_excl_tax * qty;
                         double price_subtotal_incl = calculate_price_subtotal_incl(product_taxes, price_subtotal);
-
+                        double total_cost = order_lines.get(p).getProduct().getStandard_price() * qty;
 
 
                         order_lines.get(p).setPrice_subtotal(price_subtotal);
@@ -241,6 +241,8 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
                         order_lines.get(p).setQty(qty);
                         order_lines.get(p).setPrice_before_discount(price_before_discount);
                         order_lines.get(p).setDisplay_price_before_discount(currencyDisplayFormat(price_before_discount));
+                        order_lines.get(p).setTotal_cost(total_cost);
+                        order_lines.get(p).setDisplay_total_cost(currencyDisplayFormat(total_cost));
 
                         Order_Line updateOrderLine = order_lines.get(p);
                         holder.binding.setOrderLine(updateOrderLine);

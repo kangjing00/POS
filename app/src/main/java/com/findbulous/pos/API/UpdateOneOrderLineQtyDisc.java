@@ -105,8 +105,8 @@ public class UpdateOneOrderLineQtyDisc extends AsyncTask<String, String, String>
                 .equalTo("product_tmpl_id", product.getProduct_tmpl_id()).findAll();
         product_taxes = new ArrayList<>();
         product_taxes.addAll(realm.copyFromRealm(product_tax_results));
-        if(attribute_values != null) {
-            attribute_values = (RealmList<Attribute_Value>) realm.copyFromRealm(order_line.getAttribute_values());
+        if(order_line.getAttribute_values().size() > 0) {
+            attribute_values = order_line.getAttribute_values();
         }else{
             attribute_values = null;
         }

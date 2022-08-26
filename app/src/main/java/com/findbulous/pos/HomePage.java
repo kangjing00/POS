@@ -1624,6 +1624,9 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
             popupBinding.productModifierNote.setVisibility(View.GONE);
             popupBinding.textView1.setVisibility(View.INVISIBLE);
             popupBinding.textView1.setTextSize(0);
+        }else{
+            if(order_line != null)
+                popupBinding.productModifierNote.setText(order_line.getCustomer_note());
         }
 
         if(order_line == null){ //from menu because it is new order_line
@@ -1704,7 +1707,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                 double price_extra = 0.0;
                 String product_attributesName = null;
                 String customer_note = null;
-                if(!pos_config.isIface_orderline_customer_notes()) {
+                if(pos_config.isIface_orderline_customer_notes()) {
                     customer_note = popupBinding.productModifierNote.getText().toString().trim();
                     if(customer_note.equalsIgnoreCase("")){
                         customer_note = null;
@@ -1736,15 +1739,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
 
 
 
-                boolean empty_custom_et = true, empty_customer_note = true;
-
-                if(pos_config.isIface_orderline_customer_notes()){
-                    if(popupBinding.productModifierNote.getText().toString().trim().length() > 0){
-                        empty_customer_note = false;
-                    }
-                }else{
-                    empty_customer_note = false;
-                }
+                boolean empty_custom_et = true;
 
                 if(pos_config.isProduct_configurator()){
                     boolean attribute_is_custom = false; //one of the attribute_value selected is custom
@@ -1767,30 +1762,31 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                 }else{
                     empty_custom_et = false;
                 }
-                System.out.println("EMPTY_CUSTOMER_NOTE: " + empty_customer_note + "\n"
-                + "EMPTY_CUSTOM_ET: " + empty_custom_et);
 
-                if(!empty_customer_note && !empty_custom_et) {
+                if(!empty_custom_et) {
                     if(order_line == null) {
-
+                        System.out.println("Customer Noteeeeeeeeeeeee: " + customer_note);
                         boolean sameProduct = false;
                         for(int i = 0; i < order_lines.size(); i++) {
                             Order_Line order_line_from_list = order_lines.get(i);
+                            //same product, no discount, no note
                             if ((product.getId() == order_line_from_list.getProduct().getProduct_id())
                                     && (order_line_from_list.getDiscount_type() == null)
-                                    && (customer_note == null)){    //same product, no discount, no note
+                                    && (customer_note == null)
+                                    && ((order_line_from_list.getCustomer_note() == null) || (order_line_from_list.getCustomer_note().equalsIgnoreCase("")))){
                                 //attribute_value same, attribute_value is not custom
-                                boolean differentAttributeValue = true, attributeHasCustom = false;
+                                boolean differentAttributeValue = false, attributeHasCustom = false;
                                 for(int x = 0; x < allAttributes.length; x++){
-                                    if(allAttributes[x].getAttribute_line_id() !=
-                                            order_line_from_list.getAttribute_values().get(x).getAttribute_line_id()){
-                                        differentAttributeValue = false;
+                                    if(allAttributes[x].getProduct_template_attribute_value_id() !=
+                                            order_line_from_list.getAttribute_values().get(x).getProduct_template_attribute_value_id()){
+                                        differentAttributeValue = true;
                                     }
 
                                     if(allAttributes[x].isIs_custom()){
                                         attributeHasCustom = true;
                                     }
                                 }
+
                                 if((!differentAttributeValue) && (!attributeHasCustom)) {   //same attribute and has no custom
                                     int qty = order_line_from_list.getQty() + 1;
                                     double price_unit_excl_tax = calculate_price_unit_excl_tax(product, order_line_from_list.getPrice_unit());
@@ -2069,7 +2065,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
             String urlParameters = "&order_id=" + order_id +
                     "&products[0][product_id]=" + product_id + "&products[0][qty]=1";
             if(customer_note != null){
-                urlParameters += "&customer_note=" + customer_note;
+                urlParameters += "&products[0][customer_note]=" + customer_note;
             }
             if(allAttributes != null){
                 for(int i = 0; i < allAttributes.length; i++){
@@ -2655,6 +2651,8 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         order_lines.get(position).setQty(updateOrderLine.getQty());
         order_lines.get(position).setPrice_before_discount(updateOrderLine.getPrice_before_discount());
         order_lines.get(position).setDisplay_price_before_discount(updateOrderLine.getDisplay_price_before_discount());
+        order_lines.get(position).setTotal_cost(updateOrderLine.getTotal_cost());
+        order_lines.get(position).setDisplay_total_cost(currencyDisplayFormat(updateOrderLine.getTotal_cost()));
 
         realm.executeTransaction(new Realm.Transaction() {
             @Override
