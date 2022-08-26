@@ -841,9 +841,6 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
         popupBinding.productsRv.setAdapter(splittingOrderLineAdapter);
 
 
-
-
-
         popupBinding.proceedBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

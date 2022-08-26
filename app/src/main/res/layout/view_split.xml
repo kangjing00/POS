@@ -6,6 +6,10 @@
         <variable
             name="orderLine"
             type="com.findbulous.pos.Order_Line" />
+
+        <variable
+            name="splitQty"
+            type="int" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -19,7 +23,7 @@
             android:id="@+id/split_quantity"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:text="0 / "
+            android:text='@{String.format("%d / ", splitQty)}'
             android:layout_marginLeft="10dp"
             android:visibility="gone"
             app:layout_constraintTop_toTopOf="parent"

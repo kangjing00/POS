@@ -64,6 +64,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -1285,6 +1286,11 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
         wm.updateViewLayout(container, p);
 
         popupBinding.setProduct(product);
+        System.out.println("IMAGEEEEEEE URLLLLLLLLLLLLLL: \n" + product.getFeatured_img_url());
+        Picasso.with(contextpage).load(product.getFeatured_img_url()).fit().centerCrop()
+                .error(R.drawable.img_placeholder)
+                .placeholder( R.drawable.progress_animation)
+                .into(popupBinding.productDetailsImage);
 
         popupBinding.productDetailsDoneBtn.setOnClickListener(new View.OnClickListener() {
             @Override
