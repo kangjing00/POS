@@ -981,7 +981,6 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
 
         splitBillViewModel.setTotalSplitBill(currencyDisplayFormat(totalSplitBill));
     }
-
     private Order_Line updateQty(Order_Line order_lineToUpdate, int qty){
         RealmResults<Product_Tax> product_tax_results = realm.where(Product_Tax.class)
                 .equalTo("product_tmpl_id", order_lineToUpdate.getProduct().getProduct_tmpl_id()).findAll();
@@ -1017,6 +1016,164 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
 
         return order_lineToUpdate;
     }
+
+    //split order api (havent done yet) [api not yet ready]
+    public class apiSplitOrder extends AsyncTask<String, String, String> {
+        private ProgressDialog pd = null;
+        private int order_id, local_order_id;
+
+        private Order update_order;
+
+        public apiSplitOrder(int order_id, int local_order_id){
+            this.order_id = order_id;
+            this.local_order_id = local_order_id;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            if (pd == null) {
+                pd = createProgressDialog(contextpage);
+                pd.show();
+            }
+            realm = Realm.getDefaultInstance();
+
+            Order result = realm.where(Order.class).equalTo("local_order_id", local_order_id).findFirst();
+            if(result != null)
+                update_order = realm.copyFromRealm(result);
+            else
+                update_order = null;
+        }
+
+        @Override
+        protected String doInBackground(String... strings) {
+            long timeBefore = Calendar.getInstance().getTimeInMillis();
+            String connection_error = "";
+
+            String urlParameters = "&order_id=" + order_id;
+
+
+            //Testing (check error)
+            urlParameters += "&dev=1";
+
+            byte[] postData = urlParameters.getBytes(Charset.forName("UTF-8"));
+            int postDataLength = postData.length;
+
+            String url = "https://www.c3rewards.com/api/merchant/?module=pos&action=checkout_order";
+            String agent = "c092dc89b7aac085a210824fb57625db";
+            String jsonUrl =url + "&agent=" + agent;
+            System.out.println(jsonUrl);
+
+            URL obj;
+            try{
+                obj = new URL(jsonUrl);
+                HttpsURLConnection con = (HttpsURLConnection) obj.openConnection();
+                con.setRequestMethod("POST");
+                con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                con.setRequestProperty("charset", "utf-8");
+                con.setRequestProperty("Content-Length", Integer.toString(postDataLength));
+
+                // Send post request
+                con.setDoOutput(true);
+                DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+                wr.writeBytes(urlParameters);
+                wr.flush();
+                wr.close();
+
+                int responseCode = con.getResponseCode();
+                System.out.println("\nSending 'POST' request to URL : " + jsonUrl);
+                System.out.println("Post parameters : " + urlParameters);
+                System.out.println("Response Code : " + responseCode);
+
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                JsonElement je = JsonParser.parseString(String.valueOf(response));
+                String prettyJsonString = gson.toJson(je);
+                System.out.println(prettyJsonString);
+                System.out.println("Post parameters : " + urlParameters);
+                System.out.println(response);
+                String data = response.toString();
+                try{
+                    JSONObject json = new JSONObject(data);
+                    String status = json.getString("status");
+
+                    if (status.equals("OK")) {
+                        JSONObject jresult = json.getJSONObject("result");
+                        JSONObject jo_order = jresult.getJSONObject("order");
+                        JSONArray jo_payment_array = jo_order.getJSONArray("payments");
+
+                        //order
+                        if(update_order != null) {
+                            update_order.setAmount_paid(jo_order.getDouble("amount_paid"));
+                            update_order.setDisplay_amount_paid(jo_order.getString("display_amount_paid"));
+                            update_order.setAmount_return(jo_order.getDouble("amount_return"));
+                            update_order.setDisplay_amount_return(jo_order.getString("display_amount_return"));
+                            update_order.setState(jo_order.getString("state"));
+                            update_order.setState_name(jo_order.getString("state_name"));
+                            if(jo_order.getString("is_tipped").length() > 0)
+                                update_order.setIs_tipped(jo_order.getBoolean("is_tipped"));
+                            if(jo_order.getString("tip_amount").length() > 0)
+                                update_order.setTip_amount(jo_order.getDouble("tip_amount"));
+                            if(jo_order.getString("display_tip_amount").length() > 0)
+                                update_order.setDisplay_tip_amount(jo_order.getString("display_tip_amount"));
+                        }
+
+                        for(int i = 0; i < payments.size(); i++){
+                            JSONObject jo_payment = jo_payment_array.getJSONObject(i);
+                            payments.get(i).setId(jo_payment.getInt("id"));
+                            payments.get(i).setAmount(jo_payment.getDouble("amount"));
+                            payments.get(i).setDisplay_amount(jo_payment.getString("display_amount"));
+                            int payment_method_id = jo_payment.getInt("payment_method_id");
+                            for(int x = 0; x < payment_methods.size(); x++){
+                                if(payment_methods.get(x).getPayment_method_id() == payment_method_id){
+                                    payments.get(i).setPayment_method(payment_methods.get(x));
+                                }
+                            }
+                        }
+                    }
+                }catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }catch (IOException e){
+                Log.e("error", "cannot fetch data");
+                connection_error = e.getMessage() + "";
+                System.out.println(connection_error);
+            }
+
+            long timeAfter = Calendar.getInstance().getTimeInMillis();
+            System.out.println("Set order note time taken: " + (timeAfter - timeBefore) + "ms");
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            if(!NetworkUtils.isNetworkAvailable(contextpage)){
+                Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
+            }else{
+                if(update_order != null) {
+                    realm.executeTransaction(new Realm.Transaction() {
+                        @Override
+                        public void execute(Realm realm) {
+                            realm.insertOrUpdate(update_order);
+                            realm.insertOrUpdate(payments);
+                        }
+                    });
+                }
+            }
+
+            if (pd != null)
+                pd.dismiss();
+        }
+    }
+
+
 
     private void showOrderProducts() {
         PopupWindow popup = new PopupWindow(contextpage);
