@@ -294,14 +294,14 @@ public class CartOrderLineAdapter extends RecyclerView.Adapter<CartOrderLineAdap
                         if ((!holder.binding.productOrderDiscountEt.getText().toString().equalsIgnoreCase(""))
                                 && (Double.valueOf(holder.binding.productOrderDiscountEt.getText().toString()) > 0.0)
                                 && (Double.valueOf(holder.binding.productOrderDiscountEt.getText().toString()) <=
-                                order_lines.get(p).getPrice_before_discount())) {
+                                order_lines.get(p).getPrice_unit())) {
                             discount = Double.valueOf(holder.binding.productOrderDiscountEt.getText().toString());
                             discount_type = "fixed_amount";
                             holder.binding.productOrderProductPriceBeforeDiscount.setVisibility(View.VISIBLE);
                         } else {
                             if((Double.valueOf(holder.binding.productOrderDiscountEt.getText().toString()) >
-                                    order_lines.get(p).getPrice_before_discount())) {
-                                Toast.makeText(context, "Discount over the total product price is impossible", Toast.LENGTH_SHORT).show();
+                                    order_lines.get(p).getPrice_unit())) {
+                                Toast.makeText(context, "Discount over the product unit price is impossible", Toast.LENGTH_SHORT).show();
                             }
                             discount_type = null;
                             discount = 0.0;
