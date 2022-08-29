@@ -152,7 +152,7 @@
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
                 android:layout_marginRight="20dp"
-                android:layout_toRightOf="@+id/table_tv_order_hold"
+                android:layout_toRightOf="@+id/table_tv_occupied"
                 android:drawableStart="@drawable/ic_circle"
                 android:drawablePadding="5dp"
                 android:drawableTint="@color/green"
