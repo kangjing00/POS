@@ -28,7 +28,6 @@ import com.findbulous.pos.Network.NetworkUtils;
 import com.findbulous.pos.OrderFragments.FragmentOfflineOrder;
 import com.findbulous.pos.OrderFragments.FragmentOrderHistory;
 import com.findbulous.pos.OrderFragments.FragmentOrderOnGoing;
-import com.findbulous.pos.OrderFragments.FragmentOrderOnHold;
 import com.findbulous.pos.databinding.CashInOutPopupBinding;
 import com.findbulous.pos.databinding.OrderPageBinding;
 import com.findbulous.pos.databinding.ToolbarSyncPopupBinding;
@@ -80,7 +79,6 @@ public class OrderPage extends CheckConnection {
     private Currency currency;
     //Fragments
 //    private FragmentOrderHistory fragmentOrderHistory;
-//    private FragmentOrderOnHold fragmentOrderOnHold;
 //    private FragmentOfflineOrder fragmentOfflineOrder;
 
     private String statuslogin;
@@ -142,16 +140,6 @@ public class OrderPage extends CheckConnection {
             @Override
             public void onClick(View view) {
                 fragmentOrderOffline();
-            }
-        });
-        binding.orderOnHoldRb.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                ft = fm.beginTransaction();
-                ft.replace(binding.orderFragmentFl.getId(), new FragmentOrderOnHold()).commit();
-                binding.orderRelativeLayout.setVisibility(View.GONE);
-                visibleTipCashBalance();
-                resetOrderSelected();
             }
         });
         binding.orderOnGoingRb.setOnClickListener(new View.OnClickListener(){

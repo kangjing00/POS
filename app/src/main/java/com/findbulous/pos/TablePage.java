@@ -32,7 +32,6 @@ import com.findbulous.pos.Adapters.TableOrderAdapter;
 import com.findbulous.pos.Network.CheckConnection;
 import com.findbulous.pos.Network.NetworkUtils;
 import com.findbulous.pos.databinding.CashInOutPopupBinding;
-import com.findbulous.pos.databinding.TableAddonProceedPopupBinding;
 import com.findbulous.pos.databinding.TableOrderSelectionPopupBinding;
 import com.findbulous.pos.databinding.TablePageBinding;
 import com.findbulous.pos.databinding.ToolbarSyncPopupBinding;
@@ -629,133 +628,6 @@ public class TablePage extends CheckConnection implements
             new UpdateTableState(contextpage, table).execute();
         }
     }
-    //OnHold and Occupied table popup
-    private void showAddonAndProceed(View view, Table clickedTable) {
-        PopupWindow popup = new PopupWindow(contextpage);
-        TableAddonProceedPopupBinding popupBinding = TableAddonProceedPopupBinding.inflate(getLayoutInflater());
-//        View layout = getLayoutInflater().inflate(R.layout.table_addon_proceed_popup, null);
-        popup.setContentView(popupBinding.getRoot());
-        // Set content width and height
-        popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
-        popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
-        // Closes the popup window when touch outside of it - when looses focus
-        popup.setOutsideTouchable(true);
-        popup.setFocusable(true);
-        // Show anchored to button
-        popup.setElevation(8);
-        popup.setBackgroundDrawable(null);
-        popup.showAsDropDown(view);
-
-
-        popupBinding.tableAddonProceedPopupTableName.setText("Table " + clickedTable.getName());
-        Order order = realm.where(Order.class).equalTo("table.table_id", clickedTable.getTable_id()).
-                and().notEqualTo("state", "paid").findFirst();
-        Customer customer = (order == null)? null : realm.where(Customer.class).equalTo("customer_id", order.getCustomer().getCustomer_id()).findFirst();
-        int current_local_order_id = currentOrderSharedPreference.getInt("localOrderId", -1);
-
-        if(order != null){
-//            popupBinding.tableAddonProceedPopupOrderId.setText("#" + order.getOrder_id());
-//            popupBinding.tableAddonProceedPopupOrderId.setVisibility(View.VISIBLE);
-//            popupBinding.tableAddonProceedPopupTv2.setVisibility(View.VISIBLE);
-            popupBinding.tableTransferBtn.setVisibility(View.VISIBLE);
-        }else{
-            popupBinding.tableTransferBtn.setVisibility(View.GONE);
-//            popupBinding.tableAddonProceedPopupTv2.setVisibility(View.GONE);
-//            popupBinding.tableAddonProceedPopupOrderId.setVisibility(View.GONE);
-        }
-
-        popupBinding.addMoreOrderBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-            }
-        });
-        popupBinding.tableTransferBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                tableTransferring = true;
-                turnOnTransferCancelBtn();
-                tableTransferFrom = clickedTable;
-                popup.dismiss();
-                Toast.makeText(TablePage.this, "Choose a table for transferring", Toast.LENGTH_SHORT).show();
-            }
-        });
-        popupBinding.tableAddonBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(current_local_order_id == -1) { //no current order
-                    if(order != null) { //the table has an order
-                        currentCustomerSharedPreferenceEdit.putInt("customerID", customer.getCustomer_id());
-                        currentCustomerSharedPreferenceEdit.putString("customerName", customer.getCustomer_name());
-                        currentCustomerSharedPreferenceEdit.putString("customerEmail", customer.getCustomer_email());
-                        currentCustomerSharedPreferenceEdit.putString("customerPhoneNo", customer.getCustomer_phoneNo());
-                        currentCustomerSharedPreferenceEdit.putString("customerIdentityNo", customer.getCustomer_identityNo());
-                        currentCustomerSharedPreferenceEdit.putString("customerBirthdate", customer.getCustomer_birthdate());
-                        currentCustomerSharedPreferenceEdit.commit();
-
-                        currentOrderSharedPreferenceEdit.putInt("orderingState", 1);
-                        currentOrderSharedPreferenceEdit.putInt("localOrderId", order.getLocal_order_id());
-                        currentOrderSharedPreferenceEdit.putInt("orderTypePosition", 1);
-                        currentOrderSharedPreferenceEdit.commit();
-
-                        Intent intent = new Intent(contextpage, HomePage.class);
-                        startActivity(intent);
-                        finish();
-                    }else{ //the table has no order
-//                        addNewOrder(clickedTable);
-//                        currentOrderSharedPreferenceEdit.putInt("orderingState", 1);    //ordering
-//                        currentOrderSharedPreferenceEdit.putInt("orderTypePosition", 1); //dine-in
-//                        currentOrderSharedPreferenceEdit.commit();
-//                        //update table status
-//                        updateTableOccupied(clickedTable);
-//                        Intent intent = new Intent(contextpage, HomePage.class);
-//                        startActivity(intent);
-//                        finish();
-                    }
-                }else{
-                    Toast.makeText(contextpage, "Can not resume, an order is in process", Toast.LENGTH_SHORT).show();
-                }
-                popup.dismiss();
-            }
-        });
-        popupBinding.tableProceedBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(current_local_order_id == -1) { //no current order
-                    if(order != null) { //the table has an order
-                        currentCustomerSharedPreferenceEdit.putInt("customerID", customer.getCustomer_id());
-                        currentCustomerSharedPreferenceEdit.putString("customerName", customer.getCustomer_name());
-                        currentCustomerSharedPreferenceEdit.putString("customerEmail", customer.getCustomer_email());
-                        currentCustomerSharedPreferenceEdit.putString("customerPhoneNo", customer.getCustomer_phoneNo());
-                        currentCustomerSharedPreferenceEdit.putString("customerIdentityNo", customer.getCustomer_identityNo());
-                        currentCustomerSharedPreferenceEdit.putString("customerBirthdate", customer.getCustomer_birthdate());
-                        currentCustomerSharedPreferenceEdit.commit();
-
-                        currentOrderSharedPreferenceEdit.putInt("orderingState", 1);
-                        currentOrderSharedPreferenceEdit.putInt("localOrderId", order.getLocal_order_id());
-                        currentOrderSharedPreferenceEdit.putInt("orderTypePosition", 1);
-                        currentOrderSharedPreferenceEdit.commit();
-
-                        if (order.getOrder_lines().size() == 0) { //empty cart
-                            Toast.makeText(TablePage.this, "Please proceed payment with at least 1 product", Toast.LENGTH_SHORT).show();
-                            Intent intent = new Intent(contextpage, HomePage.class);
-                            startActivity(intent);
-                        } else { //ready to payment
-                            Intent intent = new Intent(contextpage, PaymentPage.class);
-                            startActivity(intent);
-                        }
-                        finish();
-                    }else{ //the table has no order
-
-                    }
-                }else{
-                    Toast.makeText(contextpage, "Can not resume, an order is in process", Toast.LENGTH_SHORT).show();
-                }
-                popup.dismiss();
-            }
-        });
-
-    }
     private void showOrderSelection(Table clickedTable){
         PopupWindow popup = new PopupWindow(contextpage);
         TableOrderSelectionPopupBinding popupBinding = TableOrderSelectionPopupBinding.inflate(getLayoutInflater());
@@ -1203,8 +1075,6 @@ public class TablePage extends CheckConnection implements
                     }
                 }else if(clickedTable.getState().equalsIgnoreCase("O")){
                     showOrderSelection(clickedTable);
-                }else{//obsolete "table onHold"
-                    //showAddonAndProceed(v, clickedTable);
                 }
             }else{      // Ordering rn
                 if(tableSelected != null){
@@ -1321,8 +1191,6 @@ public class TablePage extends CheckConnection implements
                             }
                         }else if(clickedTable.getState().equalsIgnoreCase("O")){
                             showOrderSelection(clickedTable);
-                        }else{//obsolete "table onHold"
-                            //showAddonAndProceed(v, clickedTable);
                         }
                     }
                 }

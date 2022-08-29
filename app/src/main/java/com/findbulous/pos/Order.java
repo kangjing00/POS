@@ -10,7 +10,7 @@ public class Order  extends RealmObject {
     @PrimaryKey
     private int local_order_id;
     private int order_id;
-    private String name, date_order, pos_reference, note, state, state_name; //state: "paid", "draft" ("OnGoing"), "onHold"
+    private String name, date_order, pos_reference, note, state, state_name; //state: "paid", "draft" ("OnGoing")
     private double amount_tax, amount_total, amount_paid, amount_return, amount_subtotal, tip_amount, discount;
     private boolean is_tipped;
     private int customer_count;

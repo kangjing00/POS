@@ -10,7 +10,7 @@ public class Table extends RealmObject {
     private double position_h, position_v, width, height;
     private int seats;
     private boolean active;
-    private String state; // V - vacant, H - on hold, O - occupied
+    private String state; // V - vacant, O - occupied
 
     private Floor floor;
 

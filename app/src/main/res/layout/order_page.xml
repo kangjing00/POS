@@ -70,18 +70,6 @@
                     android:textColor="@drawable/categorybtn_text_color" />
 
                 <RadioButton
-                    android:id="@+id/order_on_hold_rb"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="5dp"
-                    android:background="@drawable/navbtn_selector"
-                    android:button="@android:color/transparent"
-                    android:padding="8dp"
-                    android:text="Order On Hold"
-                    android:visibility="gone"
-                    android:textColor="@drawable/categorybtn_text_color" />
-
-                <RadioButton
                     android:id="@+id/offline_order_rb"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
