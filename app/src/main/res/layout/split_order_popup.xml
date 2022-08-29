@@ -4,7 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-
+        <variable
+            name="splitBillViewModel"
+            type="com.findbulous.pos.PaymentPageSplitBillViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -92,7 +94,7 @@
             android:id="@+id/payment_grand_total"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="RM 0.00"
+            android:text="@{splitBillViewModel.totalSplitBill}"
             android:textSize="60dp"
             android:textColor="@color/green"
             android:textAlignment="center"

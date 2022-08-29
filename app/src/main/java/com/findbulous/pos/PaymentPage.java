@@ -28,11 +28,13 @@ import com.findbulous.pos.Adapters.PaymentOrderLineAdapter;
 import com.findbulous.pos.Adapters.SplitBillOrderAdapter;
 import com.findbulous.pos.Network.CheckConnection;
 import com.findbulous.pos.Network.NetworkUtils;
+import com.findbulous.pos.databinding.CartOrderAddDiscountPopupBinding;
 import com.findbulous.pos.databinding.CashInOutPopupBinding;
 import com.findbulous.pos.databinding.PaymentAddTipPopupBinding;
 import com.findbulous.pos.databinding.PaymentOrderLinePopupBinding;
 import com.findbulous.pos.databinding.PaymentPageBinding;
 import com.findbulous.pos.databinding.SplitOrderPopupBinding;
+import com.findbulous.pos.databinding.SplitOrderQtyPopupBinding;
 import com.findbulous.pos.databinding.ToolbarSyncPopupBinding;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -67,7 +69,9 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
     private ArrayList<Order_Line> payment_order_lines;
 //    private PaymentOrderLineAdapter paymentOrderLineAdapter;
 
-    private ArrayList<Order_Line> splitting_order_lines;
+    private ArrayList<Order_Line> splitting_order_lines, splitted_order_lines;
+    private ArrayList<Integer> splitsQty;
+    private  PaymentPageSplitBillViewModel splitBillViewModel;
     private SplitBillOrderAdapter splittingOrderLineAdapter;
     //Current order
     private Order currentOrder;
@@ -94,6 +98,7 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
         super.onCreate(savedInstanceState);
         contextpage = PaymentPage.this;
         binding = DataBindingUtil.setContentView(this, R.layout.payment_page);
+        splitBillViewModel = new ViewModelProvider(this).get(PaymentPageSplitBillViewModel.class);
         viewModel = new ViewModelProvider(this).get(PaymentPageViewModel.class);
         binding.setPaymentPageViewModel(viewModel);
         binding.setLifecycleOwner(this);
@@ -833,11 +838,20 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
         popupBinding.productsRv.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
         popupBinding.productsRv.setHasFixedSize(true);
 
-        popupBinding.paymentGrandTotal.setText(currencyDisplayFormat(0.00));
+        popupBinding.setSplitBillViewModel(splitBillViewModel);
+        splitBillViewModel.getTotalSplitBill().observe(this, item -> {
+            // Update the UI..
+            popupBinding.setSplitBillViewModel(splitBillViewModel);
+        });
 
         splitting_order_lines = new ArrayList<>();
-        splittingOrderLineAdapter = new SplitBillOrderAdapter(splitting_order_lines, this);
+        splitted_order_lines = new ArrayList<>();
+        splitsQty = new ArrayList<>();
+        splittingOrderLineAdapter = new SplitBillOrderAdapter(splitting_order_lines, splitsQty, this);
         splitting_order_lines.addAll(order.getOrder_lines());
+        for (int i = 0; i < splitting_order_lines.size(); i++){
+            splitsQty.add(0);
+        }
         popupBinding.productsRv.setAdapter(splittingOrderLineAdapter);
 
 
@@ -847,13 +861,21 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
 
             }
         });
-
         popupBinding.cancelBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 popup.dismiss();
             }
         });
+
+        popup.setOnDismissListener(new PopupWindow.OnDismissListener() {
+            @Override
+            public void onDismiss() {
+                splitBillViewModel.setTotalSplitBill(currencyDisplayFormat(0.00));
+                splitting_order_lines.clear();
+            }
+        });
+
 
         popup.showAtLocation(binding.getRoot(), Gravity.CENTER, 0, 0);
         //blur background
@@ -863,6 +885,137 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
         p.flags |= WindowManager.LayoutParams.FLAG_DIM_BEHIND;
         p.dimAmount = 0.3f;
         wm.updateViewLayout(container, p);
+    }
+    @Override
+    public void onSplitOrderLineClick(int position, int qty) {
+        splitsQty.set(position, qty);
+        Order_Line splitting_order_line = realm.copyFromRealm(splitting_order_lines.get(position));
+
+        updateSplitOrderLine(splitting_order_line, qty);
+    }
+    private void showSplitBillInsertQty(Order_Line splitting_order_line, int qty, int splitsQtyPosition){
+        PopupWindow popup = new PopupWindow(contextpage);
+        SplitOrderQtyPopupBinding popupBinding = SplitOrderQtyPopupBinding.inflate(getLayoutInflater());
+//        View layout = getLayoutInflater().inflate(R.layout.cart_order_add_discount_popup, null);
+        popup.setContentView(popupBinding.getRoot());
+        // Set content width and height
+        popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
+        popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
+        // Closes the popup window when touch outside of it - when looses focus
+        popup.setOutsideTouchable(false);
+        popup.setFocusable(true);
+        // Show anchored to button
+        popup.setElevation(8);
+        popup.setBackgroundDrawable(null);
+
+        popupBinding.productNameTv.setText(splitting_order_line.getProduct().getName());
+        popupBinding.qtyEt.setText(String.valueOf(qty));
+
+        popupBinding.positiveBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                int latestQty = 0;
+                if(popupBinding.qtyEt.getText().length() > 0)
+                    latestQty = Integer.valueOf(popupBinding.qtyEt.getText().toString());
+
+                if(latestQty <= splitting_order_line.getQty()) {
+                    splitsQty.set(splitsQtyPosition, latestQty);
+                    updateSplitOrderLine(splitting_order_line, latestQty);
+                    splittingOrderLineAdapter.notifyDataSetChanged();
+                    popup.dismiss();
+                }else{
+                    Toast.makeText(contextpage, "The quantity has exceeded", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        popupBinding.negativeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                popup.dismiss();
+            }
+        });
+
+
+        popup.showAtLocation(binding.getRoot(), Gravity.CENTER, 0, 0);
+        //blur background
+        View container = (View) popup.getContentView().getParent();
+        WindowManager wm = (WindowManager) PaymentPage.this.getSystemService(Context.WINDOW_SERVICE);
+        WindowManager.LayoutParams p = (WindowManager.LayoutParams) container.getLayoutParams();
+        p.flags |= WindowManager.LayoutParams.FLAG_DIM_BEHIND;
+        p.dimAmount = 0.3f;
+        wm.updateViewLayout(container, p);
+    }
+    @Override
+    public void onSplitOrderLineLongClick(int position) {
+        int qty = splitsQty.get(position);
+        Order_Line splitting_order_line = realm.copyFromRealm(splitting_order_lines.get(position));
+
+        showSplitBillInsertQty(splitting_order_line, qty, position);
+    }
+
+    private void updateSplitOrderLine(Order_Line splitting_order_line, int latestQty){
+        splitting_order_line = updateQty(splitting_order_line, latestQty);
+        if(splitted_order_lines.size() > 0) {
+            boolean splitted = false;
+            for(int i = 0; i < splitted_order_lines.size(); i++) {
+                if(splitted_order_lines.get(i).getLocal_order_line_id() == splitting_order_line.getLocal_order_line_id()){
+                    if(latestQty > 0)
+                        splitted_order_lines.set(i, splitting_order_line);
+                    else
+                        splitted_order_lines.remove(i);
+                    splitted = true;
+                }
+            }
+            if(splitted == false){
+                splitted_order_lines.add(splitting_order_line);
+            }
+        }else{
+            splitted_order_lines.add(splitting_order_line);
+        }
+
+
+        double totalSplitBill = 0.0;
+        for(int i = 0; i < splitted_order_lines.size(); i++){
+            totalSplitBill += splitted_order_lines.get(i).getPrice_subtotal_incl();
+        }
+
+        splitBillViewModel.setTotalSplitBill(currencyDisplayFormat(totalSplitBill));
+    }
+
+    private Order_Line updateQty(Order_Line order_lineToUpdate, int qty){
+        RealmResults<Product_Tax> product_tax_results = realm.where(Product_Tax.class)
+                .equalTo("product_tmpl_id", order_lineToUpdate.getProduct().getProduct_tmpl_id()).findAll();
+        ArrayList<Product_Tax> product_taxes = new ArrayList<>();
+        product_taxes.addAll(realm.copyFromRealm(product_tax_results));
+
+        double price_unit = order_lineToUpdate.getPrice_unit();
+        double amount_discount = 0;
+        if(order_lineToUpdate.getDiscount_type() != null) {
+            if (order_lineToUpdate.getDiscount_type().equalsIgnoreCase("percentage")) {
+                amount_discount = (price_unit * order_lineToUpdate.getDiscount()) / 100;
+            } else if (order_lineToUpdate.getDiscount_type().equalsIgnoreCase("fixed_amount")) {
+                amount_discount = order_lineToUpdate.getDiscount();
+            }
+        }
+        double price_before_discount =
+                calculate_price_unit_excl_tax(order_lineToUpdate.getProduct(), price_unit) * qty;
+        double price_unit_excl_tax =
+                calculate_price_unit_excl_tax(order_lineToUpdate.getProduct(), (price_unit - amount_discount));
+        double price_subtotal = price_unit_excl_tax * qty;
+        double price_subtotal_incl = calculate_price_subtotal_incl(product_taxes, price_subtotal);
+        double total_cost = order_lineToUpdate.getProduct().getStandard_price() * qty;
+
+        order_lineToUpdate.setPrice_subtotal(price_subtotal);
+        order_lineToUpdate.setDisplay_price_subtotal(currencyDisplayFormat(price_subtotal));
+        order_lineToUpdate.setPrice_subtotal_incl(price_subtotal_incl);
+        order_lineToUpdate.setDisplay_price_subtotal_incl(currencyDisplayFormat(price_subtotal_incl));
+        order_lineToUpdate.setQty(qty);
+        order_lineToUpdate.setPrice_before_discount(price_before_discount);
+        order_lineToUpdate.setDisplay_price_before_discount(currencyDisplayFormat(price_before_discount));
+        order_lineToUpdate.setTotal_cost(total_cost);
+        order_lineToUpdate.setDisplay_total_cost(currencyDisplayFormat(total_cost));
+
+        return order_lineToUpdate;
     }
 
     private void showOrderProducts() {
@@ -1050,11 +1203,6 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
     }
 
     @Override
-    public void onSplitOrderLineClick(int position) {
-
-    }
-
-    @Override
     public void onPaymentRemove(int position) {
         Payment payment = payments.get(position);
 
@@ -1069,6 +1217,41 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
 //                + "\nAmount = " + payment.getAmount(), Toast.LENGTH_SHORT).show();
     }
 
+    private double calculate_price_unit_excl_tax(Product product, double price_unit){
+        double fixed = product.getAmount_tax_incl_fixed(),
+                percent = product.getAmount_tax_incl_percent(),
+                division = product.getAmount_tax_incl_division();
+
+        double price_unit_excl_tax = ((price_unit  - fixed) / (1 + (percent / 100))) * (1 - (division / 100));
+
+        return price_unit_excl_tax;
+    }
+    private double calculate_price_subtotal_incl(ArrayList<Product_Tax> product_taxes, double price_subtotal){
+        double price_subtotal_incl;
+        double total_taxes = 0.0, price = price_subtotal;
+        double tax = 0.0;
+
+        for(int i = 0; i < product_taxes.size(); i++){
+            Product_Tax product_tax = product_taxes.get(i);
+
+            if (product_tax.getAmount_type().equalsIgnoreCase("fixed")) {
+                tax = product_tax.getAmount();
+            } else if (product_tax.getAmount_type().equalsIgnoreCase("percent")) {
+                tax = (price * (product_tax.getAmount() / 100));
+            } else if (product_tax.getAmount_type().equalsIgnoreCase("division")) {
+                tax = ((price / (1 - (product_tax.getAmount() / 100))) - price);
+            }
+
+            if (product_tax.isInclude_base_amount()) {    //TRUE
+                price += tax;
+            }
+
+            total_taxes += tax;
+        }
+        price_subtotal_incl = price_subtotal + total_taxes;
+
+        return price_subtotal_incl;
+    }
     private String currencyDisplayFormat(double value){
         String valueFormatted = null;
         int decimal_place = currency.getDecimal_places();

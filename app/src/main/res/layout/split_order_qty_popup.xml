@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/box_corner_nopadding_white"
+        android:padding="10dp">
+
+        <TextView
+            android:id="@+id/qty_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Split Quantity"
+            android:paddingStart="5dp"
+            android:paddingTop="5dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/product_name_tv"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="[Product Name]"
+            android:paddingStart="5dp"
+            android:paddingBottom="5dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/qty_title" />
+
+        <EditText
+            android:id="@+id/qty_et"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:background="@drawable/custom_input"
+            android:maxLines="1"
+            android:padding="15dp"
+            android:text="0"
+            android:inputType="number"
+            android:textSize="12dp"
+            android:gravity="end"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/product_name_tv" />
+
+        <Button
+            android:id="@+id/negative_btn"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Cancel"
+            android:textAllCaps="false"
+            android:layout_margin="5dp"
+            android:backgroundTint="@color/darkOrange"
+            app:layout_constraintTop_toBottomOf="@+id/qty_et"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/positive_btn" />
+
+        <Button
+            android:id="@+id/positive_btn"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/green"
+            android:text="Split"
+            android:textAllCaps="false"
+            android:layout_margin="5dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/negative_btn"
+            app:layout_constraintTop_toBottomOf="@+id/qty_et" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>

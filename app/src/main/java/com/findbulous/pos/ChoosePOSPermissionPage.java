@@ -95,7 +95,7 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
 //        posSharedPreferenceEdit = posSharedPreference.edit();
         openedSessionExist = false;
         pos_config = null;
-        pos_session = null;
+        pos_session = realm.where(POS_Session.class).findFirst();
         currency = null;
         product_categories = new ArrayList<>();
         products = new ArrayList<>();
@@ -109,8 +109,6 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
         orderStates = new ArrayList<>();
         customers = new ArrayList<>();
 
-        //Temporarily
-//        finishApiLoad = false;
         pd = null;
 
         if (!NetworkUtils.isNetworkAvailable(contextpage)) {
@@ -169,6 +167,11 @@ public class ChoosePOSPermissionPage extends AppCompatActivity {
     }
 
     private void goToHomePage(){
+        if(!NetworkUtils.isNetworkAvailable(contextpage)) {
+            if (pos_session.getState().equalsIgnoreCase("opened")) {
+                openedSessionExist = true;
+            }
+        }
         if(openedSessionExist){
             Toast.makeText(contextpage, "Session Exist, Action: Continue Session", Toast.LENGTH_SHORT).show();
             System.out.println("Session Exist, Action: Continue Session");
