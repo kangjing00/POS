@@ -27,7 +27,37 @@ public class Order  extends RealmObject {
     private final RealmResults<Order_Line> order_lines = null;
 
     //Constructors
-    //Dine-in
+    public Order(Order order){
+        local_order_id = order.getLocal_order_id();
+        order_id = order.getOrder_id();
+        name = order.getName();
+        date_order = order.getDate_order();
+        pos_reference = order.getPos_reference();
+        state = order.getState();
+        state_name = order.getState_name();
+        amount_tax = order.getAmount_tax();
+        amount_total = order.getAmount_total();
+        amount_paid = order.getAmount_paid();
+        amount_return = order.getAmount_return();
+        tip_amount = order.getTip_amount();
+        display_amount_tax = order.getDisplay_amount_tax();
+        display_amount_total = order.getDisplay_amount_total();
+        display_amount_paid = order.getDisplay_amount_paid();
+        display_amount_return = order.getDisplay_amount_return();
+        display_amount_subtotal = order.getDisplay_amount_subtotal();
+        display_tip_amount = order.getDisplay_tip_amount();
+        is_tipped = order.isIs_tipped();
+        table = order.getTable();
+        customer = order.getCustomer();
+        note = order.getNote();
+        discount = order.getDiscount();
+        discount_type = order.getDiscount_type();
+        customer_count = order.getCustomer_count();
+        session_id = order.getSession_id();
+        user_id = order.getUser_id();
+        company_id = order.getCompany_id();
+        partner_id = order.getPartner_id();
+    }
     public Order(int local_order_id, int order_id, String name, String date_order, String pos_reference, String state, String state_name,
                  double amount_tax, double amount_total, double amount_paid, double amount_return, double amount_subtotal,
                  double tip_amount, String display_amount_tax, String display_amount_total, String display_amount_paid,

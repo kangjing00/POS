@@ -12,6 +12,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.TimeZone;
 
 public class TableOrderAdapter extends RecyclerView.Adapter<TableOrderAdapter.TableOrderViewHolder> {
 
@@ -47,6 +48,18 @@ public class TableOrderAdapter extends RecyclerView.Adapter<TableOrderAdapter.Ta
     @Override
     public void onBindViewHolder(TableOrderViewHolder holder, int position) {
         Order order = orders.get(position);
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        df.setTimeZone(TimeZone.getTimeZone("Asia/Kuala_Lumpur"));
+        Date date_format = null;
+        try {
+            date_format = df.parse(order.getDate_order());
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        if(date_format != null){
+            order.setDate_order(df.format(date_format));
+        }
+
         holder.binding.setOrder(order);
 
         if((holder.getAdapterPosition() % 2) == 0){

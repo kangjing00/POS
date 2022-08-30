@@ -1575,6 +1575,13 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                             order_line_from_list.setTotal_cost(total_cost);
                             order_line_from_list.setDisplay_total_cost(currencyDisplayFormat(total_cost));
 
+                            realm.executeTransaction(new Realm.Transaction() {
+                                @Override
+                                public void execute(Realm realm) {
+                                    realm.insertOrUpdate(order_line_from_list);
+                                }
+                            });
+
                             order_lines.set(i, order_line_from_list);
                             orderLineAdapter.notifyDataSetChanged();
                             updateOrderTotalAmount();
@@ -1721,6 +1728,13 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                                     order_line_from_list.setDisplay_price_before_discount(currencyDisplayFormat(price_before_discount));
                                     order_line_from_list.setTotal_cost(total_cost);
                                     order_line_from_list.setDisplay_total_cost(currencyDisplayFormat(total_cost));
+
+                                    realm.executeTransaction(new Realm.Transaction() {
+                                        @Override
+                                        public void execute(Realm realm) {
+                                            realm.insertOrUpdate(order_line_from_list);
+                                        }
+                                    });
 
                                     order_lines.set(i, order_line_from_list);
                                     orderLineAdapter.notifyDataSetChanged();
@@ -2285,7 +2299,7 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
             }
 
             //Temporary (Bug Fixing)
-            urlParameters += "&dev=1";
+//            urlParameters += "&dev=1";
 
             byte[] postData = urlParameters.getBytes(Charset.forName("UTF-8"));
             int postDataLength = postData.length;
@@ -2803,6 +2817,13 @@ public class HomePage extends CheckConnection implements ProductCategoryAdapter.
                     order_line.setDisplay_price_before_discount(currencyDisplayFormat(price_before_discount));
                     order_line.setTotal_cost(total_cost);
                     order_line.setDisplay_total_cost(currencyDisplayFormat(total_cost));
+
+                    realm.executeTransaction(new Realm.Transaction() {
+                        @Override
+                        public void execute(Realm realm) {
+                            realm.insertOrUpdate(order_line);
+                        }
+                    });
 
                     order_lines.set(i, order_line);
                     orderLineAdapter.notifyDataSetChanged();

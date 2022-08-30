@@ -27,7 +27,33 @@ public class Order_Line extends RealmObject {
 
     private RealmList<Attribute_Value> attribute_values;
 
-    //Constructor
+    //Constructors
+    public Order_Line(Order_Line order_line){
+        local_order_line_id = order_line.getLocal_order_line_id();
+        order_line_id = order_line.getOrder_line_id();
+        name = order_line.getName();
+        qty = order_line.getQty();
+        price_unit = order_line.getPrice_unit();
+        price_subtotal = order_line.getPrice_subtotal();
+        price_subtotal_incl = order_line.getPrice_subtotal_incl();
+        price_before_discount = order_line.getPrice_before_discount();
+        display_price_unit = order_line.display_price_unit;
+        display_price_subtotal = order_line.getDisplay_price_subtotal();
+        display_price_subtotal_incl = order_line.getDisplay_price_subtotal_incl();
+        display_price_before_discount = order_line.getDisplay_price_before_discount();
+        full_product_name = order_line.getFull_product_name();
+        customer_note = order_line.getCustomer_note();
+        discount_type = order_line.getDiscount_type();
+        discount = order_line.getDiscount();
+        display_discount = order_line.getDisplay_discount();
+        total_cost = order_line.getTotal_cost();
+        display_total_cost = order_line.getDisplay_total_cost();
+        price_extra = order_line.getPrice_extra();
+        display_price_extra = order_line.getDisplay_price_extra();
+        order = order_line.getOrder();
+        product = order_line.getProduct();
+        attribute_values = order_line.getAttribute_values();
+    }
     public Order_Line(int local_order_line_id, int order_line_id, String name, int qty, double price_unit, double price_subtotal,
                       double price_subtotal_incl, double price_before_discount, String display_price_unit,
                       String display_price_subtotal, String display_price_subtotal_incl, String display_price_before_discount,
@@ -122,9 +148,9 @@ public class Order_Line extends RealmObject {
         return order;
     }
 
-//    public void setOrder(Order order) {
-//        this.order = order;
-//    }
+    public void setOrder(Order order) {
+        this.order = order;
+    }
 
     public Product getProduct() {
         return product;

@@ -17,6 +17,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.TimeZone;
 
 public class OrderOnGoingAdapter  extends RecyclerView.Adapter<OrderOnGoingAdapter.OrderOnGoingViewHolder>{
 
@@ -53,6 +54,7 @@ public class OrderOnGoingAdapter  extends RecyclerView.Adapter<OrderOnGoingAdapt
     public void onBindViewHolder(OrderOnGoingViewHolder holder, int position) {
         Order order = orders.get(position);
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        df.setTimeZone(TimeZone.getTimeZone("Asia/Kuala_Lumpur"));
         Date date_format = null;
         try {
             date_format = df.parse(order.getDate_order());

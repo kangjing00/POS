@@ -55,6 +55,7 @@ import java.util.Calendar;
 
 import javax.net.ssl.HttpsURLConnection;
 import io.realm.Realm;
+import io.realm.RealmList;
 import io.realm.RealmResults;
 
 public class PaymentPage extends CheckConnection implements SplitBillOrderAdapter.SplitOrderLineInterface, PaymentAdapter.PaymentInterface {
@@ -791,7 +792,7 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
             }
 
             long timeAfter = Calendar.getInstance().getTimeInMillis();
-            System.out.println("Set order note time taken: " + (timeAfter - timeBefore) + "ms");
+            System.out.println("Checkout order api time taken: " + (timeAfter - timeBefore) + "ms");
             return null;
         }
 
@@ -848,7 +849,7 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
         splitted_order_lines = new ArrayList<>();
         splitsQty = new ArrayList<>();
         splittingOrderLineAdapter = new SplitBillOrderAdapter(splitting_order_lines, splitsQty, this);
-        splitting_order_lines.addAll(order.getOrder_lines());
+        splitting_order_lines.addAll(realm.copyFromRealm(order.getOrder_lines()));
         for (int i = 0; i < splitting_order_lines.size(); i++){
             splitsQty.add(0);
         }
@@ -858,7 +859,132 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
         popupBinding.proceedBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(splitted_order_lines.size() > 0) {
+                    //calculation splitting order line (Order A)
+                    ArrayList<Order_Line> removedOrderLine = new ArrayList<>();
+                    for (int i = 0; i < splitsQty.size(); i++) {
+                        if (splitsQty.get(i) == splitting_order_lines.get(i).getQty()) {
+                            removedOrderLine.add(splitting_order_lines.get(i));
+                        } else if ((splitsQty.get(i) < splitting_order_lines.get(i).getQty()) && (splitsQty.get(i) > 0)) {
+                            splitting_order_lines.set(
+                                    i,
+                                    updateQty(splitting_order_lines.get(i), splitting_order_lines.get(i).getQty() - splitsQty.get(i))
+                            );
+                        }
+                    }
 
+                    for (int i = 0; i < removedOrderLine.size(); i++) {
+                        for (int x = 0; x < splitting_order_lines.size(); x++) {
+                            if (removedOrderLine.get(i).getLocal_order_line_id() == splitting_order_lines.get(x).getLocal_order_line_id()) {
+                                splitting_order_lines.remove(x);
+                            }
+                        }
+                    }
+
+                    //create splitted order (Order B)
+                    Order splitted_order = new Order(currentOrder);
+                    Number id1 = realm.where(Order.class).max("local_order_id");
+                    int nextOrderID = -1;
+                    if (id1 == null) {
+                        nextOrderID = 1;
+                    } else {
+                        nextOrderID = id1.intValue() + 1;
+                    }
+                    splitted_order.setLocal_order_id(nextOrderID);
+                    splitted_order.setOrder_id(-1);
+                    splitted_order.setCustomer(null);
+                    splitted_order.setPos_reference(null);
+                    splitted_order.setNote(null);
+                    splitted_order.setCustomer_count(1);
+                    splitted_order.setName(null);
+                    splitted_order.setTip_amount(0);
+                    splitted_order.setIs_tipped(false);
+                    splitted_order.setPartner_id(-1);
+                    splitted_order.setDisplay_tip_amount(currencyDisplayFormat(0.00));
+
+                    //update splitted order line id (Order Line B)
+                    Number id = realm.where(Order_Line.class).max("local_order_line_id");
+                    int nextID = -1;
+                    if (id == null) {
+                        nextID = 1;
+                    } else {
+                        nextID = id.intValue() + 1;
+                    }
+
+                    ArrayList<Integer> splitted_order_lines_id = new ArrayList<>();
+                    for (int i = 0; i < splitted_order_lines.size(); i++) {
+                        splitted_order_lines_id.add(splitted_order_lines.get(i).getOrder_line_id());
+                    }
+
+                    splitted_order_lines.get(0).setLocal_order_line_id(nextID);
+                    splitted_order_lines.get(0).setOrder_line_id(-1);
+                    splitted_order_lines.get(0).setOrder(splitted_order);
+                    for (int i = 1; i < splitted_order_lines.size(); i++) {
+                        splitted_order_lines.get(i).setLocal_order_line_id(
+                                (splitted_order_lines.get(i - 1).getLocal_order_line_id() + 1)
+                        );
+                        splitted_order_lines.get(i).setOrder_line_id(-1);
+                        splitted_order_lines.get(i).setOrder(splitted_order);
+                    }
+
+                    //calculation + insert splitted order (Order B)
+                    updateOrderTotalAmount(splitted_order_lines, splitted_order);
+
+                    //update order line   (Order Line A) and (Order Line B)
+                    for (int i = 0; i < removedOrderLine.size(); i++) {
+                        Order_Line removedOrderLine_result = realm.where(Order_Line.class)
+                                .equalTo("local_order_line_id", removedOrderLine.get(i).getLocal_order_line_id())
+                                .findFirst();
+                        realm.executeTransaction(new Realm.Transaction() {
+                            @Override
+                            public void execute(Realm realm) {
+                                removedOrderLine_result.deleteFromRealm();
+                            }
+                        });
+                    }
+                    realm.executeTransaction(new Realm.Transaction() {
+                        @Override
+                        public void execute(Realm realm) {
+                            realm.insertOrUpdate(splitting_order_lines);
+                            realm.insertOrUpdate(splitted_order_lines);
+                        }
+                    });
+
+                    //calculation + update splitting order (Order A)
+                    updateOrderTotalAmount(splitting_order_lines, currentOrder);
+
+                    //update share preference
+                    currentCustomerSharePreferenceEdit.putInt("customerID", -1);
+                    currentCustomerSharePreferenceEdit.putString("customerName", null);
+                    currentCustomerSharePreferenceEdit.putString("customerEmail", null);
+                    currentCustomerSharePreferenceEdit.putString("customerPhoneNo", null);
+                    currentCustomerSharePreferenceEdit.putString("customerIdentityNo", null);
+                    currentCustomerSharePreferenceEdit.putString("customerBirthdate", null);
+                    currentCustomerSharePreferenceEdit.commit();
+
+                    int orderTypePosition = 0;
+                    if (splitted_order.getTable() != null) {
+                        orderTypePosition = 1;
+                    }
+                    currentOrderSharePreferenceEdit.putInt("orderTypePosition", orderTypePosition);
+                    currentOrderSharePreferenceEdit.putInt("orderingState", 1);
+                    currentOrderSharePreferenceEdit.putInt("localOrderId", splitted_order.getLocal_order_id());
+                    currentOrderSharePreferenceEdit.commit();
+
+                    //call api
+                    if (!NetworkUtils.isNetworkAvailable(contextpage)) {
+                        Toast.makeText(contextpage, "No Internet Connection.", Toast.LENGTH_SHORT).show();
+                        startActivity(getIntent());
+                        finish();
+                    } else {
+                        new apiSplitOrder(currentOrder.getOrder_id(), currentOrder.getLocal_order_id(),
+                                splitted_order.getLocal_order_id(), splitted_order_lines_id).execute();
+                    }
+
+                    popup.dismiss();
+                }else{
+                    Toast.makeText(contextpage, "Please select product for splitting", Toast.LENGTH_SHORT).show();
+                }
             }
         });
         popupBinding.cancelBtn.setOnClickListener(new View.OnClickListener() {
@@ -889,7 +1015,7 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
     @Override
     public void onSplitOrderLineClick(int position, int qty) {
         splitsQty.set(position, qty);
-        Order_Line splitting_order_line = realm.copyFromRealm(splitting_order_lines.get(position));
+        Order_Line splitting_order_line = new Order_Line(splitting_order_lines.get(position));
 
         updateSplitOrderLine(splitting_order_line, qty);
     }
@@ -948,7 +1074,7 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
     @Override
     public void onSplitOrderLineLongClick(int position) {
         int qty = splitsQty.get(position);
-        Order_Line splitting_order_line = realm.copyFromRealm(splitting_order_lines.get(position));
+        Order_Line splitting_order_line = new Order_Line(splitting_order_lines.get(position));
 
         showSplitBillInsertQty(splitting_order_line, qty, position);
     }
@@ -1017,16 +1143,20 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
         return order_lineToUpdate;
     }
 
-    //split order api (havent done yet) [api not yet ready]
     public class apiSplitOrder extends AsyncTask<String, String, String> {
         private ProgressDialog pd = null;
-        private int order_id, local_order_id;
+        private int order_id, local_order_id, split_local_order_id;
 
-        private Order update_order;
+        private ArrayList<Order_Line> update_order_lines, update_split_order_lines;
+        private Order update_splitting_order, update_splitted_order;
+        private ArrayList<Integer> splitted_order_lines_id;
 
-        public apiSplitOrder(int order_id, int local_order_id){
+        public apiSplitOrder(int order_id, int local_order_id, int split_local_order_id,
+                             ArrayList<Integer> splitted_order_lines_id){
             this.order_id = order_id;
             this.local_order_id = local_order_id;
+            this.split_local_order_id = split_local_order_id;
+            this.splitted_order_lines_id = splitted_order_lines_id;
         }
 
         @Override
@@ -1039,9 +1169,25 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
 
             Order result = realm.where(Order.class).equalTo("local_order_id", local_order_id).findFirst();
             if(result != null)
-                update_order = realm.copyFromRealm(result);
+                update_splitting_order = realm.copyFromRealm(result);
             else
-                update_order = null;
+                update_splitting_order = null;
+
+            Order split_result = realm.where(Order.class).equalTo("local_order_id", split_local_order_id).findFirst();
+            if(split_result != null)
+                update_splitted_order = realm.copyFromRealm(split_result);
+            else
+                update_splitted_order = null;
+
+            RealmResults<Order_Line> results_order_lines = realm.where(Order_Line.class)
+                    .equalTo("order.local_order_id", local_order_id).findAll();
+            update_order_lines = new ArrayList<>();
+            update_order_lines.addAll(realm.copyFromRealm(results_order_lines));
+
+            RealmResults<Order_Line> results_split_order_lines = realm.where(Order_Line.class)
+                    .equalTo("order.local_order_id", split_local_order_id).findAll();
+            update_split_order_lines = new ArrayList<>();
+            update_split_order_lines.addAll(realm.copyFromRealm(results_split_order_lines));
         }
 
         @Override
@@ -1050,7 +1196,10 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
             String connection_error = "";
 
             String urlParameters = "&order_id=" + order_id;
-
+            for(int i = 0; i < update_split_order_lines.size(); i++) {
+                urlParameters += "&order_lines[" + splitted_order_lines_id.get(i) + "]="
+                            + update_split_order_lines.get(i).getQty();
+            }
 
             //Testing (check error)
             urlParameters += "&dev=1";
@@ -1058,7 +1207,7 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
             byte[] postData = urlParameters.getBytes(Charset.forName("UTF-8"));
             int postDataLength = postData.length;
 
-            String url = "https://www.c3rewards.com/api/merchant/?module=pos&action=checkout_order";
+            String url = "https://www.c3rewards.com/api/merchant/?module=pos&action=split_order";
             String agent = "c092dc89b7aac085a210824fb57625db";
             String jsonUrl =url + "&agent=" + agent;
             System.out.println(jsonUrl);
@@ -1106,34 +1255,151 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
 
                     if (status.equals("OK")) {
                         JSONObject jresult = json.getJSONObject("result");
-                        JSONObject jo_order = jresult.getJSONObject("order");
-                        JSONArray jo_payment_array = jo_order.getJSONArray("payments");
+                        JSONArray jo_order_arr = jresult.getJSONArray("orders");
 
-                        //order
-                        if(update_order != null) {
-                            update_order.setAmount_paid(jo_order.getDouble("amount_paid"));
-                            update_order.setDisplay_amount_paid(jo_order.getString("display_amount_paid"));
-                            update_order.setAmount_return(jo_order.getDouble("amount_return"));
-                            update_order.setDisplay_amount_return(jo_order.getString("display_amount_return"));
-                            update_order.setState(jo_order.getString("state"));
-                            update_order.setState_name(jo_order.getString("state_name"));
-                            if(jo_order.getString("is_tipped").length() > 0)
-                                update_order.setIs_tipped(jo_order.getBoolean("is_tipped"));
-                            if(jo_order.getString("tip_amount").length() > 0)
-                                update_order.setTip_amount(jo_order.getDouble("tip_amount"));
-                            if(jo_order.getString("display_tip_amount").length() > 0)
-                                update_order.setDisplay_tip_amount(jo_order.getString("display_tip_amount"));
-                        }
+                        for(int i = 0; i < jo_order_arr.length(); i++){
+                            JSONObject jo_order = jo_order_arr.getJSONObject(i);
+                            if(jo_order.getInt("order_id") == order_id){
+                                if(update_splitting_order != null){
+                                    double tip_amount = 0;
+                                    boolean is_tipped = false;
+                                    int partner_id = -1, customer_count = 1;
+                                    String discount_type = null;
+                                    if(jo_order.getString("is_tipped").length() > 0)
+                                        is_tipped = jo_order.getBoolean("is_tipped");
+                                    if(jo_order.getString("tip_amount").length() > 0)
+                                        tip_amount = jo_order.getDouble("tip_amount");
+                                    if(jo_order.getString("partner_id").length() > 0)
+                                        partner_id = jo_order.getInt("partner_id");
+                                    if(jo_order.getString("discount_type").length() > 0)
+                                        discount_type = jo_order.getString("discount_type");
+                                    if(jo_order.getString("customer_count").length() > 0){
+                                        customer_count = jo_order.getInt("customer_count");
+                                    }
 
-                        for(int i = 0; i < payments.size(); i++){
-                            JSONObject jo_payment = jo_payment_array.getJSONObject(i);
-                            payments.get(i).setId(jo_payment.getInt("id"));
-                            payments.get(i).setAmount(jo_payment.getDouble("amount"));
-                            payments.get(i).setDisplay_amount(jo_payment.getString("display_amount"));
-                            int payment_method_id = jo_payment.getInt("payment_method_id");
-                            for(int x = 0; x < payment_methods.size(); x++){
-                                if(payment_methods.get(x).getPayment_method_id() == payment_method_id){
-                                    payments.get(i).setPayment_method(payment_methods.get(x));
+                                    update_splitting_order = new Order(local_order_id, jo_order.getInt("order_id"), jo_order.getString("name"),
+                                        jo_order.getString("date_order"), jo_order.getString("pos_reference"),
+                                        jo_order.getString("state"), jo_order.getString("state_name"),
+                                        jo_order.getDouble("amount_tax"), jo_order.getDouble("amount_total"),
+                                        jo_order.getDouble("amount_paid"), jo_order.getDouble("amount_return"),
+                                        jo_order.getDouble("amount_subtotal"), tip_amount,
+                                        jo_order.getString("display_amount_tax"), jo_order.getString("display_amount_total"),
+                                        jo_order.getString("display_amount_paid"), jo_order.getString("display_amount_return"),
+                                        jo_order.getString("display_amount_subtotal"), jo_order.getString("display_tip_amount"),
+                                        is_tipped, update_splitting_order.getTable(), update_splitting_order.getCustomer(), jo_order.getString("note"),
+                                        jo_order.getDouble("discount"), discount_type, customer_count,
+                                        jo_order.getInt("session_id"), jo_order.getInt("user_id"),
+                                        jo_order.getInt("company_id"), partner_id);
+                                }
+                                JSONArray jo_order_line_arr = jo_order.getJSONArray("order_lines");
+                                for(int x = 0; x < jo_order_line_arr.length(); x++){
+                                    JSONObject jo_order_line = jo_order_line_arr.getJSONObject(x);
+                                    update_order_lines.get(x).setOrder(update_splitting_order);
+                                    update_order_lines.get(x).setOrder_line_id(jo_order_line.getInt("order_line_id"));
+                                    update_order_lines.get(x).setName(jo_order_line.getString("name"));
+                                    update_order_lines.get(x).setPrice_unit(jo_order_line.getDouble("price_unit"));
+                                    update_order_lines.get(x).setPrice_subtotal(jo_order_line.getDouble("price_subtotal"));
+                                    update_order_lines.get(x).setPrice_subtotal_incl(jo_order_line.getDouble("price_subtotal_incl"));
+                                    update_order_lines.get(x).setDisplay_price_unit(jo_order_line.getString("display_price_unit"));
+                                    update_order_lines.get(x).setDisplay_price_subtotal(jo_order_line.getString("display_price_subtotal"));
+                                    update_order_lines.get(x).setDisplay_price_subtotal_incl(jo_order_line.getString("display_price_subtotal_incl"));
+                                    update_order_lines.get(x).setFull_product_name(jo_order_line.getString("full_product_name"));
+                                    update_order_lines.get(x).setCustomer_note(jo_order_line.getString("customer_note"));
+                                    double total_cost = 0;
+                                    if(jo_order_line.getString("total_cost").length() > 0){
+                                        total_cost = jo_order_line.getDouble("total_cost");
+                                    }
+                                    update_order_lines.get(x).setTotal_cost(total_cost);
+                                    update_order_lines.get(x).setDisplay_total_cost(jo_order_line.getString("display_total_cost"));
+                                    double price_extra = 0.0;
+                                    if(jo_order_line.getString("price_extra").length() > 0){
+                                        price_extra = jo_order_line.getDouble("price_extra");
+                                    }
+                                    update_order_lines.get(x).setPrice_extra(price_extra);
+                                    update_order_lines.get(x).setDisplay_price_extra(jo_order_line.getString("display_price_extra"));
+                                    double discount_order_line = 0.0;
+                                    if(jo_order_line.getString("discount").length() > 0){
+                                        discount_order_line = jo_order_line.getDouble("discount");
+                                    }
+                                    String discount_type_order_line = null;
+                                    if(jo_order_line.getString("discount_type").length() > 0){
+                                        discount_type_order_line = jo_order_line.getString("discount_type");
+                                    }
+                                    update_order_lines.get(x).setDiscount(discount_order_line);
+                                    update_order_lines.get(x).setDiscount_type(discount_type_order_line);
+                                    update_order_lines.get(x).setDisplay_discount(jo_order_line.getString("display_discount"));
+                                }
+                            }else{
+                                if(update_splitted_order != null){
+                                    double tip_amount = 0;
+                                    boolean is_tipped = false;
+                                    int partner_id = -1, customer_count = 1;
+                                    String discount_type = null;
+                                    if(jo_order.getString("is_tipped").length() > 0)
+                                        is_tipped = jo_order.getBoolean("is_tipped");
+                                    if(jo_order.getString("tip_amount").length() > 0)
+                                        tip_amount = jo_order.getDouble("tip_amount");
+                                    if(jo_order.getString("partner_id").length() > 0)
+                                        partner_id = jo_order.getInt("partner_id");
+                                    if(jo_order.getString("discount_type").length() > 0)
+                                        discount_type = jo_order.getString("discount_type");
+                                    if(jo_order.getString("customer_count").length() > 0){
+                                        customer_count = jo_order.getInt("customer_count");
+                                    }
+
+                                    update_splitted_order = new Order(split_local_order_id, jo_order.getInt("order_id"), jo_order.getString("name"),
+                                        jo_order.getString("date_order"), jo_order.getString("pos_reference"),
+                                        jo_order.getString("state"), jo_order.getString("state_name"),
+                                        jo_order.getDouble("amount_tax"), jo_order.getDouble("amount_total"),
+                                        jo_order.getDouble("amount_paid"), jo_order.getDouble("amount_return"),
+                                        jo_order.getDouble("amount_subtotal"), tip_amount,
+                                        jo_order.getString("display_amount_tax"), jo_order.getString("display_amount_total"),
+                                        jo_order.getString("display_amount_paid"), jo_order.getString("display_amount_return"),
+                                        jo_order.getString("display_amount_subtotal"), jo_order.getString("display_tip_amount"),
+                                        is_tipped, update_splitted_order.getTable(), null, jo_order.getString("note"),
+                                        jo_order.getDouble("discount"), discount_type, customer_count,
+                                        jo_order.getInt("session_id"), jo_order.getInt("user_id"),
+                                        jo_order.getInt("company_id"), partner_id);
+
+                                    JSONArray jo_order_line_arr = jo_order.getJSONArray("order_lines");
+                                    for(int x = 0; x < jo_order_line_arr.length(); x++){
+                                        JSONObject jo_order_line = jo_order_line_arr.getJSONObject(x);
+                                        update_split_order_lines.get(x).setOrder(update_splitted_order);
+                                        update_split_order_lines.get(x).setOrder_line_id(jo_order_line.getInt("order_line_id"));
+                                        update_split_order_lines.get(x).setName(jo_order_line.getString("name"));
+                                        update_split_order_lines.get(x).setPrice_unit(jo_order_line.getDouble("price_unit"));
+                                        update_split_order_lines.get(x).setPrice_subtotal(jo_order_line.getDouble("price_subtotal"));
+                                        update_split_order_lines.get(x).setPrice_subtotal_incl(jo_order_line.getDouble("price_subtotal_incl"));
+                                        update_split_order_lines.get(x).setDisplay_price_unit(jo_order_line.getString("display_price_unit"));
+                                        update_split_order_lines.get(x).setDisplay_price_subtotal(jo_order_line.getString("display_price_subtotal"));
+                                        update_split_order_lines.get(x).setDisplay_price_subtotal_incl(jo_order_line.getString("display_price_subtotal_incl"));
+                                        update_split_order_lines.get(x).setFull_product_name(jo_order_line.getString("full_product_name"));
+                                        update_split_order_lines.get(x).setCustomer_note(jo_order_line.getString("customer_note"));
+                                        double total_cost = 0;
+                                        if(jo_order_line.getString("total_cost").length() > 0){
+                                            total_cost = jo_order_line.getDouble("total_cost");
+                                        }
+                                        update_split_order_lines.get(x).setTotal_cost(total_cost);
+                                        update_split_order_lines.get(x).setDisplay_total_cost(jo_order_line.getString("display_total_cost"));
+                                        double price_extra = 0.0;
+                                        if(jo_order_line.getString("price_extra").length() > 0){
+                                            price_extra = jo_order_line.getDouble("price_extra");
+                                        }
+                                        update_split_order_lines.get(x).setPrice_extra(price_extra);
+                                        update_split_order_lines.get(x).setDisplay_price_extra(jo_order_line.getString("display_price_extra"));
+                                        double discount_order_line = 0.0;
+                                        if(jo_order_line.getString("discount").length() > 0){
+                                            discount_order_line = jo_order_line.getDouble("discount");
+                                        }
+                                        String discount_type_order_line = null;
+                                        if(jo_order_line.getString("discount_type").length() > 0){
+                                            discount_type_order_line = jo_order_line.getString("discount_type");
+                                        }
+
+                                        update_split_order_lines.get(x).setDiscount(discount_order_line);
+                                        update_split_order_lines.get(x).setDiscount_type(discount_type_order_line);
+                                        update_split_order_lines.get(x).setDisplay_discount(jo_order_line.getString("display_discount"));
+                                    }
                                 }
                             }
                         }
@@ -1148,7 +1414,7 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
             }
 
             long timeAfter = Calendar.getInstance().getTimeInMillis();
-            System.out.println("Set order note time taken: " + (timeAfter - timeBefore) + "ms");
+            System.out.println("Split api time taken: " + (timeAfter - timeBefore) + "ms");
             return null;
         }
 
@@ -1157,12 +1423,15 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
             if(!NetworkUtils.isNetworkAvailable(contextpage)){
                 Toast.makeText(contextpage, "No Internet Connection", Toast.LENGTH_SHORT).show();
             }else{
-                if(update_order != null) {
+                if((update_splitted_order != null) && (update_splitting_order != null)){
                     realm.executeTransaction(new Realm.Transaction() {
                         @Override
                         public void execute(Realm realm) {
-                            realm.insertOrUpdate(update_order);
-                            realm.insertOrUpdate(payments);
+                            realm.insertOrUpdate(update_splitted_order);
+                            realm.insertOrUpdate(update_splitting_order);
+
+                            realm.insertOrUpdate(update_split_order_lines);
+                            realm.insertOrUpdate(update_order_lines);
                         }
                     });
                 }
@@ -1170,6 +1439,9 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
 
             if (pd != null)
                 pd.dismiss();
+
+            startActivity(getIntent());
+            finish();
         }
     }
 
@@ -1374,6 +1646,50 @@ public class PaymentPage extends CheckConnection implements SplitBillOrderAdapte
 //                + "\nAmount = " + payment.getAmount(), Toast.LENGTH_SHORT).show();
     }
 
+    private void updateOrderTotalAmount(ArrayList<Order_Line> order_lines, Order order){
+        double order_subtotal = 0.0, total_price_subtotal_incl = 0.0, amount_total = 0.0, amount_order_discount = 0.0;
+        double total_tax_amount = 0.0;
+
+        for(int i = 0; i < order_lines.size(); i++){
+            order_subtotal += order_lines.get(i).getPrice_subtotal();
+            total_price_subtotal_incl += order_lines.get(i).getPrice_subtotal_incl();
+        }
+        amount_total = total_price_subtotal_incl;
+        if(order.getDiscount_type() != null){
+            if(order.getDiscount_type().equalsIgnoreCase("percentage")){
+                amount_order_discount = total_price_subtotal_incl * (order.getDiscount()/100);
+            }else if(order.getDiscount_type().equalsIgnoreCase("fixed_amount")){
+                amount_order_discount = order.getDiscount();
+            }
+            amount_total -= amount_order_discount;
+        }
+
+        total_tax_amount = totalAllOrderLineTax(order_lines);
+
+        order.setAmount_total(amount_total);
+        order.setDisplay_amount_total(currencyDisplayFormat(amount_total));
+        order.setAmount_tax(total_tax_amount);
+        order.setDisplay_amount_tax(currencyDisplayFormat(total_tax_amount));
+        order.setAmount_subtotal(order_subtotal);
+        order.setDisplay_amount_subtotal(currencyDisplayFormat(order_subtotal));
+
+        realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.insertOrUpdate(order);
+            }
+        });
+    }
+    private double totalAllOrderLineTax(ArrayList<Order_Line> order_lines){
+        double total_tax_amount = 0.0;
+
+        for(int i = 0; i < order_lines.size(); i++){
+            double amount_tax = order_lines.get(i).getPrice_subtotal_incl() - order_lines.get(i).getPrice_subtotal();
+            total_tax_amount += amount_tax;
+        }
+
+        return total_tax_amount;
+    }
     private double calculate_price_unit_excl_tax(Product product, double price_unit){
         double fixed = product.getAmount_tax_incl_fixed(),
                 percent = product.getAmount_tax_incl_percent(),
